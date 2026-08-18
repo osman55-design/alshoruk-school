@@ -7,7 +7,6 @@ export default function StudentsSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showQuerySection, setShowQuerySection] = useState(false);
 
-  // تعيين الصف الافتراضي بناءً على خيارات المرحلة الثانوية في كودك الأصلي
   const [selectedViewClass, setSelectedViewClass] = useState('الثالث ثانوي - المساق العلمي');
   const [selectedViewGender, setSelectedViewGender] = useState('ذكور');
 
@@ -17,7 +16,6 @@ export default function StudentsSection() {
 
   const loadStudentsData = async () => {
     try {
-      // جلب البيانات حياً من تبويب "الطلاب" في جدول جوجل السحابي
       const data = await db.getData("الطلاب");
       setStudents(data || []);
     } catch (error) {
@@ -27,11 +25,9 @@ export default function StudentsSection() {
 
   const handleSaveStudent = async (newStudent) => {
     try {
-      // حفظ الطالب مباشرة في سحابة جوجل تلقائياً
       const result = await db.insertData("الطلاب", newStudent);
-      
       if (result && result.status !== "error") {
-        await loadStudentsData(); // إعادة تحديث القائمة السحابية فوراً
+        await loadStudentsData();
         setIsModalOpen(false);
         alert("تم حفظ بيانات الطالب بنجاح في قاعدة البيانات وتحديث المساق الدراسي السحابي 💾");
       } else {
@@ -44,13 +40,11 @@ export default function StudentsSection() {
 
   const handleDelete = async (id) => {
     if (window.confirm("هل أنت متأكد من الحذف؟")) {
-      // الحذف محلياً لتحديث الواجهة فوراً لحين ربط حذفه من السطر بالجدول
       setStudents(prev => prev.filter(s => s.id !== id));
       alert("تم الحذف بنجاح من الشاشة المزامنة.");
     }
   };
 
-  // فلترة وتصفية القائمة بناءً على المدخلات المفضلة لديك
   const displayedStudents = students.filter(s => 
     String(s.class) === selectedViewClass && String(s.gender) === selectedViewGender
   );
@@ -63,29 +57,18 @@ export default function StudentsSection() {
 
   return (
     <div className="section-container" style={{ padding: '30px 20px', direction: 'rtl', fontFamily: 'Arial, sans-serif' }}>
-      
-      {/* صف الأزرار الرئيسي - يظهر مرة واحدة فقط بشكل نظيف */}
       <div className="main-buttons-wrapper" style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '40px', marginTop: '20px' }}>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          style={{ padding: '15px 35px', cursor: 'pointer', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-        >
+        <button onClick={() => setIsModalOpen(true)} style={{ padding: '15px 35px', cursor: 'pointer', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
           ➕ إضافة طالب جديد
         </button>
-
-        <button 
-          onClick={() => setShowQuerySection(!showQuerySection)}
-          style={{ padding: '15px 35px', cursor: 'pointer', backgroundColor: showQuerySection ? '#dc3545' : '#007bff', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-        >
+        <button onClick={() => setShowQuerySection(!showQuerySection)} style={{ padding: '15px 35px', cursor: 'pointer', backgroundColor: showQuerySection ? '#dc3545' : '#007bff', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
           {showQuerySection ? '❌ إغلاق شاشة الاستعلام' : '🔍 فتح شاشة الاستعلام والفرز'}
         </button>
       </div>
 
-      {/* قسم الفلترة والجدول التفاعلي المصمم من قبلك */}
       {showQuerySection && (
         <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '30px' }}>
           <h3 style={{ marginTop: 0, color: '#1e3a8a', marginBottom: '20px' }}>🔍 فلترة وبحث مخصص في قوائم الطلاب</h3>
-          
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '20px' }}>
             <div style={{ flex: 1, minWidth: '200px' }}>
               <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>اختر الصف الدراسي:</label>
@@ -97,7 +80,6 @@ export default function StudentsSection() {
                 ))}
               </select>
             </div>
-
             <div style={{ flex: 1, minWidth: '150px' }}>
               <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>النوع:</label>
               <select value={selectedViewGender} onChange={(e) => setSelectedViewGender(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}>
@@ -136,7 +118,6 @@ export default function StudentsSection() {
         </div>
       )}
 
-      {/* المودال المنبثق للإضافة */}
       {isModalOpen && (
         <AddStudentModal classOptions={classOptions} onSave={handleSaveStudent} onClose={() => setIsModalOpen(false)} />
       )}
