@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// استيراد الملفات الستة المفصولة لحماية النظام
+// استيراد الملفات الستة المفصولة لحماية النظام (المسارات صحيحة بناءً على هيكل مجلداتك الجديد)
 import StudentsSection from './components/StudentsSection';
 import ClassesSection from './components/ClassesSection';
 import TeachersSection from './components/TeachersSection';
@@ -9,23 +9,71 @@ import AccountsSection from './components/AccountsSection';
 import ResultsSection from './components/ResultsSection';
 import DashboardSection from './components/DashboardSection';
 
+// الرابط السحابي (الجسر البرمجي) الخاص بك مع سحابة جوجل
+const GOOGLE_SCRIPT_URL = "https://google.com";
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // ستبدأ القائمة فارغة ليتم شحنها ببيانات حية ومباشرة من جدولك السحابي
+  const [usersList, setUsersList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // قائمة المستخدمين المركزية التي تبدأ بحسابك الافتراضي وأستاذ محمد
-  const [usersList, setUsersList] = useState([
-    { id: 1, name: "الأستاذ عثمان صديق", loginName: "admin", role: "أدمن", pin: "123", permissions: { students: true, classes: true, teachers: true, finance: true, admin: true } },
-    { id: 2, name: "أستاذ محمد", loginName: "محمد", role: "معلم", pin: "123456", permissions: { students: true, classes: true, teachers: false, finance: false, admin: false } }
-  ]);
+  // دالة جلب بيانات المستخدمين من جدول جوجل وتجهيز الصلاحيات
+  const fetchUsersFromCloud = async () => {
+    try {
+      // استدعاء تبويب "المستخدمين" من جدولك عبر الرابط السحابي
+      const response = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=المستخدمين`);
+      const cloudData = await response.json();
+      
+      // تحويل الأعمدة الإنجليزية القادمة من جدولك إلى الكائنات التي يفهمها مشروعك
+      const formattedUsers = cloudData.map((u, index) => {
+        const isAdmin = String(u.role).trim() === "أدمن";
+        
+        return {
+          id: index + 1,
+          name: u.name,
+          loginName: String(u.username).trim(),
+          pin: String(u.password).trim(),
+          role: u.role,
+          // توزيع الصلاحيات تلقائياً بناءً على الدور المخزن في السحابة
+          permissions: {
+            students: true,
+            classes: true,
+            teachers: isAdmin,
+            finance: isAdmin,
+            admin: isAdmin
+          }
+        };
+      });
+      
+      setUsersList(formattedUsers);
+      return formattedUsers;
+    } catch (error) {
+      console.error("حدث خطأ أثناء جلب حسابات المستخدمين من سحابة جوجل:", error);
+      return [];
+    }
+  };
 
-  const handleLogin = (e) => {
+  // جلب البيانات فور تحميل واجهة التطبيق لأول مرة
+  useEffect(() => {
+    fetchUsersFromCloud();
+  }, []);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const foundUser = usersList.find(
-      u => u.loginName.trim() === username.trim() && u.pin === password
+    setLoading(true);
+
+    // إعادة سحب البيانات للتأكد من مواكبة أي تعديل أو إضافة في الجداول
+    const freshUsers = await fetchUsersFromCloud();
+    
+    // فحص المدخلات الحالية مع البيانات القادمة من السحابة
+    const foundUser = freshUsers.find(
+      u => u.loginName === username.trim() && u.pin === password.trim()
     );
 
     if (foundUser) {
@@ -39,8 +87,9 @@ export default function App() {
         setActiveTab('classes');
       }
     } else {
-      alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام!');
+      alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام السحابي لجوجل!');
     }
+    setLoading(false);
   };
 
   const handleLogout = () => {
@@ -67,7 +116,9 @@ export default function App() {
             <input type="password" placeholder="ادخل كلمة المرور" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', textAlign: 'right' }} required />
           </div>
 
-          <button type="submit" style={{ width: '100%', padding: '12px', background: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>دخول النظام</button>
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>
+            {loading ? "جاري الاتصال بالسحابة..." : "دخول النظام"}
+          </button>
         </form>
       </div>
     );
@@ -96,7 +147,7 @@ export default function App() {
         {activeTab === 'teachers' && currentUser?.permissions.teachers && <TeachersSection />}
         {activeTab === 'accounts' && currentUser?.permissions.finance && <AccountsSection />}
         {activeTab === 'results' && currentUser?.permissions.admin && <ResultsSection />}
-        {/* تمرير القائمة ودالة التحديث للوحة التحكم */}
+        
         {activeTab === 'dashboard' && currentUser?.permissions.admin && (
           <DashboardSection users={usersList} setUsers={setUsersList} onBack={() => setActiveTab('dashboard')} />
         )}
