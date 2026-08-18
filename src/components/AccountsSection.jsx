@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getAllStudents, getAllTeachers, addTransaction, getAllTransactions } from '../db'; 
+// استيراد قاعدة البيانات المركزية الجديدة
+import { db } from '../db'; 
 import QuickInputsSection from './QuickInputsSection';
 import TuitionSection from './TuitionSection';
 import PayrollSection from './PayrollSection'; 
@@ -14,11 +15,24 @@ export default function AccountsSection() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [s, t, tx] = await Promise.all([getAllStudents(), getAllTeachers(), getAllTransactions()]);
-        let bal = 10000;
-        (tx || []).forEach(x => bal += x.type === 'قبض' ? x.amount : -x.amount);
+        // جلب البيانات مباشرة من تبويبات سحابة جوجل (الطلاب، المعلمين، الحسابات)
+        const [s, t, tx] = await Promise.all([
+          db.getData("الطلاب"), 
+          db.getData("المعلمين"), 
+          db.getData("الحسابات")
+        ]);
+
+        let bal = 10000; // السيولة الافتراضية المحددة في كودك الأصلي
+        (tx || []).forEach(x => {
+          // حساب العمليات السحابية بناءً على نوع الحركة (قبض / صرف)
+          const amountNum = parseFloat(x.amount) || 0;
+          bal += x.type === 'قبض' ? amountNum : -amountNum;
+        });
+
         setData({ students: s || [], teachers: t || [], txs: tx || [], balance: bal });
-      } catch (e) { console.error(e); }
+      } catch (e) { 
+        console.error("خطأ سحابي في جلب الحسابات:", e); 
+      }
     };
     load();
   }, [active]);
@@ -33,8 +47,10 @@ export default function AccountsSection() {
     const list = isGet ? data.students : data.teachers;
     const item = list.find(x => String(x.id) === String(targetId));
     
+    // تجهيز السند المالي لحفظه في السحابة ومطابقة الحقول
     const newTx = {
-      type, targetId: targetId || null,
+      type, 
+      targetId: targetId || null,
       targetName: customName || (item ? item.name : (isGet ? '' : 'مصروفات عامة')),
       amount: parseFloat(amountVal),
       statement: noteVal || (isGet ? 'تحصيل رسوم' : 'مصروفات فواتير'),
@@ -42,11 +58,14 @@ export default function AccountsSection() {
     };
 
     try {
-      await addTransaction(newTx);
-      alert('تم الحفظ بنجاح!');
+      // حفظ السند المالي فوراً في تبويب "الحسابات" داخل جدول جوجل
+      await db.insertData("الحسابات", newTx);
+      alert('✅ تم الحفظ وتوثيق السند المالي في سحابة جوجل بنجاح!');
       setForm({ id: '', amount: '', note: '' });
       setActive('main');
-    } catch (err) { alert('فشل الحفظ'); }
+    } catch (err) { 
+      alert('❌ فشل الحفظ في السحابة، يرجى محاولة فتح العملية مجدداً'); 
+    }
   };
 
   const btnSt = (c) => ({ backgroundColor: c, color: '#fff', border: 'none', borderRadius: '12px', padding: '24px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', minHeight: '150px', justifyContent: 'center' });
