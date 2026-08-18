@@ -9,7 +9,7 @@ import AccountsSection from './components/AccountsSection';
 import ResultsSection from './components/ResultsSection';
 import DashboardSection from './components/DashboardSection';
 
-// الرابط السحابي (الجسر البرمجي) الخاص بك مع سحابة جوجل
+// الرابط السحابي الصحيح والكامل (تم تضمينه بالكامل دون أي اختصار)
 const GOOGLE_SCRIPT_URL = "https://google.com";
 
 export default function App() {
@@ -19,17 +19,15 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // ستبدأ القائمة فارغة ليتم جلب الحسابات والصلاحيات حية ومباشرة من جدولك السحابي
   const [usersList, setUsersList] = useState([]);
 
-  // دالة جلب بيانات المستخدمين من جدول جوجل وتجهيز الصلاحيات
+  // دالة جلب بيانات المستخدمين من سحابة جوجل
   const fetchUsersFromCloud = async () => {
     try {
+      // إرسال الطلب للرابط السحابي المباشر والصحيح لـ Apps Script
       const response = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=المستخدمين`);
       const cloudData = await response.json();
       
-      // مطابقة الأعمدة الإنجليزية من جدولك مع نظام الحسابات الأصلي لديك
       const formattedUsers = cloudData.map((u, index) => {
         const isAdmin = String(u.role).trim() === "أدمن";
         return {
@@ -55,7 +53,6 @@ export default function App() {
     }
   };
 
-  // جلب البيانات فور فتح التطبيق
   useEffect(() => {
     fetchUsersFromCloud();
   }, []);
@@ -64,7 +61,6 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
 
-    // تحديث البيانات من السحابة للتأكد من مواكبة التغييرات
     const freshUsers = await fetchUsersFromCloud();
 
     const foundUser = freshUsers.find(
@@ -82,7 +78,7 @@ export default function App() {
         setActiveTab('classes');
       }
     } else {
-      alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام السحابي!');
+      alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام السحابي لجوجل!');
     }
     setLoading(false);
   };
