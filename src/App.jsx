@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// استيراد الملفات الستة المفصولة لحماية النظام (المسارات صحيحة بناءً على هيكل مجلداتك الجديد)
+// استيراد الملفات الستة المفصولة لحماية النظام
 import StudentsSection from './components/StudentsSection';
 import ClassesSection from './components/ClassesSection';
 import TeachersSection from './components/TeachersSection';
@@ -18,48 +18,44 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentUser, setCurrentUser] = useState(null);
-  
-  // ستبدأ القائمة فارغة ليتم شحنها ببيانات حية ومباشرة من جدولك السحابي
-  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // ستبدأ القائمة فارغة ليتم جلب الحسابات والصلاحيات حية ومباشرة من جدولك السحابي
+  const [usersList, setUsersList] = useState([]);
 
   // دالة جلب بيانات المستخدمين من جدول جوجل وتجهيز الصلاحيات
   const fetchUsersFromCloud = async () => {
     try {
-      // استدعاء تبويب "المستخدمين" من جدولك عبر الرابط السحابي
       const response = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=المستخدمين`);
       const cloudData = await response.json();
       
-      // تحويل الأعمدة الإنجليزية القادمة من جدولك إلى الكائنات التي يفهمها مشروعك
+      // مطابقة الأعمدة الإنجليزية من جدولك مع نظام الحسابات الأصلي لديك
       const formattedUsers = cloudData.map((u, index) => {
         const isAdmin = String(u.role).trim() === "أدمن";
-        
         return {
           id: index + 1,
           name: u.name,
           loginName: String(u.username).trim(),
-          pin: String(u.password).trim(),
           role: u.role,
-          // توزيع الصلاحيات تلقائياً بناءً على الدور المخزن في السحابة
-          permissions: {
-            students: true,
-            classes: true,
-            teachers: isAdmin,
-            finance: isAdmin,
-            admin: isAdmin
+          pin: String(u.password).trim(),
+          permissions: { 
+            students: true, 
+            classes: true, 
+            teachers: isAdmin, 
+            finance: isAdmin, 
+            admin: isAdmin 
           }
         };
       });
-      
       setUsersList(formattedUsers);
       return formattedUsers;
     } catch (error) {
-      console.error("حدث خطأ أثناء جلب حسابات المستخدمين من سحابة جوجل:", error);
+      console.error("حدث خطأ في الاتصال بسحابة جوجل:", error);
       return [];
     }
   };
 
-  // جلب البيانات فور تحميل واجهة التطبيق لأول مرة
+  // جلب البيانات فور فتح التطبيق
   useEffect(() => {
     fetchUsersFromCloud();
   }, []);
@@ -68,10 +64,9 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
 
-    // إعادة سحب البيانات للتأكد من مواكبة أي تعديل أو إضافة في الجداول
+    // تحديث البيانات من السحابة للتأكد من مواكبة التغييرات
     const freshUsers = await fetchUsersFromCloud();
-    
-    // فحص المدخلات الحالية مع البيانات القادمة من السحابة
+
     const foundUser = freshUsers.find(
       u => u.loginName === username.trim() && u.pin === password.trim()
     );
@@ -87,7 +82,7 @@ export default function App() {
         setActiveTab('classes');
       }
     } else {
-      alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام السحابي لجوجل!');
+      alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام السحابي!');
     }
     setLoading(false);
   };
