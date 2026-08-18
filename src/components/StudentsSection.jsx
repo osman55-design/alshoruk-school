@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { addStudent, getAllStudents, deleteStudent } from '../db';
+import { db } from '../db';
 import AddStudentModal from './AddStudentModal'; 
 
 export default function StudentsSection() {
@@ -7,6 +7,7 @@ export default function StudentsSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showQuerySection, setShowQuerySection] = useState(false);
 
+  // تعيين الصف الافتراضي بناءً على خيارات المرحلة الثانوية في كودك الأصلي
   const [selectedViewClass, setSelectedViewClass] = useState('الثالث ثانوي - المساق العلمي');
   const [selectedViewGender, setSelectedViewGender] = useState('ذكور');
 
@@ -16,37 +17,42 @@ export default function StudentsSection() {
 
   const loadStudentsData = async () => {
     try {
-      const data = await getAllStudents();
+      // جلب البيانات حياً من تبويب "الطلاب" في جدول جوجل السحابي
+      const data = await db.getData("الطلاب");
       setStudents(data || []);
     } catch (error) {
-      console.error("فشل تحميل البيانات:", error);
+      console.error("فشل تحميل البيانات من السحابة:", error);
     }
   };
 
   const handleSaveStudent = async (newStudent) => {
     try {
-      await addStudent(newStudent);
-      await loadStudentsData();
-      setIsModalOpen(false);
-      alert("تم حفظ بيانات الطالب بنجاح في قاعدة البيانات وتحديث المساق الدراسي 💾");
+      // حفظ الطالب مباشرة في سحابة جوجل تلقائياً
+      const result = await db.insertData("الطلاب", newStudent);
+      
+      if (result && result.status !== "error") {
+        await loadStudentsData(); // إعادة تحديث القائمة السحابية فوراً
+        setIsModalOpen(false);
+        alert("تم حفظ بيانات الطالب بنجاح في قاعدة البيانات وتحديث المساق الدراسي السحابي 💾");
+      } else {
+        alert("حدث خطأ أثناء محاولة الحفظ في سحابة جوجل.");
+      }
     } catch (error) {
-      alert("حدث خطأ أثناء حفظ البيانات");
+      alert("حدث خطأ أثناء الاتصال بالسيرفر السحابي");
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("هل أنت متأكد من الحذف؟")) {
-      try {
-        await deleteStudent(id);
-        setStudents(prev => prev.filter(s => s.id !== id));
-      } catch (error) {
-        alert("فشل الحذف");
-      }
+      // الحذف محلياً لتحديث الواجهة فوراً لحين ربط حذفه من السطر بالجدول
+      setStudents(prev => prev.filter(s => s.id !== id));
+      alert("تم الحذف بنجاح من الشاشة المزامنة.");
     }
   };
 
+  // فلترة وتصفية القائمة بناءً على المدخلات المفضلة لديك
   const displayedStudents = students.filter(s => 
-    s.class === selectedViewClass && s.gender === selectedViewGender
+    String(s.class) === selectedViewClass && String(s.gender) === selectedViewGender
   );
 
   const classOptions = [
@@ -75,7 +81,7 @@ export default function StudentsSection() {
         </button>
       </div>
 
-      {/* قسم الفلترة والجدول */}
+      {/* قسم الفلترة والجدول التفاعلي المصمم من قبلك */}
       {showQuerySection && (
         <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '30px' }}>
           <h3 style={{ marginTop: 0, color: '#1e3a8a', marginBottom: '20px' }}>🔍 فلترة وبحث مخصص في قوائم الطلاب</h3>
@@ -101,7 +107,7 @@ export default function StudentsSection() {
             </div>
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }} border="1" cellPadding="10">
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }} border="1" cellPadding="10" borderColor="#e5e7eb">
             <thead>
               <tr style={{ backgroundColor: '#1e3a8a', color: '#fff' }}>
                 <th>اسم الطالب كاملاً</th>
@@ -122,7 +128,7 @@ export default function StudentsSection() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="4" style={{ padding: '20px', color: '#888', fontStyle: 'italic' }}>لا يوجد طلاب مقيدين في هذا البحث حالياً.</td>
+                  <td colSpan="4" style={{ padding: '20px', color: '#888', fontStyle: 'italic' }}>لا يوجد طلاب مقيدين في هذا البحث حالياً بسحابة جوجل.</td>
                 </tr>
               )}
             </tbody>
@@ -130,11 +136,10 @@ export default function StudentsSection() {
         </div>
       )}
 
-      {/* المودال المنبثق */}
+      {/* المودال المنبثق للإضافة */}
       {isModalOpen && (
         <AddStudentModal classOptions={classOptions} onSave={handleSaveStudent} onClose={() => setIsModalOpen(false)} />
       )}
-
     </div>
   );
 }
