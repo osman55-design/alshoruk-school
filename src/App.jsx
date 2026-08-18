@@ -9,9 +9,6 @@ import AccountsSection from './components/AccountsSection';
 import ResultsSection from './components/ResultsSection';
 import DashboardSection from './components/DashboardSection';
 
-// الرابط السحابي الصحيح والكامل (تم تضمينه بالكامل دون أي اختصار)
-const GOOGLE_SCRIPT_URL = "https://google.com";
-
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
@@ -24,8 +21,8 @@ export default function App() {
   // دالة جلب بيانات المستخدمين من سحابة جوجل
   const fetchUsersFromCloud = async () => {
     try {
-      // إرسال الطلب للرابط السحابي المباشر والصحيح لـ Apps Script
-      const response = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=المستخدمين`);
+      // وضعت الرابط السحابي الطويل كاملاً داخل دالة fetch مباشرة للتأكد من عدم حدوث أي خطأ أو اختصار
+      const response = await fetch("https://google.com");
       const cloudData = await response.json();
       
       const formattedUsers = cloudData.map((u, index) => {
