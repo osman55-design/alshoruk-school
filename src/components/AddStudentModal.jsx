@@ -17,13 +17,16 @@ export default function AddStudentModal({ onClose, onSave, classOptions }) {
     e.preventDefault();
     if (!studentName.trim()) return;
 
+    // تم تنظيم الحقول السحابية لتتوافق مع أسماء الأعمدة في جداول سحابة جوجل
     onSave({
+      id: Date.now(), // إنشاء رقم تعريفي مميز للطالب
       name: studentName.trim(),
       address: studentAddress.trim(),
       class: studentClass,
       gender: studentGender,
       phone: studentPhone.trim(),
-      whatsapp: studentWhatsapp.trim()
+      whatsapp: studentWhatsapp.trim(),
+      dateAdded: new Date().toLocaleDateString('ar-EG') // توثيق تاريخ الإضافة
     });
   };
 
@@ -45,7 +48,7 @@ export default function AddStudentModal({ onClose, onSave, classOptions }) {
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <label style={{ fontWeight: 'bold', textAlign: 'right' }}>الفصل الدراسي:</label>
                 <select value={studentClass} onChange={(e) => setStudentClass(e.target.value)} required style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
-                  {classOptions.map(g => (
+                  {classOptions && classOptions.map(g => (
                     <optgroup key={g.group} label={g.group}>
                       {g.items.map(c => <option key={c} value={c}>{c}</option>)}
                     </optgroup>
