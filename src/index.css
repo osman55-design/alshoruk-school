@@ -1,0 +1,21 @@
+.school-app-container { padding: 30px; direction: rtl; backgroundColor: #f1f5f9; min-height: 100vh; font-family: sans-serif; }
+.school-app-header { background: #fff; padding: 20px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+.school-app-header h2 { color: #1e3a8a; margin: 0 0 5px 0; }
+.school-app-header p { color: #64748b; margin: 0; }
+.elegant-nav-container { display: flex; gap: 15px; background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.08); flex-wrap: wrap; }
+.nav-tab-btn { padding: 10px 20px; cursor: pointer; background: #f1f5f9; color: #000; border: none; border-radius: 8px; font-weight: bold; }
+.active-tab { background: #1e3a8a !important; color: #fff !important; }
+.school-app-main { background: #fff; padding: 25px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+.form-grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+.form-group-box label { display: block; font-weight: bold; margin-bottom: 5px; color: #475569; }
+.form-group-box input, .form-group-box select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; box-sizing: border-box; }
+.finance-box-green { background: #f0fdf4; padding: 20px; border-radius: 12px; border-right: 6px solid #16a34a; }
+.finance-box-red { background: #fef2f2; padding: 20px; border-radius: 12px; border-right: 6px solid #ef4444; }
+.finance-box-blue { background: #eff6ff; padding: 20px; border-radius: 12px; border-right: 6px solid #1e3a8a; }
+.money-txt { fontSize: 20px; fontWeight: bold; color: #1e3a8a; marginTop: 10px; }
+.disabled-box { background: #e2e8f0; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; border: 1px solid #cbd5e1; }
+.control-panel-box { max-width: 650px; margin: 0 auto; }
+.checkbox-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.checkbox-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
+.checkbox-item input { width: 20px; height: 20px; cursor: pointer; }
+.save-btn { width: 100%; padding: 12px; background: #1e3a8a; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
