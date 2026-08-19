@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 
-// استيراد ملف الاتصال السحابي الذي قمنا بتحديثه
-import { db } from '../db'; 
-
 export default function DashboardSection({ users, setUsers, onBack }) {
   const [newName, setNewName] = useState('');
   const [newLoginName, setNewLoginName] = useState(''); 
@@ -11,7 +8,7 @@ export default function DashboardSection({ users, setUsers, onBack }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // دالة إضافة موظف وحفظه في سحابة جوجل تلقائياً
+  // دالة إضافة موظف وحفظه في سحابة جوجل تلقائياً بالتفاف أمني حول الـ CORS
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (!newName.trim() || !newLoginName.trim() || !newPin.trim()) {
@@ -21,7 +18,7 @@ export default function DashboardSection({ users, setUsers, onBack }) {
     
     setLoading(true);
 
-    // تجهيز البيانات لتطابق الأعمدة الإنجليزية في جدول جوجل الخاص بك
+    // 1. تجهيز البيانات لتطابق الأعمدة الإنجليزية والترتيب في جدول جوجل الخاص بك
     const cloudUserData = {
       name: newName,
       username: newLoginName,
@@ -30,33 +27,50 @@ export default function DashboardSection({ users, setUsers, onBack }) {
       permissions: "معتمد"
     };
 
-    // إرسال البيانات فوراً لتبويب "المستخدمين" في السحابة
-    const result = await db.insertData("المستخدمين", cloudUserData);
+    try {
+      // 2. رابط الـ Web App السحابي الموحد الخاص بك المنتهي بـ /exec
+      const googleScriptUrl = "https://google.com"; 
 
-    if (result && result.status !== "error") {
-      const newUser = {
-        id: Date.now(),
-        name: newName,
-        loginName: newLoginName,
-        role: newRole,
-        pin: newPin, 
-        permissions: { 
-          students: newRole === 'إداري', 
-          classes: newRole === 'إداري', 
-          teachers: false, 
-          finance: newRole === 'محاسب', 
-          admin: false 
-        }
-      };
-      
-      setUsers([...users, newUser]);
-      setNewName('');
-      setNewLoginName('');
-      setNewPin('');
-      alert(`✅ تم الحفظ السحابي بنجاح!\nتم إضافة ${newRole}: ${newName}\nاسم الدخول: ${newLoginName}\nكلمة المرور: ${newPin}`);
-    } else {
-      alert("❌ حدث خطأ أثناء محاولة إرسال البيانات لسحابة جوجل، يرجى التحقق من الاتصال.");
+      // 3. إرسال طلب الحفظ كـ text/plain لكسر حظر الـ CORS تماماً في المتصفحات
+      const response = await fetch(googleScriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(cloudUserData)
+      });
+
+      const result = await response.json();
+
+      // 4. التحقق إذا نجحت عملية الحفظ في السيرفر السحابي لجوجل
+      if (result && result.status === "success") {
+        const newUser = {
+          id: Date.now(),
+          name: newName,
+          loginName: newLoginName,
+          role: newRole,
+          pin: newPin, 
+          permissions: { 
+            students: newRole === 'إداري', 
+            classes: newRole === 'إداري', 
+            teachers: false, 
+            finance: newRole === 'محاسب', 
+            admin: false 
+          }
+        };
+        
+        setUsers([...users, newUser]);
+        setNewName('');
+        setNewLoginName('');
+        setNewPin('');
+        alert(`✅ تم الحفظ السحابي بنجاح!\nتم إضافة ${newRole}: ${newName}\nاسم الدخول: ${newLoginName}\nكلمة المرور: ${newPin}`);
+      } else {
+        alert("❌ رفض السيرفر السحابي حفظ البيانات: " + (result.message || "خطأ غير معروف"));
+      }
+
+    } catch (error) {
+      console.error("حدث خطأ في الاتصال بسحابة جوجل:", error);
+      alert("❌ فشل الاتصال بالسحابة بسبب قيود CORS للمتصفح، يرجى التحقق من إعدادات النشر على جوجل.");
     }
+
     setLoading(false);
   };
 
