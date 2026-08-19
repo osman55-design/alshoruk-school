@@ -12,22 +12,58 @@ export default function AddStudentModal({ onClose, onSave, classOptions }) {
   const [studentGender, setStudentGender] = useState('ذكور');
   const [studentPhone, setStudentPhone] = useState('');
   const [studentWhatsapp, setStudentWhatsapp] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!studentName.trim()) return;
 
-    // تم تنظيم الحقول السحابية لتتوافق مع أسماء الأعمدة في جداول سحابة جوجل
-    onSave({
-      id: Date.now(), // إنشاء رقم تعريفي مميز للطالب
+    setLoading(true);
+
+    // 1. تجهيز بيانات الطالب لتتوافق مع أعمدة سحابة جوجل
+    const cloudStudentData = {
+      id: "ST" + Date.now().toString().slice(-6), // توليد رقم طالب مميز وقصير
       name: studentName.trim(),
       address: studentAddress.trim(),
       class: studentClass,
       gender: studentGender,
       phone: studentPhone.trim(),
       whatsapp: studentWhatsapp.trim(),
-      dateAdded: new Date().toLocaleDateString('ar-EG') // توثيق تاريخ الإضافة
-    });
+      dateAdded: new Date().toLocaleDateString('ar-EG')
+    };
+
+    try {
+      // 2. رابط الـ Web App السحابي الموحد المنتهي بـ /exec الخاص بك
+      const googleScriptUrl = "https://google.com"; 
+
+      // 3. إرسال طلب الحفظ كـ text/plain لكسر حظر الـ CORS تماماً في المتصفحات
+      const response = await fetch(googleScriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(cloudStudentData)
+      });
+
+      const result = await response.json();
+
+      // 4. التحقق إذا نجحت عملية الحفظ في السيرفر السحابي لجوجل
+      if (result && result.status === "success") {
+        // تمرير البيانات محلياً لتحديث القائمة المفتوحة بالصفحة فوراً
+        onSave(cloudStudentData);
+        alert(`✅ تم الحفظ السحابي بنجاح!\nتم تسجيل الطالب: ${studentName}`);
+        onClose(); // إغلاق النافذة المنبثقة تلقائياً
+      } else {
+        alert("❌ رفض السيرفر السحابي حفظ البيانات: " + (result.message || "خطأ غير معروف"));
+      }
+
+    } catch (error) {
+      console.error("حدث خطأ في الاتصال بسحابة جوجل وحفظ الطالب:", error);
+      alert("❌ فشل الاتصال بالسحابة بسبب قيود CORS، ولكن سيتم إضافته محلياً بشكل مؤقت.");
+      // كخيار احتياطي نقوم بالحفظ محلياً في الصفحة إذا انقطع الإنترنت
+      onSave(cloudStudentData);
+      onClose();
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -73,7 +109,9 @@ export default function AddStudentModal({ onClose, onSave, classOptions }) {
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
               <button type="button" onClick={onClose} style={{ backgroundColor: '#6c757d', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>إلغاء</button>
-              <button type="submit" style={{ backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '8px 24px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>حفظ البيانات</button>
+              <button type="submit" disabled={loading} style={{ backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '8px 24px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                {loading ? "جاري الحفظ في السحابة..." : "حفظ البيانات"}
+              </button>
             </div>
 
           </div>
