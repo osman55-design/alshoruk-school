@@ -21,11 +21,11 @@ export default function App() {
   // دالة جلب بيانات المستخدمين من سحابة جوجل المحدثة لحل مشكلة CORS
   const fetchUsersFromCloud = async () => {
     try {
-      // ⚠️ ضع هنا رابط الـ Web App الطويل الذي ينتهي بـ /exec والذي أخذته من جوجل بعد عمل Deploy
-      const googleScriptUrl = "https://script.google.com/macros/library/d/1kA8M_-qbeJ850LYJB0gjlc4tIJRZ1_gw7gE3mdqOK4RQb8lgKdonhrA5/1"; 
+      // الرابط السحابي الخاص بك والمضاف له /exec في النهاية ليعمل بشكل صحيح
+      const googleScriptUrl = "https://google.com"; 
       
       const response = await fetch(googleScriptUrl, {
-        method: 'GET', // نستخدم GET لجلب البيانات بشكل مبسط لتخطي قيود CORS
+        method: 'GET', 
         mode: 'cors'
       });
       
@@ -35,7 +35,6 @@ export default function App() {
 
       const cloudData = await response.json();
       
-      // تحويل البيانات القادمة من الأعمدة لتتوافق مع نظام الصلاحيات في موقعك
       const formattedUsers = cloudData.map((u, index) => {
         const isAdmin = String(u.role).trim() === "أدمن";
         return {
@@ -98,22 +97,64 @@ export default function App() {
     setUsername('');
     setPassword('');
   };
-function doGet() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = sheet.getDataRange().getValues();
-  var users = [];
-  
-  // تحويل صفوف الجدول إلى مصفوفة ليفهمها كود الـ React
-  for (var i = 1; i < data.length; i++) {
-    users.push({
-      name: data[i][0],        // العمود A
-      username: data[i][1],    // العمود B
-      password: data[i][2],    // العمود C
-      role: data[i][3],        // العمود D
-      permissions: data[i][4]  // العمود E
-    });
+
+  if (!isLoggedIn) {
+    return (
+      <div className="app-main-layout" dir="rtl" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f3f4f6' }}>
+        <form onSubmit={handleLogin} style={{ background: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', width: '320px' }}>
+          <h2 style={{ textAlign: 'center', color: '#1e3a8a', marginBottom: '5px' }}>مدرسة الشروق السودانية</h2>
+          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '13px', marginTop: 0, marginBottom: '20px' }}>بوابة إدارة النظام الإلكتروني المتكامل</p>
+          
+          <div style={{ marginBottom: '15px', textAlign: 'right' }}>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#4b5563' }}>اسم الدخول الخاص بك</label>
+            <input type="text" placeholder="مثال: admin أو محمد" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', textAlign: 'right' }} required />
+          </div>
+
+          <div style={{ marginBottom: '20px', textAlign: 'right' }}>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#4b5563' }}>كلمة المرور</label>
+            <input type="password" placeholder="ادخل كلمة المرور" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', textAlign: 'right' }} required />
+          </div>
+
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>
+            {loading ? "جاري الاتصال بالسحابة..." : "دخول النظام"}
+          </button>
+        </form>
+      </div>
+    );
   }
-  
-  return ContentService.createTextOutput(JSON.stringify(users))
-                       .setMimeType(ContentService.MimeType.JSON);
+
+  return (
+    <div className="app-main-layout" dir="rtl" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="elegant-nav-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', padding: '15px', background: '#1e3a8a', alignItems: 'center' }}>
+        <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px', marginLeft: 'auto', paddingLeft: '15px' }}>
+          🇸🇩 مدرسة الشروق السودانية | <span style={{ color: '#fed7aa' }}>مرحباً: {currentUser?.name} ({currentUser?.role})</span>
+        </span>
+        
+        {currentUser?.permissions.students && <button className={`nav-tab-btn ${activeTab === 'students' ? 'active-tab' : ''}`} onClick={() => setActiveTab('students')}>الطلاب</button>}
+        {currentUser?.permissions.classes && <button className={`nav-tab-btn ${activeTab === 'classes' ? 'active-tab' : ''}`} onClick={() => setActiveTab('classes')}>الفصل</button>}
+        {currentUser?.permissions.teachers && <button className={`nav-tab-btn ${activeTab === 'teachers' ? 'active-tab' : ''}`} onClick={() => setActiveTab('teachers')}>المعلمين</button>}
+        {currentUser?.permissions.finance && <button className={`nav-tab-btn ${activeTab === 'accounts' ? 'active-tab' : ''}`} onClick={() => setActiveTab('accounts')}>الحسابات</button>}
+        {currentUser?.permissions.admin && <button className={`nav-tab-btn ${activeTab === 'results' ? 'active-tab' : ''}`} onClick={() => setActiveTab('results')}>النتيجة</button>}
+        {currentUser?.permissions.admin && <button className={`nav-tab-btn ${activeTab === 'dashboard' ? 'active-tab' : ''}`} onClick={() => setActiveTab('dashboard')}>لوحة التحكم</button>}
+        
+        <button onClick={handleLogout} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '10px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>خروج</button>
+      </div>
+
+      <div className="content-fade-in" style={{ padding: '20px', flex: '1' }}>
+        {activeTab === 'students' && currentUser?.permissions.students && <StudentsSection />}
+        {activeTab === 'classes' && currentUser?.permissions.classes && <ClassesSection />}
+        {activeTab === 'teachers' && currentUser?.permissions.teachers && <TeachersSection />}
+        {activeTab === 'accounts' && currentUser?.permissions.finance && <AccountsSection />}
+        {activeTab === 'results' && currentUser?.permissions.admin && <ResultsSection />}
+        
+        {activeTab === 'dashboard' && currentUser?.permissions.admin && (
+          <DashboardSection users={usersList} setUsers={setUsersList} onBack={() => setActiveTab('dashboard')} />
+        )}
+      </div>
+
+      <footer className="no-print" style={{ textAlign: 'center', padding: '15px', backgroundColor: '#f3f4f6', borderTop: '1px solid #e5e7eb', color: '#4b5563', fontSize: '14px', fontWeight: 'bold', marginTop: 'auto' }}>
+        ✨ من تصميم الأستاذ عثمان صديق ( أبو حلا ) | 📱 للتواصل والدعم الفني: <span style={{ color: '#1e3a8a' }}>01149169346</span>
+      </footer>
+    </div>
+  );
 }
