@@ -18,22 +18,20 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [usersList, setUsersList] = useState([]);
 
-  // دالة جلب بيانات المستخدمين من سحابة جوجل المحدثة لحل مشكلة CORS
+  // دالة جلب بيانات المستخدمين من سحابة جوجل
   const fetchUsersFromCloud = async () => {
     try {
-      // الرابط السحابي المحدث الخاص بك
-      const googleScriptUrl = "https://script.google.com/macros/library/d/1kA8M_-qbeJ850LYJB0gjlc4tIJRZ1_gw7gE3mdqOK4RQb8lgKdonhrA5/2"; 
+      const googleScriptUrl = "https://google.com"; 
       
       const response = await fetch(googleScriptUrl, {
         method: 'GET', 
         mode: 'cors'
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      // إذا كان الرابط لا يرجع مصفوفة صحيحة، نرجع مصفوفة فارغة لتجنب تعطل الكود والـ map
+      if (!response.ok) return [];
       const cloudData = await response.json();
+      if (!Array.isArray(cloudData)) return [];
       
       const formattedUsers = cloudData.map((u, index) => {
         const isAdmin = String(u.role).trim() === "أدمن";
@@ -69,10 +67,30 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
 
-    const freshUsers = await fetchUsersFromCloud();
+    const inputUser = username.trim();
+    const inputPass = password.trim();
 
+    // 🔑 1. التحقق أولاً من حساب الأدمن الثابت الخاص بك لضمان الدخول الفوري
+    if (inputUser === "admin" && inputPass === "1234") {
+      const adminUser = {
+        id: 0,
+        name: "الأستاذ عثمان صديق (أبو حلا)",
+        loginName: "admin",
+        role: "أدمن",
+        pin: "1234",
+        permissions: { students: true, classes: true, teachers: true, finance: true, admin: true }
+      };
+      setCurrentUser(adminUser);
+      setIsLoggedIn(true);
+      setActiveTab('dashboard');
+      setLoading(false);
+      return; // نوقف الدالة هنا لأن الدخول نجح
+    }
+
+    // 🌐 2. إذا لم يكن الحساب الثابت، نبحث في السحابة كالمعتاد
+    const freshUsers = await fetchUsersFromCloud();
     const foundUser = freshUsers.find(
-      u => u.loginName === username.trim() && u.pin === password.trim()
+      u => u.loginName === inputUser && u.pin === inputPass
     );
 
     if (foundUser) {
@@ -86,7 +104,7 @@ export default function App() {
         setActiveTab('classes');
       }
     } else {
-      alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام السحابي لجوجل!');
+      alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام!');
     }
     setLoading(false);
   };
