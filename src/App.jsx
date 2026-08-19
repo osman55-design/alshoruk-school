@@ -22,7 +22,7 @@ export default function App() {
   const fetchUsersFromCloud = async () => {
     try {
       // الرابط السحابي المحدث الخاص بك
-      const googleScriptUrl = "https://script.google.com/macros/s/AKfycbxCrqSFESFY0voY_s_zNn_AVs-YNZpbMMgUb-ZNFQSuh9jx_xOHswOyhb23Y89DaTZX/exec"; 
+      const googleScriptUrl = "https://script.google.com/macros/library/d/1kA8M_-qbeJ850LYJB0gjlc4tIJRZ1_gw7gE3mdqOK4RQb8lgKdonhrA5/2"; 
       
       const response = await fetch(googleScriptUrl, {
         method: 'GET', 
