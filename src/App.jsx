@@ -22,7 +22,7 @@ export default function App() {
   const fetchUsersFromCloud = async () => {
     try {
       // ⚠️ ضع هنا رابط الـ Web App الطويل الذي ينتهي بـ /exec والذي أخذته من جوجل بعد عمل Deploy
-      const googleScriptUrl = "https://script.google.com/macros/s/AKfycbyoZ2e32d87euph22ZqM-SO9YmnkTiinV3Ol1F1y08KCLU7BfxPV9GfGldIzcOLGrd8/exec"; 
+      const googleScriptUrl = "https://script.google.com/macros/library/d/1kA8M_-qbeJ850LYJB0gjlc4tIJRZ1_gw7gE3mdqOK4RQb8lgKdonhrA5/1"; 
       
       const response = await fetch(googleScriptUrl, {
         method: 'GET', // نستخدم GET لجلب البيانات بشكل مبسط لتخطي قيود CORS
