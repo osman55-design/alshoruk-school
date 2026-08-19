@@ -1,76 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// استيراد الملفات الستة المفصولة لحماية النظام
+// استيراد الأقسام الأساسية للوحة التحكم
 import StudentsSection from './components/StudentsSection';
 import ClassesSection from './components/ClassesSection';
 import TeachersSection from './components/TeachersSection';
 import AccountsSection from './components/AccountsSection';
-import ResultsSection from './components/ResultsSection';
 import DashboardSection from './components/DashboardSection';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false); // للتحكم في ظهور نافذة تسجيل الدخول
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('landing'); // 'landing' تعني صفحة التنوير التعريفية الأولى
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [usersList, setUsersList] = useState([]);
 
-  // دالة جلب بيانات المستخدمين من سحابة جوجل
+  // دالة جلب المستخدمين (مجهزة تمهيداً لربطها بالفيربيس)
   const fetchUsersFromCloud = async () => {
-    try {
-      const googleScriptUrl = "https://script.google.com/macros/s/AKfycbw72pRba1ZaqRXHqsnkCkoS1ebAbyzTwIaeMpP6M8AIJM6tbg4hTfuKV4E9_PG5949n/exec"; 
-      
-      const response = await fetch(googleScriptUrl, {
-        method: 'GET', 
-        mode: 'cors'
-      });
-      
-      // إذا كان الرابط لا يرجع مصفوفة صحيحة، نرجع مصفوفة فارغة لتجنب تعطل الكود والـ map
-      if (!response.ok) return [];
-      const cloudData = await response.json();
-      if (!Array.isArray(cloudData)) return [];
-      
-      const formattedUsers = cloudData.map((u, index) => {
-        const isAdmin = String(u.role).trim() === "أدمن";
-        return {
-          id: index + 1,
-          name: u.name,
-          loginName: String(u.username).trim(),
-          role: u.role,
-          pin: String(u.password).trim(),
-          permissions: { 
-            students: true, 
-            classes: true, 
-            teachers: isAdmin, 
-            finance: isAdmin, 
-            admin: isAdmin 
-          }
-        };
-      });
-      
-      setUsersList(formattedUsers);
-      return formattedUsers;
-    } catch (error) {
-      console.error("حدث خطأ في الاتصال بسحابة جوجل وجلب المستخدمين:", error);
-      return [];
-    }
+    return [];
   };
 
   useEffect(() => {
     fetchUsersFromCloud();
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
     setLoading(true);
 
     const inputUser = username.trim();
     const inputPass = password.trim();
 
-    // 🔑 1. التحقق أولاً من حساب الأدمن الثابت الخاص بك لضمان الدخول الفوري
+    // 🔑 حساب الإدارة الثابت للأستاذ عثمان
     if (inputUser === "admin" && inputPass === "1234") {
       const adminUser = {
         id: 0,
@@ -82,27 +46,8 @@ export default function App() {
       };
       setCurrentUser(adminUser);
       setIsLoggedIn(true);
-      setActiveTab('dashboard');
-      setLoading(false);
-      return; // نوقف الدالة هنا لأن الدخول نجح
-    }
-
-    // 🌐 2. إذا لم يكن الحساب الثابت، نبحث في السحابة كالمعتاد
-    const freshUsers = await fetchUsersFromCloud();
-    const foundUser = freshUsers.find(
-      u => u.loginName === inputUser && u.pin === inputPass
-    );
-
-    if (foundUser) {
-      setCurrentUser(foundUser);
-      setIsLoggedIn(true);
-      if (foundUser.permissions.admin) {
-        setActiveTab('dashboard');
-      } else if (foundUser.permissions.students) {
-        setActiveTab('students');
-      } else {
-        setActiveTab('classes');
-      }
+      setShowLoginModal(false);
+      setActiveTab('dashboard'); // التوجه مباشرة للوحة التحكم بعد الدخول
     } else {
       alert('اسم المستخدم أو كلمة المرور غير مسجلة بالنظام!');
     }
@@ -114,65 +59,106 @@ export default function App() {
     setCurrentUser(null);
     setUsername('');
     setPassword('');
+    setActiveTab('landing'); // العودة لصفحة التنوير عند الخروج
   };
 
-  if (!isLoggedIn) {
-    return (
-      <div className="app-main-layout" dir="rtl" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f3f4f6' }}>
-        <form onSubmit={handleLogin} style={{ background: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', width: '320px' }}>
-          <h2 style={{ textAlign: 'center', color: '#1e3a8a', marginBottom: '5px' }}>مدرسة الشروق السودانية</h2>
-          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '13px', marginTop: 0, marginBottom: '20px' }}>بوابة إدارة النظام الإلكتروني المتكامل</p>
-          
-          <div style={{ marginBottom: '15px', textAlign: 'right' }}>
-            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#4b5563' }}>اسم الدخول الخاص بك</label>
-            <input type="text" placeholder="مثال: admin أو محمد" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', textAlign: 'right' }} required />
-          </div>
-
-          <div style={{ marginBottom: '20px', textAlign: 'right' }}>
-            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#4b5563' }}>كلمة المرور</label>
-            <input type="password" placeholder="ادخل كلمة المرور" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', textAlign: 'right' }} required />
-          </div>
-
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>
-            {loading ? "جاري الاتصال بالسحابة..." : "دخول النظام"}
-          </button>
-        </form>
-      </div>
-    );
-  }
-
   return (
-    <div className="app-main-layout" dir="rtl" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <div className="elegant-nav-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', padding: '15px', background: '#1e3a8a', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px', marginLeft: 'auto', paddingLeft: '15px' }}>
-          🇸🇩 مدرسة الشروق السودانية | <span style={{ color: '#fed7aa' }}>مرحباً: {currentUser?.name} ({currentUser?.role})</span>
-        </span>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: 'Arial, sans-serif' }}>
+      
+      {/* 🌐 شريط التنقل العلوي العصري الموحد */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px 30px', background: '#1e3a8a', alignItems: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
         
-        {currentUser?.permissions.students && <button className={`nav-tab-btn ${activeTab === 'students' ? 'active-tab' : ''}`} onClick={() => setActiveTab('students')}>الطلاب</button>}
-        {currentUser?.permissions.classes && <button className={`nav-tab-btn ${activeTab === 'classes' ? 'active-tab' : ''}`} onClick={() => setActiveTab('classes')}>الفصل</button>}
-        {currentUser?.permissions.teachers && <button className={`nav-tab-btn ${activeTab === 'teachers' ? 'active-tab' : ''}`} onClick={() => setActiveTab('teachers')}>المعلمين</button>}
-        {currentUser?.permissions.finance && <button className={`nav-tab-btn ${activeTab === 'accounts' ? 'active-tab' : ''}`} onClick={() => setActiveTab('accounts')}>الحسابات</button>}
-        {currentUser?.permissions.admin && <button className={`nav-tab-btn ${activeTab === 'results' ? 'active-tab' : ''}`} onClick={() => setActiveTab('results')}>النتيجة</button>}
-        {currentUser?.permissions.admin && <button className={`nav-tab-btn ${activeTab === 'dashboard' ? 'active-tab' : ''}`} onClick={() => setActiveTab('dashboard')}>لوحة التحكم</button>}
+        {/* الشعار واسم المدرسة جهة اليمين */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', cursor: 'pointer' }} onClick={() => setActiveTab('landing')}>
+          {/* الكود يقرأ الشعار مباشرة من جيت هاب، تأكد فقط من مطابقة الامتداد png أو jpg */}
+          <img 
+            src="logo.png" 
+            alt="شعار مدرسة الشروق" 
+            onError={(e) => { e.target.src = "https://placehold.co🇸🇩"; }} // صورة احتياطية في حال تعطل المسار
+            style={{ width: '45px', height: '45px', borderRadius: '50%', border: '2px solid #fff', objectFit: 'cover' }} 
+          />
+          <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '18px' }}>
+            مدرسة الشروق السودانية المتكاملة
+          </span>
+        </div>
         
-        <button onClick={handleLogout} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '10px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>خروج</button>
-      </div>
-
-      <div className="content-fade-in" style={{ padding: '20px', flex: '1' }}>
-        {activeTab === 'students' && currentUser?.permissions.students && <StudentsSection />}
-        {activeTab === 'classes' && currentUser?.permissions.classes && <ClassesSection />}
-        {activeTab === 'teachers' && currentUser?.permissions.teachers && <TeachersSection />}
-        {activeTab === 'accounts' && currentUser?.permissions.finance && <AccountsSection />}
-        {activeTab === 'results' && currentUser?.permissions.admin && <ResultsSection />}
-        
-        {activeTab === 'dashboard' && currentUser?.permissions.admin && (
-          <DashboardSection users={usersList} setUsers={setUsersList} onBack={() => setActiveTab('dashboard')} />
+        {/* أزرار التنقل حسب حالة تسجيل الدخول */}
+        {!isLoggedIn ? (
+          <>
+            <button style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'landing' ? '#fed7aa' : 'transparent', color: activeTab === 'landing' ? '#1e3a8a' : '#fff' }} onClick={() => setActiveTab('landing')}>الرئيسية</button>
+            <button style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: '#16a34a', color: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} onClick={() => setShowLoginModal(true)}>🔐 بوابة النظام الإلكتروني</button>
+          </>
+        ) : (
+          <>
+            <span style={{ color: '#fed7aa', fontWeight: 'bold', marginLeft: '20px' }}>مرحباً: {currentUser?.name} 🌟</span>
+            <button style={{ padding: '10px 15px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'dashboard' ? '#fed7aa' : '#fff' }} onClick={() => setActiveTab('dashboard')}>لوحة التحكم</button>
+            <button style={{ padding: '10px 15px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'students' ? '#fed7aa' : '#fff' }} onClick={() => setActiveTab('students')}>الطلاب</button>
+            <button style={{ padding: '10px 15px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'classes' ? '#fed7aa' : '#fff' }} onClick={() => setActiveTab('classes')}>الفصول</button>
+            <button style={{ padding: '10px 15px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'teachers' ? '#fed7aa' : '#fff' }} onClick={() => setActiveTab('teachers')}>المعلمين</button>
+            <button style={{ padding: '10px 15px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'accounts' ? '#fed7aa' : '#fff' }} onClick={() => setActiveTab('accounts')}>الحسابات</button>
+            <button onClick={handleLogout} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '10px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginRight: '10px' }}>خروج 🚪</button>
+          </>
         )}
       </div>
 
-      <footer className="no-print" style={{ textAlign: 'center', padding: '15px', backgroundColor: '#f3f4f6', borderTop: '1px solid #e5e7eb', color: '#4b5563', fontSize: '14px', fontWeight: 'bold', marginTop: 'auto' }}>
-        ✨ من تصميم الأستاذ عثمان صديق ( أبو حلا ) | 📱 للتواصل والدعم الفني: <span style={{ color: '#1e3a8a' }}>01149169346</span>
-      </footer>
-    </div>
-  );
-}
+      {/* 📄 عرض محتوى الشاشات */}
+      <div style={{ padding: '30px 20px', flex: '1' }}>
+        
+        {/* 🏛️ 1. صفحة التنوير والتعريف بالمدرسة (Landing Page) */}
+        {activeTab === 'landing' && (
+          <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            
+            {/* البانر الترحيبي العريض */}
+            <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', color: '#fff', padding: '50px 30px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 10px 20px rgba(30,58,138,0.15)' }}>
+              <img src="logo.png" alt="شعار المدرسة الكبير" onError={(e) => { e.target.style.display = 'none'; }} style={{ width: '100px', height: '100px', marginBottom: '15px', borderRadius: '50%', backgroundColor: '#fff', padding: '5px' }} />
+              <h1 style={{ margin: '0 0 10px 0', fontSize: '32px' }}>مرحباً بكم في مدرسة الشروق السودانية</h1>
+              <p style={{ margin: 0, fontSize: '18px', color: '#bfdbfe' }}>بوابتكم التعليمية نحو مستقبل أكاديمي متميز وذكي لمراحلنا الثلاث</p>
+            </div>
+
+            {/* شبكة معلومات من نحن وأهدافنا */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px' }}>
+              
+              <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ color: '#1e3a8a', marginTop: 0, borderBottom: '2px solid #fed7aa', paddingBottom: '8px' }}>📖 مَن نحن؟</h3>
+                <p style={{ color: '#475569', lineHeight: '1.7', fontSize: '15px' }}>
+                  مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد مخصص لتقديم المنهج السوداني بكفاءة وجودة عالية. نحتضن الطلاب في بيئة تربوية محفزة عبر ثلاث مراحل دراسية متكاملة: **المرحلة الابتدائية، المرحلة المتوسطة، والمرحلة الثانوية**.
+                </p>
+              </div>
+
+              <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ color: '#1e3a8a', marginTop: 0, borderBottom: '2px solid #fed7aa', paddingBottom: '8px' }}>🎯 أهدافنا ورسالتنا</h3>
+                <ul style={{ color: '#475569', lineHeight: '1.8', fontSize: '15px', paddingRight: '20px' }}>
+                  <li>تقديم **تعليم متميز** يتوافق مع المعايير التربوية الحديثة.</li>
+                  <li>بناء شخصية الطالب وتعزيز القيم الأخلاقية والوطنية.</li>
+                  <li>توظيف **التكنولوجيا والأنظمة الذكية** لتسهيل الإدارة والمتابعة.</li>
+                  <li>مد جسور التواصل الفعال بين المدرسة وأولياء الأمور.</li>
+                </ul>
+              </div>
+
+              <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ color: '#1e3a8a', marginTop: 0, borderBottom: '2px solid #fed7aa', paddingBottom: '8px' }}>💼 إدارة النظام والحلول الذكية</h3>
+                <p style={{ color: '#475569', lineHeight: '1.7', fontSize: '15px' }}>
+                  تحتوي البوابة الإلكترونية على نظام سحابي متطور لإدارة شؤون المعلمين، الفصول، الحسابات المالية، وقوائم الطلاب بشكل يضمن الدقة التامة والسرعة الفائقة في تنفيذ العمليات المدرسية تحت إشراف طاقم إداري متميز.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* ⚙️ 2. أقسام لوحة الإدارة (تظهر فقط عند تسجيل الدخول) */}
+        {isLoggedIn && (
+          <>
+            {activeTab === 'students' && <StudentsSection />}
+            {activeTab === 'classes' && <ClassesSection />}
+            {activeTab === 'teachers' && <TeachersSection />}
+            {activeTab === 'accounts' && <AccountsSection />}
+            {activeTab === 'dashboard' && (
+              <DashboardSection users={usersList} setUsers={setUsersList} onBack={() => setActiveTab('dashboard')} />
+            )}
+          </>
+        )}
+      </div>
+
+      {/* 🔐 3. النافذة المنبثقة لتسجيل الدخول (Login Modal) */}
+      {showLoginModal && (
