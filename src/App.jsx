@@ -21,7 +21,7 @@ export default function App() {
   // دالة جلب بيانات المستخدمين من سحابة جوجل المحدثة لحل مشكلة CORS
   const fetchUsersFromCloud = async () => {
     try {
-      // الرابط السحابي الخاص بك والمضاف له /exec في النهاية ليعمل بشكل صحيح
+      // الرابط السحابي المحدث الخاص بك
       const googleScriptUrl = "https://google.com"; 
       
       const response = await fetch(googleScriptUrl, {
