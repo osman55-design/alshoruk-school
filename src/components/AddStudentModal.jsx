@@ -34,7 +34,7 @@ export default function AddStudentModal({ onClose, onSave, classOptions }) {
 
     try {
       // 2. رابط الـ Web App السحابي الموحد المنتهي بـ /exec الخاص بك
-      const googleScriptUrl = "https://google.com"; 
+      const googleScriptUrl = "https://script.google.com/macros/s/AKfycbw72pRba1ZaqRXHqsnkCkoS1ebAbyzTwIaeMpP6M8AIJM6tbg4hTfuKV4E9_PG5949n/exec"; 
 
       // 3. إرسال طلب الحفظ كـ text/plain لكسر حظر الـ CORS تماماً في المتصفحات
       const response = await fetch(googleScriptUrl, {
