@@ -17,31 +17,20 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [usersList, setUsersList] = useState([]);
 
-  const fetchUsersFromCloud = async () => {
-    return [];
-  };
+  const fetchUsersFromCloud = async () => { return []; };
 
-  useEffect(() => {
-    fetchUsersFromCloud();
-  }, []);
+  useEffect(() => { fetchUsersFromCloud(); }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
     setLoading(true);
-
-    const inputUser = username.trim();
-    const inputPass = password.trim();
-
-    if (inputUser === "admin" && inputPass === "1234") {
-      const adminUser = {
+    if (username.trim() === "admin" && password.trim() === "1234") {
+      setCurrentUser({
         id: 0,
         name: "الأستاذ عثمان صديق (أبو حلا)",
-        loginName: "admin",
         role: "أدمن",
-        pin: "1234",
         permissions: { students: true, classes: true, teachers: true, finance: true, admin: true }
-      };
-      setCurrentUser(adminUser);
+      });
       setIsLoggedIn(true);
       setShowLoginModal(false);
       setActiveTab('dashboard'); 
@@ -60,37 +49,27 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: 'Arial' }}>
       
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px 5%', background: 'linear-gradient(90deg, #09170e 0%, #152c1e 100%)', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 15px rgba(0,0,0,0.15)', borderBottom: '4px solid #cc9933' }}>
-        
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => setActiveTab('landing')}>
-          <img 
-            src="logo.png" 
-            alt="شعار مدرسة الشروق" 
-            onError={(e) => { e.target.src = "https://placehold.co🇸🇩"; }} 
-            style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid #cc9933', objectFit: 'cover' }} 
-          />
+          <img src="logo.png" alt="شعار مدرسة الشروق" onError={(e) => { e.target.src = "https://placehold.co🇸🇩"; }} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid #cc9933', objectFit: 'cover' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ color: '#fff', fontWeight: 'bold', fontSize: 'clamp(16px, 4vw, 20px)', textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
-              مدرسة الشروق السودانية المتكاملة
-            </span>
+            <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '18px' }}>مدرسة الشروق السودانية المتكاملة</span>
             <span style={{ color: '#cc9933', fontSize: '11px', fontWeight: 'bold' }}>بوابة التعليم الإلكتروني المتطور</span>
           </div>
         </div>
         
         {!isLoggedIn ? (
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button style={{ padding: '8px 24px', borderRadius: '25px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', backgroundColor: '#cc9933', color: '#fff', boxShadow: '0 4px 10px rgba(204,153,51,0.3)' }} onClick={() => setShowLoginModal(true)}>🔐 بوابة النظام</button>
-          </div>
+          <button style={{ padding: '8px 24px', borderRadius: '25px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: '#cc9933', color: '#fff' }} onClick={() => setShowLoginModal(true)}>🔐 بوابة النظام</button>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            <span style={{ color: '#cc9933', fontWeight: 'bold', marginLeft: '10px', fontSize: '14px' }}>مرحباً: {currentUser?.name} 🌟</span>
-            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', backgroundColor: activeTab === 'dashboard' ? '#cc9933' : '#fff', color: activeTab === 'dashboard' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('dashboard')}>لوحة التحكم</button>
-            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', backgroundColor: activeTab === 'students' ? '#cc9933' : '#fff', color: activeTab === 'students' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('students')}>الطلاب</button>
-            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', backgroundColor: activeTab === 'classes' ? '#cc9933' : '#fff', color: activeTab === 'classes' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('classes')}>الفصول</button>
-            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', backgroundColor: activeTab === 'teachers' ? '#cc9933' : '#fff', color: activeTab === 'teachers' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('teachers')}>المعلمين</button>
-            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', backgroundColor: activeTab === 'accounts' ? '#cc9933' : '#fff', color: activeTab === 'accounts' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('accounts')}>الحسابات</button>
+            <span style={{ color: '#cc9933', fontWeight: 'bold', marginLeft: '10px' }}>مرحباً: {currentUser?.name} 🌟</span>
+            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'dashboard' ? '#cc9933' : '#fff', color: activeTab === 'dashboard' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('dashboard')}>لوحة التحكم</button>
+            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'students' ? '#cc9933' : '#fff', color: activeTab === 'students' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('students')}>الطلاب</button>
+            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'classes' ? '#cc9933' : '#fff', color: activeTab === 'classes' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('classes')}>الفصول</button>
+            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'teachers' ? '#cc9933' : '#fff', color: activeTab === 'teachers' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('teachers')}>المعلمين</button>
+            <button style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'accounts' ? '#cc9933' : '#fff', color: activeTab === 'accounts' ? '#fff' : '#152c1e' }} onClick={() => setActiveTab('accounts')}>الحسابات</button>
             <button onClick={handleLogout} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '6px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>خروج 🚪</button>
           </div>
         )}
@@ -181,7 +160,7 @@ export default function App() {
 
       {showLoginModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.75)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000, backdropFilter: 'blur(4px)' }}>
-          <form onSubmit={handleLogin} style={{ background: '#fff', padding: '40px 35px', borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', width: '340px', position: 'relative', borderTop: '6px solid #cc9933' }}>
+          <form onSubmit={handleLogin} style={{ background: '#fff', padding: '40px 35px', borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', width: '350px', position: 'relative', borderTop: '6px solid #cc9933' }}>
             <button type="button" onClick={() => setShowLoginModal(false)} style={{ position: 'absolute', top: '20px', left: '20px', border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}>❌</button>
             <h3 style={{ textAlign: 'center', color: '#152c1e', margin: '0 0 5px 0', fontSize: '22px', fontWeight: 'bold' }}>تسجيل دخول الإدارة</h3>
             <p style={{ textAlign: 'center', color: '#64748b', fontSize: '13px', margin: '0 0 30px 0' }}>الوصول الآمن لبوابة إدارة نظام مدرسة الشروق</p>
