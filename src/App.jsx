@@ -19,6 +19,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [usersList, setUsersList] = useState([]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -66,6 +67,7 @@ export default function App() {
     setPassword('');
     setActiveTab('landing'); 
   };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#ffffff', direction: 'rtl', fontFamily: 'Arial' }}>
       
@@ -136,22 +138,3 @@ export default function App() {
 
                   {/* البطاقة 4 */}
                   <div style={{ background: '#ffffff', borderRadius: '15px', padding: '15px', textAlign: 'center', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-                    <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', marginBottom: '12px', border: '3px solid #14b8a6' }} />
-                    <h4 style={{ margin: '5px 0', color: '#115e59', fontSize: '14px', fontWeight: 'bold' }}>4. مديرة إدارية</h4>
-                    <p style={{ margin: '0', color: '#334155', fontWeight: 'bold', fontSize: '15px' }}>لينا كمال الدين مجذوب</p>
-                  </div>
-
-                </div>
-              </div>
-
-            </div>
-
-            {/* بطاقات التعريف والمعلومات بالخلفية البيضاء الناصعة */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '30px' }}>
-              
-              <div style={{ background: '#fff', padding: '25px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', borderTop: '5px solid #115e59', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}><span style={{ fontSize: '22px' }}>📖</span><h3 style={{ color: '#115e59', margin: 0, fontWeight: 'bold', fontSize: '18px' }}>مَن نحن؟</h3></div>
-                <p style={{ color: '#475569', lineHeight: '1.7', fontSize: '15px', margin: 0 }}>مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد مخصص لتقديم المنهج السوداني الرصين بكفاءة وجودة عالية. نحتضن الطلاب في بيئة تربوية محفزة آمنة تعبر بهم بنجاح عبر ثلاث مراحل دراسية متكاملة: <strong>الابتدائية، المتوسطة، والثانوية</strong>.</p>
-              </div>
-
-              <div style={{ background: '#fff', padding: '25px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', borderTop: '5px solid #134e4a', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
