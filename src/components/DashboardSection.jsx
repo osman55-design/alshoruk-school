@@ -11,10 +11,8 @@ export default function DashboardSection({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [currentLoginAdmin, setCurrentLoginAdmin] = useState('');
 
-  // دالة جلب قائمة المستخدمين مع تصفية حساب الأدمن لحمايته
   const fetchUsers = async () => {
     try {
-      // جلب المستخدم الحالي النشط في الجلسة لمعرفة هل هو الأدمن الرئيسي أم لا
       const sessionUser = localStorage.getItem('supabase_current_user');
       if (sessionUser) {
         const parsed = JSON.parse(sessionUser);
@@ -29,9 +27,8 @@ export default function DashboardSection({ onBack }) {
       if (error) throw error;
       
       if (data) {
-        // حيلة برمجية ذكية: إذا كان المسجل ليس الأدمن الرئيسي 'admin'، نقوم بإخفاء الأدمن من القائمة تماماً لحمايته
-        const isActualAdmin = localStorage.getItem('is_actual_admin') === 'true';
-        if (isActualAdmin) {
+        // إذا كان المستخدم الحالي ليس الـ admin الرئيسي، نقوم بإخفاء حساب الـ admin لحمايته
+        if (currentLoginAdmin === 'admin') {
           setUsers(data);
         } else {
           const filtered = data.filter(u => u.username !== 'admin');
@@ -45,7 +42,7 @@ export default function DashboardSection({ onBack }) {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentLoginAdmin]);
 
   const handleAddUser = async (e) => {
     e.preventDefault();
@@ -131,6 +128,7 @@ export default function DashboardSection({ onBack }) {
   return (
     <div style={{ direction: 'rtl', padding: '20px', fontFamily: 'Arial', backgroundColor: '#ffffff' }}>
       
+      {/* شريط العنوان وزر العودة المصلح ليعود للوحة التحكم الداخلية */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '2px solid #e2e8f0', paddingBottom: '15px' }}>
         <div>
           <h2 style={{ color: '#115e59', margin: 0, fontWeight: 'bold' }}>⚙️ لوحة الإدارة العليا وإدارة صلاحيات المستخدمين</h2>
@@ -138,14 +136,14 @@ export default function DashboardSection({ onBack }) {
         </div>
         <button 
           onClick={onBack} 
-          style={{ backgroundColor: '#d4af37', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+          style={{ backgroundColor: '#d4af37', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
         >
-          ↩️ عودة للرئيسية
+          ↩️ عودة للوحة التحكم
         </button>
       </div>
 
       {/* نموذج الإضافة يظهر فقط للأدمن لحماية لوحة التحكم */}
-      {localStorage.getItem('is_actual_admin') === 'true' && (
+      {currentLoginAdmin === 'admin' && (
         <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
           <h4 style={{ marginTop: 0, color: '#115e59', marginBottom: '15px', fontWeight: 'bold' }}>➕ إضافة موظف جديد وتعيين كلمة مرور مخصصة</h4>
           <form onSubmit={handleAddUser} style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -196,7 +194,7 @@ export default function DashboardSection({ onBack }) {
                   </div>
                 </div>
 
-                {/* لوحة قوائم الاختيار (Checkboxes) المباشرة أمام الاسم لجميع الأقسام */}
+                {/* لوحة قوائم الاختيار (Checkboxes) المباشرة أمام الاسم لجميع الأقسام الستة */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', background: 'rgba(241,245,249,0.5)', padding: '8px 15px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
                   
                   {/* قائمة صلاحية الطلاب */}
@@ -223,6 +221,12 @@ export default function DashboardSection({ onBack }) {
                     💰 الحسابات
                   </label>
 
+                  {/* قائمة صلاحية النتيجة */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>
+                    <input type="checkbox" checked={u.can_manage_admin || false} onChange={() => { setSelectedUser(u); handlePermissionChange('admin', 'can_manage_admin'); }} style={{ width: '16px', height: '16px', accentColor: '#115e59', cursor: 'pointer' }} />
+                    📄 النتيجة
+                  </label>
+
                   {/* قائمة صلاحية الإدارة الكاملة */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>
                     <input type="checkbox" checked={u.can_manage_admin || false} onChange={() => { setSelectedUser(u); handlePermissionChange('admin', 'can_manage_admin'); }} style={{ width: '16px', height: '16px', accentColor: '#115e59', cursor: 'pointer' }} />
@@ -233,7 +237,7 @@ export default function DashboardSection({ onBack }) {
 
                 {/* زر حذف المستخدم المتاح فقط للأدمن الفعلي وللحسابات الأخرى غير حساب admin نفسه */}
                 <div>
-                  {u.username !== 'admin' && localStorage.getItem('is_actual_admin') === 'true' && (
+                  {u.username !== 'admin' && currentLoginAdmin === 'admin' && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDeleteUser(u.id); }} 
                       style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s' }}
