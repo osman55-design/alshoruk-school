@@ -20,7 +20,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [usersList, setUsersList] = useState([]);
 
-  // دالة تسجيل الدخول مع الحماية الأمنية المفرطة وتوجيه الموظف حسب صلاحياته الفرعية
+  // دالة تسجيل الدخول مع الحماية والتوجيه التلقائي للموظف حسب صلاحياته
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -98,7 +98,7 @@ export default function App() {
         </div>
         
         {!isLoggedIn ? (
-          <button style={{ padding: '10px 28px', borderRadius: '25px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: '#f59e0b', color: '#ffffff', fontSize: '14px', boxShadow: '0 4px 12px rgba(245,158,11,0.3)', transition: 'all 0.2s' }} onClick={() => setShowLoginModal(true)}>🔐 بوابة النظام</button>
+          <button style={{ padding: '10px 28px', borderRadius: '25px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: '#f59e0b', color: '#ffffff', fontSize: '14px', boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }} onClick={() => setShowLoginModal(true)}>🔐 بوابة النظام</button>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
             <span style={{ color: '#fef08a', fontWeight: 'bold', marginLeft: '12px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 14px', borderRadius: '20px' }}>👤 مرحباً: {currentUser?.name}</span>
@@ -133,17 +133,18 @@ export default function App() {
         {activeTab === 'landing' && (
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '40px' }}>
             
-            {/* القسم الترحيبي الرئيسي بالأخضر المشرق الفاخر ونصوص بارزة بلون ملكي */}
+            {/* القسم الترحيبي الرئيسي بالأخضر المهرجاني المشرق الفاخر ونصوص بارزة بلون ملكي */}
             <div style={{ background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)', color: '#ffffff', padding: '50px 40px', borderRadius: '24px', boxShadow: '0 12px 35px rgba(4,120,87,0.15)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '40px', alignItems: 'center' }}>
               
               <div style={{ textAlign: 'center', padding: '10px', maxWidth: '850px' }}>
-                <h1 style={{ margin: '0 0 18px 0', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: '900', color: '#ffffff', letterSpacing: '0.5px' }}>مرحباً بكم في صرح الشروق التعليمي الملكي</h1>
+                <h1 style={{ margin: '0 0 18px 0', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: '900', color: '#ffffff' }}>مرحباً بكم في صرح الشروق التعليمي الملكي</h1>
                 <p style={{ margin: '0 auto', fontSize: 'clamp(16px, 2vw, 19px)', color: '#d1fae5', lineHeight: '1.7', fontWeight: '500' }}>بوابتكم التعليمية الذكية والعصرية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز ومشرق يليق بأبنائنا</p>
                 <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
                   <span style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#f59e0b', padding: '8px 18px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', border: '1px solid #f59e0b' }}>✨ بيئة رقمية سحابية ملكية</span>
                   <span style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#34d399', padding: '8px 18px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.2)' }}>📚 المنهج السوداني المطور</span>
                 </div>
               </div>
+
               {/* قسم مجلس الإدارة ببطاقات ملكية بيضاء ناصعة ومحاطة بالذهب والأخضر */}
               <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.06)', padding: '35px 25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
                 <h3 style={{ margin: '0 0 35px 0', color: '#fef08a', borderBottom: '2px solid rgba(245,158,11,0.3)', paddingBottom: '12px', fontSize: '24px', fontWeight: '900', textAlign: 'center' }}>🏛️ مجلس إدارة المدرسة الموقر</h3>
@@ -156,7 +157,6 @@ export default function App() {
                     <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>1. المدير العام</h4>
                     <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>كمال الدين مجذوب الطيب</p>
                   </div>
-
                   {/* البطاقة 2 */}
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
                     <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
@@ -183,12 +183,11 @@ export default function App() {
 
             </div>
 
-            {/* بطاقات التعريف والمعلومات البارزة ذات التباين الملكي والعصري العالي */}
+            {/* بطاقات التعريف والمعلومات */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '30px' }}>
-              
               <div style={{ background: '#ffffff', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', borderTop: '6px solid #047857', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}><span style={{ fontSize: '24px' }}>📖</span><h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: '20px' }}>مَن نحن؟</h3></div>
-                <p style={{ color: '#064e3b', lineHeight: '1.8', fontSize: '15.5px', margin: 0, fontWeight: '700' }}>مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد مخصص لتقديم المنهج السوداني الرصين بكفاءة وجودة عالية. نحتضن الطلاب في بيئة تربوية محفزة آمنة تعبر بهم بنجاح عبر ثلاث مراحل دراسية متكاملة: <strong>الابتدائية، المتوسطة، والثانوية</strong>.</p>
+                <p style={{ color: '#064e3b', lineHeight: '1.8', fontSize: '15.5px', margin: 0, fontWeight: '700' }}>مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد مخصص لتقديم المنهج السوداني الرصين بكفاءة وجودة عالية عبر مراحلها الثلاث.</p>
               </div>
 
               <div style={{ background: '#ffffff', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', borderTop: '6px solid #065f46', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
@@ -196,13 +195,12 @@ export default function App() {
                 <ul style={{ color: '#064e3b', lineHeight: '1.9', fontSize: '15px', paddingRight: '20px', margin: 0, fontWeight: '700' }}>
                   <li>تقديم تعليم متميز يتوافق مع المعايير التربوية الحديثة والمطورة.</li>
                   <li>بناء شخصية الطالب القيادية وتعزيز القيم الأخلاقية والوطنية الراسخة.</li>
-                  <li>توظيف الأنظمة السحابية لتسهيل العمليات الإدارية والتعليمية للمدرسة.</li>
                 </ul>
               </div>
 
               <div style={{ background: '#ffffff', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', borderTop: '6px solid #f59e0b', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}><span style={{ fontSize: '24px' }}>💼</span><h3 style={{ color: '#f59e0b', margin: 0, fontWeight: '900', fontSize: '20px' }}>الحلول الرقمية الذكية</h3></div>
-                <p style={{ color: '#064e3b', lineHeight: '1.8', fontSize: '15.5px', margin: 0, fontWeight: '700' }}>تتضمن هذه البوابة الإلكترونية المتقدمة لوحة تحكم مخصصة لإدارة شؤون المعلمين، الفصول والمستويات الدراسية، الحسابات والرسوم المالية، وسجلات الفرز للطلاب والنتائج، لضمان الدقة الكاملة والسرعة الفائقة تحت إشراف طاقم متميز.</p>
+                <p style={{ color: '#064e3b', lineHeight: '1.8', fontSize: '15.5px', margin: 0, fontWeight: '700' }}>تتضمن هذه البوابة الإلكترونية المتقدمة لوحة تحكم مخصصة لإدارة شؤون المعلمين، الفصول والمستويات الدراسية، الحسابات والنتائج بسرعة فائقة.</p>
               </div>
             </div>
 
@@ -211,7 +209,7 @@ export default function App() {
 
         {/* عرض نوافذ الأقسام الستة التفاعلية في حال نجاح الدخول */}
         {isLoggedIn && (
-          <div className="content-fade-in" style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
+          <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
             {activeTab === 'students' && <StudentsSection />}
             {activeTab === 'classes' && <ClassesSection />}
             {activeTab === 'teachers' && <TeachersSection />}
@@ -221,7 +219,7 @@ export default function App() {
         )}
       </div>
 
-      {/* نافذة تسجيل الدخول الفاخرة بالأخضر الملكي والأبيض الناصع */}
+      {/* نافذة تسجيل الدخول الفاخرة بالأخضر الملكي - المصلحة والنظيفة */}
       {showLoginModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(6,95,70,0.55)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000, backdropFilter: 'blur(4px)' }}>
           <form onSubmit={handleLogin} style={{ background: '#ffffff', padding: '35px', borderRadius: '20px', width: '340px', position: 'relative', borderTop: '6px solid #f59e0b', boxShadow: '0 25px 50px rgba(0,0,0,0.15)' }}>
@@ -234,3 +232,21 @@ export default function App() {
             </div>
 
             <div style={{ marginBottom: '25px', textAlign: 'right' }}>
+              <input type="password" placeholder="كلمة المرور" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box', textAlign: 'right', fontWeight: 'bold', color: '#064e3b' }} required />
+            </div>
+
+            <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', boxShadow: '0 6px 15px rgba(4,120,87,0.25)' }}>
+              {loading ? "جاري فتح البوابة السحابية..." : "دخول النظام 🔓"}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* التذييل الفاخر */}
+      <footer style={{ textAlign: 'center', padding: '25px', backgroundColor: '#ffffff', borderTop: '2px solid #e2e8f0', color: '#064e3b', fontSize: '16px', fontWeight: '900', width: '100%', boxSizing: 'border-box' }}>
+        ✨ من تصميم الإشراف البرمجي المتميز: <span style={{ color: '#f59e0b', fontSize: '18px', textDecoration: 'underline' }}>الأستاذ عثمان صديق ( أبو حلا )</span> | 📱 للتواصل والدعم السحابي الفني المباشر: <span style={{ color: '#047857' }}>01149169346</span>
+      </footer>
+
+    </div>
+  );
+}
