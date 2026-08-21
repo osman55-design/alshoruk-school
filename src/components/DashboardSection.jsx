@@ -241,8 +241,16 @@ export default function DashboardSection({ onBack }) {
                   </div>
                 </label>
 
-                {/* صلاحية الإدارة الكاملة */}
+                               {/* صلاحية الإدارة الكاملة (مصلحة) */}
                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px', borderRadius: '8px', backgroundColor: '#fdfdfd', border: '1px solid #f1f5f9' }}>
-                  <input type="checkbox" checked={selectedUser.can_manage_admin || false} onChange={() => handlePermissionChange('admin', 'can_manage_admin')} style={{ width: '18px', height: '18px', accentColor: '#115e59' }} style={{ width: '18px', height: '18px', accentColor: '#115e59' }} />
+                  <input 
+                    type="checkbox" 
+                    checked={selectedUser.can_manage_admin || false} 
+                    onChange={() => handlePermissionChange('admin', 'can_manage_admin')} 
+                    style={{ width: '18px', height: '18px', accentColor: '#115e59' }} 
+                  />
                   <div>
                     <span style={{ fontWeight: 'bold', color: '#334155' }}>👑 صلاحية الإدارة الكاملة (أدمن)</span>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748b' }}>منح التحكم الشامل في لوحة تعديل الموظفين أنفسهم</p>
+                  </div>
+                </label>
