@@ -92,8 +92,8 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <img src="logo.png" alt="الشعار" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #f59e0b', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ color: '#ffffff', fontWeight: '900', fontSize: '20px', letterSpacing: '0.5px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>مدرسة الشروق السودانية ا</span>
-            <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>روضة ابتدايئ  متوسط  ثانوي </span>
+            <span style={{ color: '#ffffff', fontWeight: '900', fontSize: '20px', letterSpacing: '0.5px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>مدرسة الشروق السودانية </span>
+            <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>روضة    ابتدائي     متوسط  ثانوي </span>
           </div>
         </div>
         
@@ -147,7 +147,7 @@ export default function App() {
 
               {/* قسم مجلس الإدارة ببطاقات ملكية بيضاء ناصعة ومحاطة بالذهب والأخضر */}
               <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.06)', padding: '35px 25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
-                <h3 style={{ margin: '0 0 35px 0', color: '#fef08a', borderBottom: '2px solid rgba(245,158,11,0.3)', paddingBottom: '12px', fontSize: '24px', fontWeight: '900', textAlign: 'center' }}>🏛️ مجلس إدارة المدرسة الموقر</h3>
+                <h3 style={{ margin: '0 0 35px 0', color: '#fef08a', borderBottom: '2px solid rgba(245,158,11,0.3)', paddingBottom: '12px', fontSize: '24px', fontWeight: '900', textAlign: 'center' }}>🏛️ مجلس إدارة المدرسة </h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '25px', width: '100%', direction: 'rtl' }}>
                   
