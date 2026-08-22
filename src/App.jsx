@@ -155,7 +155,7 @@ export default function App() {
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #f59e0b' }}>
                     <img src="manager1.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #f59e0b', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
                     <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>رئيس مجلس الإدارة</h4>
-                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>كمال الدين مجذوب الطيب</p>
+                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذ كمال الدين مجذوب الطيب</p>
                   </div>
                   {/* البطاقة 2 */}
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
