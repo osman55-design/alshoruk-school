@@ -175,7 +175,7 @@ export default function App() {
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
                     <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
                     <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}> مديرة إدارية</h4>
-                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذه ينا كمال الدين مجذوب</p>
+                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذه لينا كمال الدين مجذوب</p>
                   </div>
 
                 </div>
