@@ -1,140 +1,158 @@
 import React, { useState, useEffect } from 'react';
-import { getAllStudents } from '../db'; 
+import { supabase } from '../supabaseClient';
 
 export default function ClassesSection() {
   const [students, setStudents] = useState([]);
-  const [selectedClass, setSelectedClass] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('الابتدائية');
+  const [selectedClass, setSelectedClass] = useState('الكل');
+  const [loading, setLoading] = useState(true);
 
-  // هيكلة المراحل والفصول لتطابق المساقات السودانية الجديدة بدقة
-  const stages = [
-    {
-      title: "المرحلة الابتدائية",
-      color: "#0284c7",
-      items: ["الأول ابتدائي", "الثاني ابتدائي", "الثالث ابتدائي", "الرابع ابتدائي", "الخامس ابتدائي", "السادس ابتدائي"]
-    },
-    {
-      title: "المرحلة المتوسطة",
-      color: "#059669",
-      items: ["الأول متوسط", "الثاني متوسط", "الثالث متوسط"]
-    },
-    {
-      title: "المرحلة الثانوية",
-      color: "#dc2626",
-      items: ["الأول ثانوي", "الثاني ثانوي", "الثالث ثانوي - المساق العلمي", "الثالث ثانوي - المساق الأدبي"]
+  // دالة ذكية لجلب بيانات الطلاب وتحديث الفصول تلقائياً فوراً دون تدخل يدوي
+  const fetchStudentsForClasses = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('students_list')
+        .select('*')
+        .order('student_name', { ascending: true });
+        
+      if (error) throw error;
+      if (data) setStudents(data);
+    } catch (error) {
+      console.error("خطأ في جلب بيانات الفصول التلقائية:", error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
-    loadStudentsData();
+    fetchStudentsForClasses();
   }, []);
 
-  const loadStudentsData = async () => {
-    try {
-      const list = await getAllStudents();
-      setStudents(list || []);
-    } catch (error) {
-      console.error("خطأ في تحميل قوائم فصول الطلاب:", error);
-    }
-  };
+  // تصفية وقفر الطلاب أوتوماتيكياً بناءً على المرحلة والصف المختار في لوحة العرض
+  const displayedStudents = students.filter(s => {
+    const matchesLevel = s.academic_level === selectedLevel;
+    const matchesClass = selectedClass === 'الكل' || s.class_name.trim() === selectedClass.trim();
+    return matchesLevel && matchesClass;
+  });
 
-  // دالة ذكية لحساب عدد الطلاب المقيدين في كل صف حياً ومباشرة
-  const getStudentCount = (className) => {
-    return students.filter(s => s.class === className).length;
-  };
-
-  // فلترة الطلاب المعروضين في الجدول بالأسفل بناءً على الزر المضغوط
-  const classStudents = students.filter(s => s.class === selectedClass);
-
+  // حساب إحصائيات الطلاب الحية في كل مرحلة ديناميكياً
+  const totalInLevel = students.filter(s => s.academic_level === selectedLevel).length;
   return (
     <div style={{ direction: 'rtl', padding: '10px', fontFamily: 'Arial, sans-serif' }}>
       
-      {/* عنوان التبويب الرئيسي */}
-      <div style={{ textAlign: 'center', marginBottom: '25px', borderBottom: '2px solid #e5e7eb', paddingBottom: '15px' }}>
-        <h2 style={{ color: '#1e3a8a', margin: 0 }}>🏫 نظام إدارة وتوزيع الصفوف الدراسية</h2>
-        <p style={{ color: '#555', marginTop: '5px', fontSize: '14px' }}>هذا القسم يعرض الفصول بشكل ديناميكي مرتبط بقاعدة البيانات وموزع حسب المساقات الجديدة</p>
+      {/* شريط العناوين الملكي والفرز التلقائي */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '3px solid #f59e0b', paddingBottom: '15px', gap: '15px' }}>
+        <div>
+          <h2 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: '24px' }}>🏛️ المراقبة والفرز التلقائي للفصول الدراسية</h2>
+          <p style={{ color: '#064e3b', margin: '5px 0 0 0', fontSize: '14px', fontWeight: 'bold' }}>توزيع أوتوماتيكي ذكي يفرز الطلاب داخل صفوفهم فور قيدهم بملف شؤون الطلاب</p>
+        </div>
+
+        {/* أزرار اختيار المراحل التعليمية الثلاث الكبرى */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {['الابتدائية', 'المتوسطة', 'الثانوية'].map(level => (
+            <button 
+              key={level} 
+              onClick={() => { setSelectedLevel(level); setSelectedClass('الكل'); }}
+              style={{ padding: '10px 22px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '13.5px', backgroundColor: selectedLevel === level ? '#f59e0b' : '#047857', color: '#ffffff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}
+            >
+              {level === 'الابتدائية' ? '🎒 المرحلة الابتدائية' : level === 'المتوسطة' ? '📚 المرحلة المتوسطة' : '🦅 المرحلة الثانوية'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* عرض المراحل والفصول على شكل بطاقات أنيقة مطابقة لتصميمك الأصلي */}
-      {stages.map((stage, sIdx) => (
-        <div key={sIdx} style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ color: stage.color, marginTop: 0, marginBottom: '15px', borderBottom: '1px solid #f3f4f6', paddingBottom: '5px' }}>{stage.title}</h3>
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
-            {stage.items.map((cls, cIdx) => {
-              const count = getStudentCount(cls);
-              const isSelected = selectedClass === cls;
+      {/* لوحة بطاقة الإحصائيات وعينات الفرز العصرية البارزة */}
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '25px' }}>
+        
+        {/* بطاقة إجمالي طلاب المرحلة الحية */}
+        <div style={{ flex: '1', minWidth: '240px', background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)', color: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(4,120,87,0.15)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#d1fae5' }}>📊 إجمالي قوة القيد الحالية بالمرحلة</div>
+          <div style={{ fontSize: '32px', fontWeight: '900', marginTop: '10px', color: '#fef08a' }}>{loading ? '...' : `${totalInLevel} طالباً`}</div>
+        </div>
+
+        {/* لوحة اختيار الفرز الفرعي للصفوف داخل المرحلة المختارة */}
+        <div style={{ flex: '2', minWidth: '300px', background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ fontSize: '14px', fontWeight: '900', color: '#047857', marginBottom: '10px' }}>🔍 فحص صف دراسي محدد داخل مرحلة ({selectedLevel}):</div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {['الكل', 'الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس'].map(cls => {
+              // إخفاء الصفوف من الرابع للسادس لو كنا في المتوسطة أو الثانوية لعدم تشتيت المدير
+              if ((selectedLevel === 'المتوسطة' || selectedLevel === 'الثانوية') && ['الصف الرابع', 'الصف الخامس', 'الصف السادس'].includes(cls)) return null;
               return (
                 <button
-                  key={cIdx}
+                  key={cls}
                   onClick={() => setSelectedClass(cls)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 18px',
-                    borderRadius: '8px',
-                    border: isSelected ? '2px solid #007bff' : '1px solid #d1d5db',
-                    backgroundColor: isSelected ? '#007bff' : '#fff',
-                    color: isSelected ? '#fff' : '#1f2937',
-                    cursor: 'pointer',
-                    minWidth: '220px',
-                    flex: '1 1 200px',
-                    boxShadow: isSelected ? '0 4px 6px rgba(0,123,255,0.2)' : 'none',
-                    fontWeight: 'bold'
-                  }}
+                  style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontWeight: 'bold', fontSize: '12.5px', backgroundColor: selectedClass === cls ? '#ecfdf5' : '#ffffff', color: selectedClass === cls ? '#047857' : '#475569', border: selectedClass === cls ? '2px solid #047857' : '1px solid #cbd5e1', transition: 'all 0.1s' }}
                 >
-                  <span style={{ fontSize: '14px' }}>🏫 {cls}</span>
-                  <span style={{
-                    backgroundColor: isSelected ? '#fff' : '#f3f4f6',
-                    color: isSelected ? '#007bff' : '#4b5563',
-                    padding: '3px 10px',
-                    borderRadius: '12px',
-                    fontSize: '12px'
-                  }}>
-                    {count} طلاب
-                  </span>
+                  {cls}
                 </button>
               );
             })}
           </div>
         </div>
-      ))}
 
-      {/* جدول كشف حساب حصر الطلاب المنتمين للفصل المختار بالأسفل */}
-      {selectedClass && (
-        <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb', marginTop: '25px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f3f4f6', paddingBottom: '10px', marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, color: '#1f2937' }}>📋 كشف طلاب صف: <span style={{ color: '#007bff' }}>{selectedClass}</span></h3>
-            <div className="no-print" style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => window.print()} style={{ backgroundColor: '#1e3a8a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>🖨️ طباعة الكشف</button>
-              <button onClick={() => setSelectedClass('')} style={{ backgroundColor: '#6b7280', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>❌ إغلاق القائمة</button>
-            </div>
-          </div>
-
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }} border="1" cellPadding="12" borderColor="#e5e7eb">
+      </div>
+      {/* جدول عرض قوائم الطلاب الموزعين أوتوماتيكياً */}
+      <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #cbd5e1', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '15px' }}>
             <thead>
-              <tr style={{ backgroundColor: '#1e3a8a', color: '#fff' }}>
-                <th style={{ width: '60%' }}>اسم الطالب ثلاثي كامل</th>
-                <th style={{ width: '20%' }}>الجنس</th>
-                <th style={{ width: '20%' }}>حالة القيد</th>
+              <tr style={{ backgroundColor: '#047857', color: '#ffffff', borderBottom: '3px solid #f59e0b' }}>
+                <th style={{ padding: '15px 20px', fontWeight: '900' }}>اسم الطالـب الفعّـال بجدول القيد</th>
+                <th style={{ padding: '15px 20px', fontWeight: '900' }}>المرحلة الموزع بها</th>
+                <th style={{ padding: '15px 20px', fontWeight: '900' }}>الصف الدراسي الحالي</th>
+                <th style={{ padding: '15px 20px', fontWeight: '900' }}>رقم هاتف الطوارئ لولي الأمر</th>
+                <th style={{ padding: '15px 20px', fontWeight: '900', textAlign: 'center' }}>حالة الحساب المالي</th>
               </tr>
             </thead>
             <tbody>
-              {classStudents.length > 0 ? classStudents.map(s => (
-                <tr key={s.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ fontWeight: 'bold', textAlign: 'right', paddingRight: '20px' }}>{s.name}</td>
-                  <td>{s.gender === 'ذكور' ? '👦 بنين' : '👧 بنات'}</td>
-                  <td style={{ color: '#16a34a', fontWeight: 'bold' }}>✓ مقيد ونشط</td>
-                </tr>
-              )) : (
+              {loading ? (
                 <tr>
-                  <td colSpan="3" style={{ padding: '25px', color: '#888', fontStyle: 'italic' }}>لا يوجد طلاب مسجلون في هذا الصف حالياً.</td>
+                  <td colSpan="5" style={{ padding: '40px 10px', textAlign: 'center', color: '#047857', fontWeight: 'bold' }}>
+                    ⏳ جاري فرز وتوزيع الطلاب سحابياً...
+                  </td>
+                </tr>
+              ) : displayedStudents.length > 0 ? (
+                displayedStudents.map((student, idx) => (
+                  <tr 
+                    key={student.id} 
+                    style={{ 
+                      borderBottom: '1px solid #cbd5e1', 
+                      backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <td style={{ padding: '14px 20px', fontWeight: '700', color: '#064e3b' }}>{student.student_name}</td>
+                    <td style={{ padding: '14px 20px', color: '#334155', fontWeight: 'bold' }}>{student.academic_level}</td>
+                    <td style={{ padding: '14px 20px', color: '#334155', fontWeight: 'bold' }}>{student.class_name}</td>
+                    <td style={{ padding: '14px 20px', color: '#047857', fontWeight: 'bold', fontFamily: 'monospace' }}>{student.parent_phone || '—'}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center' }}>
+                      <span
+                        style={{
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontWeight: 'bold',
+                          fontSize: '12px',
+                          backgroundColor: student.tuition_status === 'مسدد' ? '#d1fae5' : '#fee2e2',
+                          color: student.tuition_status === 'مسدد' ? '#065f46' : '#991b1b',
+                        }}
+                      >
+                        {student.tuition_status === 'مسدد' ? '✅ معتمد مالياً' : '❌ متبقي رسوم'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ padding: '40px 10px', textAlign: 'center', color: '#64748b', fontWeight: 'bold', fontSize: '14px' }}>
+                    💡 لا يوجد طلاب مقيدين حالياً في ({selectedClass}) للمرحلة ({selectedLevel}).. أي طالب تسجله بقسم الطلاب سينزل هنا تلقائياً!
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      )}
+      </div>
 
     </div>
   );
