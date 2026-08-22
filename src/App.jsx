@@ -244,7 +244,7 @@ export default function App() {
 
       {/* التذييل الفاخر */}
       <footer style={{ textAlign: 'center', padding: '25px', backgroundColor: '#ffffff', borderTop: '2px solid #e2e8f0', color: '#064e3b', fontSize: '16px', fontWeight: '900', width: '100%', boxSizing: 'border-box' }}>
-        ✨ من تصميم : <span style={{ color: '#f59e0b', fontSize: '18px', textDecoration: 'underline' }}>الأستاذ عثمان صديق ( أبو حلا )</span> | 📱 للتواصل والدعم السحابي الفني المباشر: <span style={{ color: '#047857' }}>01149169346</span>
+        ✨ من تصميم : <span style={{ color: '#f59e0b', fontSize: '18px', textDecoration: 'underline' }}>الأستاذ عثمان صديق ( أبو حلا )</span> | 📱 : <span style={{ color: '#047857' }}>01149169346</span>
       </footer>
 
     </div>
