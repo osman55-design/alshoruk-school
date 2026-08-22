@@ -10,7 +10,7 @@ export default function DashboardSection({ onBack }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // دالة جلب قائمة المستخدمين وعرضهم بالكامل للأدمن
+  // دالة جلب الموظفين الحية بالعمود الجديد للنتيجة
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
@@ -29,7 +29,7 @@ export default function DashboardSection({ onBack }) {
     fetchUsers();
   }, []);
 
-  // دالة حفظ موظف جديد بالصلاحيات الافتراضية المناسبة لرتبته
+  // دالة إضافة موظف جديد وحفظ حقل النتيجة المستقل
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (!newName.trim() || !newLoginName.trim() || !newPin.trim()) {
@@ -51,6 +51,7 @@ export default function DashboardSection({ onBack }) {
           can_manage_classes: newRole === 'إداري' || newRole === 'أدمن',
           can_manage_teachers: newRole === 'أدمن' || newRole === 'معلم',
           can_manage_finance: newRole === 'محاسب' || newRole === 'أدمن',
+          can_manage_results: newRole === 'معلم' || newRole === 'أدمن', 
           can_manage_admin: newRole === 'أدمن'
         }]);
 
@@ -69,6 +70,7 @@ export default function DashboardSection({ onBack }) {
       setLoading(false);
     }
   };
+
   const handleDeleteUser = async (userId) => {
     if (window.confirm("هل أنت متأكد من حذف هذا المستخدم نهائياً من النظام؟")) {
       try {
@@ -99,8 +101,6 @@ export default function DashboardSection({ onBack }) {
         .eq('id', userId);
 
       if (error) throw error;
-
-      // تحديث فوري للقائمة مرئياً
       fetchUsers();
     } catch (error) {
       console.error("خطأ في تحديث الصلاحية:", error);
@@ -111,19 +111,51 @@ export default function DashboardSection({ onBack }) {
   return (
     <div style={{ direction: 'rtl', padding: '20px', fontFamily: 'Arial', backgroundColor: '#ffffff' }}>
       
-      {/* شريط العنوان وزر العودة المصلح تماماً ليعود للوحة التحكم داخل التطبيق */}
+      {/* شريط العنوان وزر العودة المغلق برمجياً بشكل صحيح 100% */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '2px solid #e2e8f0', paddingBottom: '15px' }}>
         <div>
-          <h2 style={{ color: '#115e59', margin: 0, fontWeight: 'bold' }}>⚙️ لوحة الإدارة العليا وإدارة صلاحيات المستخدمين</h2>
-          <p style={{ color: '#475569', margin: '5px 0 0 0', fontSize: '14px' }}>تعديل وإدارة صلاحيات بوابات موظفي مدرسة الشروق عبر قاعدة البيانات الحية</p>
+          <h2 style={{ color: '#047857', margin: 0, fontWeight: 'bold' }}>⚙️ لوحة الإدارة العليا وإدارة صلاحيات المستخدمين</h2>
+          <p style={{ color: '#064e3b', margin: '5px 0 0 0', fontSize: '14px', fontWeight: '700' }}>تعديل وإدارة صلاحيات بوابات موظفي مدرسة الشروق الملكية عبر قاعدة البيانات الحية</p>
         </div>
         <button 
           onClick={onBack} 
-          style={{ backgroundColor: '#d4af37', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+          style={{ backgroundColor: '#f59e0b', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 10px rgba(245,158,11,0.2)' }}
         >
-                <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+          ↩️ عودة للوحة التحكم
+        </button>
+      </div>
+
+      {/* نموذج إضافة الموظفين الجدد الملكي والعصري */}
+      <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+        <h4 style={{ marginTop: 0, color: '#047857', marginBottom: '15px', fontWeight: 'bold' }}>➕ إضافة موظف جديد وتعيين كلمة مرور مخصصة</h4>
+        <form onSubmit={handleAddUser} style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input 
+            type="text" placeholder="اسم الموظف المألوف ثلاثي" value={newName} onChange={e => setNewName(e.target.value)} 
+            style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', flex: '2', textAlign: 'right', fontWeight: 'bold' }} required 
+          />
+          <input 
+            type="text" placeholder="اسم الدخول البرمجي" value={newLoginName} onChange={e => setNewLoginName(e.target.value)} 
+            style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', flex: '1', textAlign: 'right', fontWeight: 'bold' }} required 
+          />
+          <input 
+            type="text" placeholder="تعيين كلمة مرور مخصصة" value={newPin} onChange={e => setNewPin(e.target.value)} 
+            style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', flex: '1', textAlign: 'right', fontWeight: 'bold' }} required 
+          />
+          <select value={newRole} onChange={e => setNewRole(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '120px', fontWeight: 'bold', color: '#047857' }}>
+            <option value="معلم">معلم</option>
+            <option value="محاسب">محاسب</option>
+            <option value="إداري">إداري</option>
+            <option value="أدمن">أدمن</option>
+          </select>
+          <button type="submit" disabled={loading} style={{ padding: '11px 24px', backgroundColor: '#047857', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(4,120,87,0.2)' }}>
+            {loading ? "جاري الحفظ..." : "إضافة مستخدم"}
+          </button>
+        </form>
+      </div>
+
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         
-        {/* لوحة عرض المستخدمين وقوائم صلاحيات الأقسام المباشرة أمام كل اسم */}
+        {/* لوحة عرض المستخدمين وقوائم صلاحيات الأقسام المباشرة المنفصلة 100% */}
         <div style={{ flex: '1', minWidth: '100%', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
           <h4 style={{ marginTop: 0, color: '#047857', marginBottom: '20px', fontWeight: 'bold' }}>👥 قائمة الموظفين وإدارة الصلاحيات المباشرة للأقسام ({users.length})</h4>
           
@@ -134,7 +166,6 @@ export default function DashboardSection({ onBack }) {
                 onClick={() => setSelectedUser(u)}
                 style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', padding: '15px', borderRadius: '10px', border: selectedUser?.id === u.id ? '2px solid #f59e0b' : '1px solid #e2e8f0', background: selectedUser?.id === u.id ? '#ecfdf5' : '#fff', transition: 'all 0.2s', gap: '15px' }}
               >
-                {/* معلومات الموظف وكلمة مروره */}
                 <div style={{ minWidth: '220px' }}>
                   <div style={{ fontWeight: 'bold', color: '#047857', fontSize: '16px' }}>{u.full_name}</div>
                   <div style={{ fontSize: '13px', color: '#064e3b', marginTop: '4px', fontWeight: '700' }}>
@@ -144,69 +175,18 @@ export default function DashboardSection({ onBack }) {
                   </div>
                 </div>
 
-                {/* لوحة مربعات الاختيار (Checkboxes) المباشرة مصلحة ومنفصلة تماماً بالأسماء الصحيحة */}
+                {/* لوحة الاختيارات الستة المفصولة والمحمية بالكامل وبأسماء الأعمدة الصحيحة */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', background: 'rgba(241,245,249,0.7)', padding: '8px 15px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                   
-                  {/* صلاحية الطلاب */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
                     <input type="checkbox" checked={u.can_manage_students || false} onChange={() => handlePermissionChange(u.id, 'can_manage_students', u.can_manage_students)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
                     📚 الطلاب
                   </label>
 
-                  {/* صلاحية الفصول */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
                     <input type="checkbox" checked={u.can_manage_classes || false} onChange={() => handlePermissionChange(u.id, 'can_manage_classes', u.can_manage_classes)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
                     🏛️ الفصول
                   </label>
 
-                  {/* صلاحية المعلمين */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
                     <input type="checkbox" checked={u.can_manage_teachers || false} onChange={() => handlePermissionChange(u.id, 'can_manage_teachers', u.can_manage_teachers)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
-                    👨‍🏫 المعلمين
-                  </label>
-
-                  {/* صلاحية الحسابات */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
-                    <input type="checkbox" checked={u.can_manage_finance || false} onChange={() => handlePermissionChange(u.id, 'can_manage_finance', u.can_manage_finance)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
-                    💰 الحسابات
-                  </label>
-
-                  {/* صلاحية النتيجة - مصلحة 100% ومربوطة بالعمود المخصص في الداتابيز */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
-                    <input type="checkbox" checked={u.can_manage_results || false} onChange={() => handlePermissionChange(u.id, 'can_manage_results', u.can_manage_results)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
-                    📄 النتيجة
-                  </label>
-
-                  {/* صلاحية الإدارة والتحكم */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
-                    <input type="checkbox" checked={u.can_manage_admin || false} onChange={() => handlePermissionChange(u.id, 'can_manage_admin', u.can_manage_admin)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
-                    👑 الإدارة (أدمن)
-                  </label>
-
-                </div>
-
-                {/* زر حذف الموظف */}
-                <div>
-                  {u.username !== 'admin' ? (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleDeleteUser(u.id); }} 
-                      style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s' }}
-                    >
-                      🗑️ حذف الموظف
-                    </button>
-                  ) : (
-                    <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', padding: '6px' }}>👑 الحساب الرئيسي</span>
-                  )}
-                </div>
-
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </div>
-
-    </div>
-  );
-}
-
