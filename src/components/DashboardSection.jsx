@@ -70,7 +70,6 @@ export default function DashboardSection({ onBack }) {
       setLoading(false);
     }
   };
-
   const handleDeleteUser = async (userId) => {
     if (window.confirm("هل أنت متأكد من حذف هذا المستخدم نهائياً من النظام؟")) {
       try {
@@ -111,7 +110,7 @@ export default function DashboardSection({ onBack }) {
   return (
     <div style={{ direction: 'rtl', padding: '20px', fontFamily: 'Arial', backgroundColor: '#ffffff' }}>
       
-      {/* شريط العنوان وزر العودة المغلق برمجياً بشكل صحيح 100% */}
+      {/* شريط العنوان وزر العودة المغلق والمصلح برمجياً بشكل صحيح 100% */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '2px solid #e2e8f0', paddingBottom: '15px' }}>
         <div>
           <h2 style={{ color: '#047857', margin: 0, fontWeight: 'bold' }}>⚙️ لوحة الإدارة العليا وإدارة صلاحيات المستخدمين</h2>
@@ -152,7 +151,6 @@ export default function DashboardSection({ onBack }) {
           </button>
         </form>
       </div>
-
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         
         {/* لوحة عرض المستخدمين وقوائم صلاحيات الأقسام المباشرة المنفصلة 100% */}
@@ -190,3 +188,47 @@ export default function DashboardSection({ onBack }) {
 
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
                     <input type="checkbox" checked={u.can_manage_teachers || false} onChange={() => handlePermissionChange(u.id, 'can_manage_teachers', u.can_manage_teachers)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
+                    👨‍🏫 المعلمين
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
+                    <input type="checkbox" checked={u.can_manage_finance || false} onChange={() => handlePermissionChange(u.id, 'can_manage_finance', u.can_manage_finance)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
+                    💰 الحسابات
+                  </label>
+
+                  {/* خانة النتيجة المستقلة والمربوطة بالعمود الجديد الحقيقي في سوبابيز */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
+                    <input type="checkbox" checked={u.can_manage_results || false} onChange={() => handlePermissionChange(u.id, 'can_manage_results', u.can_manage_results)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
+                    📄 النتيجة
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
+                    <input type="checkbox" checked={u.can_manage_admin || false} onChange={() => handlePermissionChange(u.id, 'can_manage_admin', u.can_manage_admin)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
+                    👑 الإدارة (أدمن)
+                  </label>
+
+                </div>
+
+                <div>
+                  {u.username !== 'admin' ? (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteUser(u.id); }} 
+                      style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s' }}
+                    >
+                      🗑️ حذف الموظف
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', padding: '6px' }}>👑 الحساب الرئيسي</span>
+                  )}
+                </div>
+
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  );
+}
