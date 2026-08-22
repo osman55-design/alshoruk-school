@@ -92,8 +92,8 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <img src="logo.png" alt="الشعار" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #f59e0b', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ color: '#ffffff', fontWeight: '900', fontSize: '20px', letterSpacing: '0.5px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>مدرسة الشروق السودانية المتكاملة</span>
-            <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>بوابة التعليم الإلكتروني المتطور والملكي</span>
+            <span style={{ color: '#ffffff', fontWeight: '900', fontSize: '20px', letterSpacing: '0.5px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>مدرسة الشروق السودانية ا</span>
+            <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>روضة ابتدايئ  متوسط  ثانوي </span>
           </div>
         </div>
         
@@ -137,10 +137,10 @@ export default function App() {
             <div style={{ background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)', color: '#ffffff', padding: '50px 40px', borderRadius: '24px', boxShadow: '0 12px 35px rgba(4,120,87,0.15)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '40px', alignItems: 'center' }}>
               
               <div style={{ textAlign: 'center', padding: '10px', maxWidth: '850px' }}>
-                <h1 style={{ margin: '0 0 18px 0', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: '900', color: '#ffffff' }}>مرحباً بكم في صرح الشروق التعليمي الملكي</h1>
+                <h1 style={{ margin: '0 0 18px 0', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: '900', color: '#ffffff' }}>مرحباً بكم في صرح الشروق التعليمي </h1>
                 <p style={{ margin: '0 auto', fontSize: 'clamp(16px, 2vw, 19px)', color: '#d1fae5', lineHeight: '1.7', fontWeight: '500' }}>بوابتكم التعليمية الذكية والعصرية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز ومشرق يليق بأبنائنا</p>
                 <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                  <span style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#f59e0b', padding: '8px 18px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', border: '1px solid #f59e0b' }}>✨ بيئة رقمية سحابية ملكية</span>
+                  <span style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#f59e0b', padding: '8px 18px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', border: '1px solid #f59e0b' }}>✨ توكل نجاح  تفوق</span>
                   <span style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#34d399', padding: '8px 18px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.2)' }}>📚 المنهج السوداني المطور</span>
                 </div>
               </div>
