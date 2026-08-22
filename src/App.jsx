@@ -154,28 +154,28 @@ export default function App() {
                   {/* البطاقة 1 */}
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #f59e0b' }}>
                     <img src="manager1.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #f59e0b', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
-                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>1. المدير العام</h4>
+                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>رئيس مجلس الإدارة</h4>
                     <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>كمال الدين مجذوب الطيب</p>
                   </div>
                   {/* البطاقة 2 */}
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
                     <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
-                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>2. الأم التربوية الحنون</h4>
+                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}> الأم التربوية الحنون</h4>
                     <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>ماما هند عبد الرازق</p>
                   </div>
 
                   {/* البطاقة 3 */}
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
                     <img src="admin_manager.png" alt="مدير إداري" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
-                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>3. مدير إداري</h4>
-                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>محمد كمال الدين مجذوب</p>
+                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>المدير العام</h4>
+                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذ محمد كمال الدين مجذوب</p>
                   </div>
 
                   {/* البطاقة 4 */}
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
                     <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
-                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>4. مديرة إدارية</h4>
-                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>لينا كمال الدين مجذوب</p>
+                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}> مديرة إدارية</h4>
+                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذه ينا كمال الدين مجذوب</p>
                   </div>
 
                 </div>
