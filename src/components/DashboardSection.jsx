@@ -70,6 +70,7 @@ export default function DashboardSection({ onBack }) {
       setLoading(false);
     }
   };
+
   const handleDeleteUser = async (userId) => {
     if (window.confirm("هل أنت متأكد من حذف هذا المستخدم نهائياً من النظام؟")) {
       try {
@@ -91,26 +92,33 @@ export default function DashboardSection({ onBack }) {
   };
 
   const handlePermissionChange = async (userId, permColumn, currentValue) => {
+    const newValue = !currentValue;
+
+    // تحديث الحالة فوراً في الـ React State لتظهر الاستجابة السريعة للمستخدم
+    setUsers(prevUsers =>
+      prevUsers.map(u => u.id === userId ? { ...u, [permColumn]: newValue } : u)
+    );
+
     try {
-      const newValue = !currentValue;
-      
       const { error } = await supabase
         .from('users_list')
         .update({ [permColumn]: newValue })
         .eq('id', userId);
 
-      if (error) throw error;
-      fetchUsers();
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       console.error("خطأ في تحديث الصلاحية:", error);
       alert("❌ فشل التحديث: " + error.message);
+      fetchUsers(); // تراجع عن التحديث وتحديث البيانات الحقيقية من الداتابيز
     }
   };
 
   return (
     <div style={{ direction: 'rtl', padding: '20px', fontFamily: 'Arial', backgroundColor: '#ffffff' }}>
       
-      {/* شريط العنوان وزر العودة المغلق والمصلح برمجياً بشكل صحيح 100% */}
+      {/* شريط العنوان وزر العودة */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '2px solid #e2e8f0', paddingBottom: '15px' }}>
         <div>
           <h2 style={{ color: '#047857', margin: 0, fontWeight: 'bold' }}>⚙️ لوحة الإدارة العليا وإدارة صلاحيات المستخدمين</h2>
@@ -124,7 +132,7 @@ export default function DashboardSection({ onBack }) {
         </button>
       </div>
 
-      {/* نموذج إضافة الموظفين الجدد الملكي والعصري */}
+      {/* نموذج إضافة الموظفين الجدد */}
       <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
         <h4 style={{ marginTop: 0, color: '#047857', marginBottom: '15px', fontWeight: 'bold' }}>➕ إضافة موظف جديد وتعيين كلمة مرور مخصصة</h4>
         <form onSubmit={handleAddUser} style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -151,9 +159,10 @@ export default function DashboardSection({ onBack }) {
           </button>
         </form>
       </div>
+
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         
-        {/* لوحة عرض المستخدمين وقوائم صلاحيات الأقسام المباشرة المنفصلة 100% */}
+        {/* قائمة عرض الصلاحيات والموظفين */}
         <div style={{ flex: '1', minWidth: '100%', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
           <h4 style={{ marginTop: 0, color: '#047857', marginBottom: '20px', fontWeight: 'bold' }}>👥 قائمة الموظفين وإدارة الصلاحيات المباشرة للأقسام ({users.length})</h4>
           
@@ -173,7 +182,7 @@ export default function DashboardSection({ onBack }) {
                   </div>
                 </div>
 
-                {/* لوحة الاختيارات الستة المفصولة والمحمية بالكامل وبأسماء الأعمدة الصحيحة */}
+                {/* خيارات الصلاحيات الستة */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', background: 'rgba(241,245,249,0.7)', padding: '8px 15px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                   
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
@@ -196,10 +205,9 @@ export default function DashboardSection({ onBack }) {
                     💰 الحسابات
                   </label>
 
-                  {/* خانة النتيجة المستقلة والمربوطة بالعمود الجديد الحقيقي في سوبابيز */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
                     <input type="checkbox" checked={u.can_manage_results || false} onChange={() => handlePermissionChange(u.id, 'can_manage_results', u.can_manage_results)} style={{ width: '16px', height: '16px', accentColor: '#047857', cursor: 'pointer' }} />
-                    📄 النتيجة
+                    📋 النتيجة
                   </label>
 
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#064e3b' }}>
