@@ -1,363 +1,253 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
 export default function StudentsSection({ onBack }) {
-  const [studentName, setStudentName] = useState('');
-  const [gender, setGender] = useState('ذكر');
-  const [birthDate, setBirthDate] = useState('');
-  const [parentPhone, setParentPhone] = useState('');
-  const [whatsappPhone, setWhatsappPhone] = useState('');
-  const [level, setLevel] = useState('الابتدائية');
-  const [grade, setGrade] = useState('الصف الأول');
-  const [track, setTrack] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [paymentStatus, setPaymentStatus] = useState('غير مسدد');
+  const [students, setStudents] = useState([]);
+  const [classesList] = useState(['الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس']);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const gradeOptions = {
-    'الابتدائية': ['الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس'],
-    'المتوسطة': ['الصف الأول متوسط', 'الصف الثاني متوسط', 'الصف الثالث متوسط'],
-    'الثانوية': ['الصف الأول ثانوي', 'الصف الثاني ثانوي', 'الصف الثالث ثانوي']
-  };
+  // حقول نموذج الطالب
+  const [name, setName] = useState('');
+  const [studentClass, setStudentClass] = useState('الصف الأول');
+  const [academicYear, setAcademicYear] = useState('2025/2026');
+  const [parentPhone, setParentPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
-  const trackSpecialties = {
-    'علمي': ['أحياء', 'حاسوب', 'هندسية'],
-    'أدبي': ['دراسات إسلامية', 'فنون', 'الأدب الإنجليزي', 'أخرى']
-  };
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
-  const handleLevelChange = (selectedLevel) => {
-    setLevel(selectedLevel);
-    setGrade(gradeOptions[selectedLevel][0]);
-    setTrack('');
-    setSpecialty('');
-  };
-
-  const handleGradeChange = (selectedGrade) => {
-    setGrade(selectedGrade);
-    if (selectedGrade !== 'الصف الثالث ثانوي') {
-      setTrack('');
-      setSpecialty('');
-    } else {
-      setTrack('علمي');
-      setSpecialty(trackSpecialties['علمي'][0]);
-    }
-  };
-
-  const handleTrackChange = (selectedTrack) => {
-    setTrack(selectedTrack);
-    setSpecialty(trackSpecialties[selectedTrack][0]);
-  };
-
-  const handleSaveStudent = async (e) => {
-    e.preventDefault();
-    if (!studentName.trim()) {
-      alert("الرجاء كتابة اسم الطالب");
-      return;
-    }
-
+  // جلب قائمة الطلاب
+  const fetchStudents = async () => {
     setLoading(true);
-
-    let finalGradeName = grade;
-    if (grade === 'الصف الثالث ثانوي' && track) {
-      finalGradeName = `${grade} (${track} - ${specialty})`;
-    }
-
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('students_list')
-        .insert([{
-          student_name: studentName.trim(),
-          gender: gender,
-          birth_date: birthDate,
-          academic_level: level,
-          class_name: finalGradeName,
-          parent_phone: parentPhone.trim(),
-          whatsapp_phone: whatsappPhone.trim(),
-          payment_status: paymentStatus
-        }]);
+        .select('*')
+        .order('id', { ascending: false });
 
       if (error) throw error;
-
-      alert("🎉 تم قيد الطالب بنجاح ورُفعت البيانات للمنظومة!");
-
-      // إعادة ضبط الحقول
-      setStudentName('');
-      setGender('ذكر');
-      setBirthDate('');
-      setParentPhone('');
-      setWhatsappPhone('');
-      setLevel('الابتدائية');
-      setGrade('الصف الأول');
-      setTrack('');
-      setSpecialty('');
-      setPaymentStatus('غير مسدد');
-
+      setStudents(data || []);
     } catch (err) {
-      alert("❌ حدث خطأ أثناء القيد: " + err.message);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div style={{
-      direction: 'rtl',
-      padding: '30px 20px',
-      fontFamily: "'Segoe UI', Roboto, 'Helvetica Neue', sans-serif",
-      backgroundColor: '#f1f5f9',
-      minHeight: '100vh'
-    }}>
-      
-      {/* شريط الأزرار العناوين العلوي */}
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto 24px auto',
-        display: 'flex',
-        justify: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div>
-          <h2 style={{ margin: 0, color: '#0f172a', fontSize: '24px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            🎓 بوابة تسجيل وقيد الطلاب
-          </h2>
-          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>قم بتعبئة بيانات الطالب واختيار المسار التعليمي بدقة</p>
-        </div>
+  // حفظ أو تعديل بيانات الطالب
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      alert('يرجى كتابة اسم الطالب');
+      return;
+    }
 
+    try {
+      const payload = {
+        name: name.trim(),
+        class_name: studentClass,
+        academic_year: academicYear,
+        parent_phone: parentPhone,
+        address: address
+      };
+
+      if (editingId) {
+        const { error } = await supabase
+          .from('students_list')
+          .update(payload)
+          .eq('id', editingId);
+        if (error) throw error;
+        alert('تم تعديل بيانات الطالب بنجاح ✨');
+      } else {
+        const { error } = await supabase
+          .from('students_list')
+          .insert([payload]);
+        if (error) throw error;
+        alert('تم تسجل الطالب بنجاح 👏');
+      }
+
+      resetForm();
+      fetchStudents();
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء الحفظ! تأكد من وجود حقل academic_year في جدول students_list.');
+    }
+  };
+
+  // حذف طالب
+  const handleDelete = async (id) => {
+    if (window.confirm('هل أنت تأكد من حذف بيانات هذا الطالب؟')) {
+      try {
+        const { error } = await supabase.from('students_list').delete().eq('id', id);
+        if (error) throw error;
+        fetchStudents();
+      } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الحذف!');
+      }
+    }
+  };
+
+  // تجهيز النموذج للتعديل
+  const handleEdit = (st) => {
+    setEditingId(st.id);
+    setName(st.name || '');
+    setStudentClass(st.class_name || 'الصف الأول');
+    setAcademicYear(st.academic_year || '2025/2026');
+    setParentPhone(st.parent_phone || '');
+    setAddress(st.address || '');
+  };
+
+  // إعادة ضبط النموذج
+  const resetForm = () => {
+    setEditingId(null);
+    setName('');
+    setStudentClass('الصف الأول');
+    setAcademicYear('2025/2026');
+    setParentPhone('');
+    setAddress('');
+  };
+
+  // تصفية الطلاب بالبحث
+  const filteredStudents = students.filter(
+    (st) =>
+      st.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      st.class_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      st.academic_year?.includes(searchTerm)
+  );
+
+  return (
+    <div style={{ direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
+      {/* رأس الصفحة */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div>
+          <h2 style={{ margin: 0, color: '#047857', fontWeight: '900', fontSize: '22px' }}>👨‍🎓 إدارة وتوزيع الطلاب</h2>
+          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>تسجيل وتتبع بيانات الطلاب والعام الدراسي</p>
+        </div>
         {onBack && (
-          <button 
-            onClick={onBack}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#ffffff',
-              color: '#475569',
-              border: '1px solid #cbd5e1',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
-              transition: 'all 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            ↩️ عودة للوحة الرئيسية
+          <button onClick={onBack} style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+            ⬅️ رجوع
           </button>
         )}
       </div>
 
-      {/* بطاقة نموذج التسجيل العصري */}
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        backgroundColor: '#ffffff',
-        borderRadius: '20px',
-        padding: '32px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
-        border: '1px solid #e2e8f0'
-      }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.5fr', gap: '20px' }}>
+        
+        {/* 1️⃣ نموذج الإضافة والتعديل */}
+        <form onSubmit={handleSubmit} style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', height: 'fit-content' }}>
+          <h3 style={{ margin: '0 0 16px 0', color: '#0f172a', fontSize: '16px', fontWeight: 'bold' }}>
+            {editingId ? '✏️ تعديل بيانات طالب' : '➕ تسجيل طالب جديد'}
+          </h3>
 
-        <form onSubmit={handleSaveStudent}>
-          
-          {/* القسم الأول: البيانات الشخصية والمعلومات الأساسية */}
-          <div style={{ marginBottom: '28px' }}>
-            <h4 style={{ margin: '0 0 16px 0', color: '#0f766e', fontSize: '15px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              👤 البيانات الشخصية للطلب
-            </h4>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-              
-              {/* اسم الطالب */}
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={labelStyle}>اسم الطالب الكامل (ثلاثي) *</label>
-                <input 
-                  type="text" 
-                  placeholder="مثال: أحمد محمد علي" 
-                  value={studentName} 
-                  onChange={e => setStudentName(e.target.value)}
-                  style={inputStyle}
-                  required 
-                />
-              </div>
-
-              {/* النوع */}
-              <div>
-                <label style={labelStyle}>النوع *</label>
-                <select value={gender} onChange={e => setGender(e.target.value)} style={inputStyle}>
-                  <option value="ذكر">👦 ذكر</option>
-                  <option value="أنثى">👧 أنثى</option>
-                </select>
-              </div>
-
-              {/* تاريخ الميلاد */}
-              <div>
-                <label style={labelStyle}>تاريخ الميلاد</label>
-                <input 
-                  type="date" 
-                  value={birthDate} 
-                  onChange={e => setBirthDate(e.target.value)}
-                  style={inputStyle} 
-                />
-              </div>
-
-              {/* هاتف ولي الأمر */}
-              <div>
-                <label style={labelStyle}>رقم هاتف ولي الأمر</label>
-                <input 
-                  type="text" 
-                  placeholder="05XXXXXXXX" 
-                  value={parentPhone} 
-                  onChange={e => setParentPhone(e.target.value)}
-                  style={inputStyle} 
-                />
-              </div>
-
-              {/* رقم الواتس اب */}
-              <div>
-                <label style={labelStyle}>رقم الواتساب للتواصل</label>
-                <input 
-                  type="text" 
-                  placeholder="05XXXXXXXX" 
-                  value={whatsappPhone} 
-                  onChange={e => setWhatsappPhone(e.target.value)}
-                  style={inputStyle} 
-                />
-              </div>
-
-            </div>
+          <div style={{ marginBottom: '14px' }}>
+            <label style={labelStyle}>اسم الطالب رباعي:</label>
+            <input type="text" placeholder="مثال: أحمد محمد علي حسن" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} required />
           </div>
 
-          <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '24px 0' }} />
-
-          {/* القسم الثاني: المسار الأكاديمي والمالي */}
-          <div style={{ marginBottom: '28px' }}>
-            <h4 style={{ margin: '0 0 16px 0', color: '#0f766e', fontSize: '15px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              📚 المسار الأكاديمي والمالي
-            </h4>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-              
-              {/* المرحلة */}
-              <div>
-                <label style={labelStyle}>المرحلة التعليمية</label>
-                <select value={level} onChange={e => handleLevelChange(e.target.value)} style={selectHighlightStyle}>
-                  <option value="الابتدائية">🏫 الابتدائية</option>
-                  <option value="المتوسطة">🏫 المتوسطة</option>
-                  <option value="الثانوية">🎓 الثانوية</option>
-                </select>
-              </div>
-
-              {/* الصف */}
-              <div>
-                <label style={labelStyle}>الصف الدراسي</label>
-                <select value={grade} onChange={e => handleGradeChange(e.target.value)} style={inputStyle}>
-                  {gradeOptions[level].map(g => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* تشعبات الصف الثالث ثانوي (تظهر فقط عند الاختيار) */}
-              {grade === 'الصف الثالث ثانوي' && (
-                <>
-                  <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
-                    <label style={{ ...labelStyle, color: '#d97706' }}>المسار *</label>
-                    <select value={track} onChange={e => handleTrackChange(e.target.value)} style={specialSelectStyle}>
-                      <option value="علمي">🔬 علمي</option>
-                      <option value="أدبي">📖 أدبي</option>
-                    </select>
-                  </div>
-
-                  <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
-                    <label style={{ ...labelStyle, color: '#d97706' }}>التخصص الفرعي *</label>
-                    <select value={specialty} onChange={e => setSpecialty(e.target.value)} style={specialSelectStyle}>
-                      {trackSpecialties[track]?.map(sp => (
-                        <option key={sp} value={sp}>{sp}</option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {/* حالة الرسوم */}
-              <div>
-                <label style={labelStyle}>موقف الرسوم المالية</label>
-                <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)} style={inputStyle}>
-                  <option value="غير مسدد">❌ غير مسدد</option>
-                  <option value="مسدد بالكامل">✅ مسدد بالكامل</option>
-                  <option value="مسدد جزئياً">⚠️ مسدد جزئياً</option>
-                </select>
-              </div>
-
-            </div>
+          <div style={{ marginBottom: '14px' }}>
+            <label style={labelStyle}>الصف / الفصل الدراسي:</label>
+            <select value={studentClass} onChange={(e) => setStudentClass(e.target.value)} style={inputStyle}>
+              {classesList.map((cls, idx) => (
+                <option key={idx} value={cls}>{cls}</option>
+              ))}
+            </select>
           </div>
 
-          {/* زر حفظ وتأكيد السجل */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '30px' }}>
-            <button 
-              type="submit" 
-              disabled={loading}
-              style={{
-                padding: '14px 40px',
-                background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontWeight: '700',
-                fontSize: '16px',
-                boxShadow: '0 4px 14px rgba(13, 148, 136, 0.35)',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              {loading ? "جاري القيد والتأمين..." : "💾 قيد الطالب في النظام"}
+          {/* حقل العام الدراسي الجديد */}
+          <div style={{ marginBottom: '14px' }}>
+            <label style={labelStyle}>📅 العام الدراسي:</label>
+            <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} style={inputStyle}>
+              <option value="2024/2025">2024/2025</option>
+              <option value="2025/2026">2025/2026</option>
+              <option value="2026/2027">2026/2027</option>
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '14px' }}>
+            <label style={labelStyle}>رقم ولي الأمر (واتساب):</label>
+            <input type="text" placeholder="01XXXXXXXXX" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} style={inputStyle} />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={labelStyle}>العنوان / السكن:</label>
+            <input type="text" placeholder="مثال: الخرطوم - حي الشروق" value={address} onChange={(e) => setAddress(e.target.value)} style={inputStyle} />
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button type="submit" style={{ flex: 1, padding: '11px', backgroundColor: editingId ? '#3b82f6' : '#047857', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+              {editingId ? 'تحديث البيانات' : 'حفظ الطالب 💾'}
             </button>
+            {editingId && (
+              <button type="button" onClick={resetForm} style={{ padding: '11px 14px', backgroundColor: '#cbd5e1', color: '#334155', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>إلغاء</button>
+            )}
           </div>
-
         </form>
+
+        {/* 2️⃣ شريط البحث والجدول */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          
+          <input
+            type="text"
+            placeholder="🔍 بحث باسم الطالب أو الفصل أو العام الدراسي..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', fontWeight: 'bold' }}
+          />
+
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#0f172a', color: '#ffffff', fontSize: '13px' }}>
+                  <th style={thStyle}>#</th>
+                  <th style={thStyle}>اسم الطالب</th>
+                  <th style={thStyle}>الفصل</th>
+                  <th style={thStyle}>العام الدراسي</th>
+                  <th style={thStyle}>رقم التواصل</th>
+                  <th style={thStyle}>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>⏳ جاري التحميل...</td></tr>
+                ) : filteredStudents.length > 0 ? (
+                  filteredStudents.map((st, index) => (
+                    <tr key={st.id} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                      <td style={tdStyle}>{index + 1}</td>
+                      <td style={{ ...tdStyle, fontWeight: 'bold', color: '#0f172a' }}>{st.name}</td>
+                      <td style={tdStyle}>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
+                          {st.class_name}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{ backgroundColor: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
+                          📅 {st.academic_year || '2025/2026'}
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle, color: '#047857', fontWeight: 'bold' }}>{st.parent_phone || 'غير مدخل'}</td>
+                      <td style={tdStyle}>
+                        <button onClick={() => handleEdit(st)} style={{ padding: '4px 10px', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', marginLeft: '6px', fontSize: '12px', fontWeight: 'bold' }}>✏️ تعديل</button>
+                        <button onClick={() => handleDelete(st.id)} style={{ padding: '4px 10px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>🗑️ حذف</button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>لا يوجد طلاب مضافين حتى الآن.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
       </div>
     </div>
   );
 }
 
-// تنسيقات العناصر المشتركة لجعل الكود أنيق ونظيف جداً
-const labelStyle = {
-  display: 'block',
-  marginBottom: '6px',
-  fontSize: '13px',
-  fontWeight: '600',
-  color: '#475569'
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '12px 14px',
-  borderRadius: '10px',
-  border: '1px solid #cbd5e1',
-  backgroundColor: '#f8fafc',
-  fontSize: '14px',
-  color: '#1e293b',
-  outline: 'none',
-  boxSizing: 'border-box',
-  transition: 'border 0.2s, background-color 0.2s'
-};
-
-const selectHighlightStyle = {
-  ...inputStyle,
-  borderColor: '#0d9488',
-  backgroundColor: '#f0fdf4',
-  fontWeight: '700',
-  color: '#0f766e'
-};
-
-const specialSelectStyle = {
-  ...inputStyle,
-  borderColor: '#f59e0b',
-  backgroundColor: '#fffbeb',
-  fontWeight: '700',
-  color: '#b45309'
-};
+const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' };
+const inputStyle = { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none', backgroundColor: '#fff', fontWeight: 'bold' };
+const thStyle = { padding: '12px 14px', fontWeight: '700' };
+const tdStyle = { padding: '12px 14px', fontSize: '13.5px' };
