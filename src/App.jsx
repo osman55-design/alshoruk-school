@@ -12,7 +12,7 @@ import AccountsSection from './components/AccountsSection';
 import DashboardSection from './components/DashboardSection';
 import ResultsSection from './components/ResultsSection';
 import TransportsSection from './components/TransportsSection';
-import SubjectsSection from './components/SubjectsSection'; // <-- إضافة قسم المواد الدراسية
+import SubjectsSection from './components/SubjectsSection';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -40,7 +40,7 @@ export default function App() {
           students: user.can_manage_students,
           classes: user.can_manage_classes,
           teachers: user.can_manage_teachers,
-          subjects: user.can_manage_subjects ?? true, // <-- صلاحية المواد الدراسية
+          subjects: user.can_manage_subjects ?? true, // صلاحية المواد الدراسية
           finance: user.can_manage_finance,
           results: user.can_manage_results ?? user.can_see_results,
           transports: user.can_manage_transports ?? true,
@@ -122,7 +122,7 @@ export default function App() {
             )}
             
             {(currentUser?.permissions?.students || currentUser?.permissions?.admin) && (
-              <button style={navBtnStyle(activeTab === 'students')} onClick={() => setActiveTab('students')}>الطلاب 📚</button>
+              <button style={navBtnStyle(activeTab === 'students')} onClick={() => setActiveTab('students')}>الطلاب 👨‍🎓</button>
             )}
             
             {(currentUser?.permissions?.classes || currentUser?.permissions?.admin) && (
@@ -130,7 +130,7 @@ export default function App() {
             )}
 
             {(currentUser?.permissions?.subjects || currentUser?.permissions?.admin) && (
-              <button style={navBtnStyle(activeTab === 'subjects')} onClick={() => setActiveTab('subjects')}>المواد الدراسية 📘</button>
+              <button style={navBtnStyle(activeTab === 'subjects')} onClick={() => setActiveTab('subjects')}>المواد الدراسية 📚</button>
             )}
             
             {(currentUser?.permissions?.teachers || currentUser?.permissions?.admin) && (
@@ -158,7 +158,7 @@ export default function App() {
         {activeTab === 'landing' && (
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '35px' }}>
             
-            {/* البانر الترحيبي العصري */}
+            {/* البانر الترحيبي */}
             <div style={{ background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)', color: '#ffffff', padding: '45px 30px', borderRadius: '24px', boxShadow: '0 12px 30px rgba(4,120,87,0.15)', display: 'flex', flexDirection: 'column', gap: '30px', alignItems: 'center' }}>
               
               <div style={{ textAlign: 'center', maxWidth: '850px' }}>
@@ -171,13 +171,12 @@ export default function App() {
                 </div>
               </div>
 
-              {/* قسم مجلس الإدارة - بطاقات عصرية */}
+              {/* قسم مجلس الإدارة */}
               <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', padding: '30px 20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.15)' }}>
                 <h3 style={{ margin: '0 0 25px 0', color: '#fef08a', borderBottom: '2px solid rgba(245,158,11,0.4)', paddingBottom: '10px', fontSize: '22px', fontWeight: '900', textAlign: 'center' }}>🏛️ مجلس إدارة المدرسة</h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '20px', width: '100%' }}>
                   
-                  {/* البطاقات الإدارية */}
                   <div style={boardCardStyle('#f59e0b')}>
                     <img src="manager1.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={avatarStyle('#f59e0b')} />
                     <h4 style={roleStyle}>رئيس مجلس الإدارة</h4>
@@ -207,7 +206,7 @@ export default function App() {
 
             </div>
 
-            {/* بطاقات التعريف والمعلومات */}
+            {/* بطاقات المعلومات */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
               <div style={infoCardStyle('#047857')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}><span style={{ fontSize: '24px' }}>📖</span><h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: '19px' }}>مَن نحن؟</h3></div>
@@ -231,7 +230,7 @@ export default function App() {
           </div>
         )}
 
-        {/* عرض نوافذ الأقسام التفاعلية في حال نجاح الدخول */}
+        {/* عرض نوافذ الأقسام التفاعلية */}
         {isLoggedIn && (
           <div style={{ background: '#ffffff', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
             {activeTab === 'students' && <StudentsSection />}
@@ -269,7 +268,7 @@ export default function App() {
         </div>
       )}
 
-      {/* التذييل العصري والأنيق */}
+      {/* التذييل */}
       <footer style={{ textAlign: 'center', padding: '20px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', color: '#334155', fontSize: '15px', fontWeight: '800', width: '100%', boxSizing: 'border-box' }}>
         ✨ من تصميم : <span style={{ color: '#d97706', textDecoration: 'underline' }}>الأستاذ عثمان صديق ( أبو حلا )</span> | 📱 <span style={{ color: '#047857' }}>01149169346</span>
       </footer>
@@ -278,7 +277,7 @@ export default function App() {
   );
 }
 
-// 🎨 التنسيقات المساعدة
+// التنسيقات
 const navBtnStyle = (isActive) => ({
   padding: '8px 14px',
   borderRadius: '10px',
