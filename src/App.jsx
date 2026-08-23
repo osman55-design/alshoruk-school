@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
-// استيراد جميع الأقسام المكونة
+// استدعاء المكونات الأنساسية
 import DashboardSection from './components/DashboardSection';
 import StudentsSection from './components/StudentsSection';
 import ClassesSection from './components/ClassesSection';
 import TeachersSection from './components/TeachersSection';
 import AccountsSection from './components/AccountsSection';
 import ResultsSection from './components/ResultsSection';
-import TransportSection from './components/TransportSection';
-import SupervisorsSection from './components/SupervisorsSection';
-import SubjectsSection from './components/SubjectsSection';
+
+// استدعاء الأقسام الإضافية بأسلوب آمن
+const TransportSection = React.lazy(() => import('./components/TransportSection').catch(() => ({ default: () => <div style={{padding: '20px', textAlign: 'center'}}>قسم التراحيل قيد الإعداد...</div> })));
+const SupervisorsSection = React.lazy(() => import('./components/SupervisorsSection').catch(() => ({ default: () => <div style={{padding: '20px', textAlign: 'center'}}>قسم المشرفات قيد الإعداد...</div> })));
+const SubjectsSection = React.lazy(() => import('./components/SubjectsSection').catch(() => ({ default: () => <div style={{padding: '20px', textAlign: 'center'}}>قسم المواد قيد الإعداد...</div> })));
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -21,7 +23,6 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // التحقق من حالة التسجيل
   useEffect(() => {
     const savedUser = localStorage.getItem('school_user');
     if (savedUser) {
@@ -93,7 +94,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #022c22 0%, #064e3b 50%, #0f766e 100%)', fontFamily: "'Segoe UI', Roboto, sans-serif", direction: 'rtl', color: '#ffffff' }}>
       
-      {/* 🟢 الشريط العلوي الزجاجي الفاخر (Modern Glass Navbar) */}
+      {/* 🟢 الشريط العلوي الزجاجي الفاخر */}
       <header style={{
         background: 'rgba(6, 78, 59, 0.65)',
         backdropFilter: 'blur(16px)',
@@ -131,7 +132,6 @@ export default function App() {
               <span>👤</span> {currentUser?.name}
             </div>
 
-            {/* الأزرار العصرية الانسيابية */}
             {currentUser?.permissions?.admin && (
               <NavPill active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon="⚙️" label="لوحة الإدارة" />
             )}
@@ -167,20 +167,18 @@ export default function App() {
         )}
       </header>
 
-      {/* 📄 قسم الصفحة الرئيسية والمحتوى */}
+      {/* 📄 قسم المحتوى الرئيسي */}
       <main style={{ padding: '30px 4%', maxWidth: '1400px', margin: '0 auto' }}>
         
         {activeTab === 'landing' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '35px' }}>
             
-            {/* البانر الترحيبي العصرى */}
             <div style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)', padding: '45px 30px', borderRadius: '28px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
               <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.18)', color: '#fef08a', padding: '6px 20px', borderRadius: '30px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.4)', display: 'inline-block', marginBottom: '15px' }}>✨ أصالة التعليم ورؤية المستقبل</span>
               <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', margin: '10px 0', fontWeight: '900', color: '#ffffff' }}>مرحباً بكم في صرح الشروق التعليمي</h2>
               <p style={{ color: '#a7f3d0', fontSize: '16px', maxWidth: '750px', margin: '0 auto 25px auto', lineHeight: '1.7' }}>منظومة متكاملة تهدف لإدارة شؤون الطلاب، الفصول، الكادر التعليمي، والتراحيل بأعلى معايير الدقة والتقنية الحديثة.</p>
             </div>
 
-            {/* مجلس الإدارة بالتصميم الزجاجي المضيء */}
             <div style={{ background: 'rgba(255, 255, 255, 0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '35px 25px', borderRadius: '28px' }}>
               <h3 style={{ textAlign: 'center', margin: '0 0 30px 0', color: '#fef08a', fontSize: '24px', fontWeight: '900' }}>🏛️ مجلس إدارة المدرسة</h3>
               
@@ -195,23 +193,24 @@ export default function App() {
           </div>
         )}
 
-        {/* عرض الأقسام الحالية المفعّلة للمستخدم */}
         {isLoggedIn && activeTab !== 'landing' && (
           <div style={{ background: 'rgba(255, 255, 255, 0.96)', color: '#0f172a', padding: '25px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
-            {activeTab === 'dashboard' && <DashboardSection />}
-            {activeTab === 'students' && <StudentsSection />}
-            {activeTab === 'classes' && <ClassesSection />}
-            {activeTab === 'teachers' && <TeachersSection />}
-            {activeTab === 'subjects' && <SubjectsSection />}
-            {activeTab === 'accounts' && <AccountsSection />}
-            {activeTab === 'results' && <ResultsSection />}
-            {activeTab === 'transport' && <TransportSection />}
-            {activeTab === 'supervisors' && <SupervisorsSection />}
+            <React.Suspense fallback={<div style={{ textAlign: 'center', padding: '20px' }}>جاري فتح القسم...</div>}>
+              {activeTab === 'dashboard' && <DashboardSection />}
+              {activeTab === 'students' && <StudentsSection />}
+              {activeTab === 'classes' && <ClassesSection />}
+              {activeTab === 'teachers' && <TeachersSection />}
+              {activeTab === 'subjects' && <SubjectsSection />}
+              {activeTab === 'accounts' && <AccountsSection />}
+              {activeTab === 'results' && <ResultsSection />}
+              {activeTab === 'transport' && <TransportSection />}
+              {activeTab === 'supervisors' && <SupervisorsSection />}
+            </React.Suspense>
           </div>
         )}
       </main>
 
-      {/* 🔐 نافذة تسجيل الدخول الزجاجية */}
+      {/* 🔐 نافذة تسجيل الدخول */}
       {showLoginModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 44, 34, 0.75)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
           <form onSubmit={handleLogin} style={{ background: 'rgba(6, 78, 59, 0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '35px', borderRadius: '24px', width: '330px', boxShadow: '0 25px 50px rgba(0,0,0,0.4)', textAlign: 'right' }}>
@@ -232,7 +231,6 @@ export default function App() {
         </div>
       )}
 
-      {/* التذييل العصري */}
       <footer style={{ textAlign: 'center', padding: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', color: '#6ee7b7', fontSize: '14px', marginTop: '40px' }}>
         ✨ تنفيذ وإشراف: <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>الأستاذ عثمان صديق (أبو حلا)</span> | 📱 01149169346
       </footer>
@@ -241,7 +239,6 @@ export default function App() {
   );
 }
 
-// 🎯 مكون الأزرار الانسيابية الحديثة (Pill Nav Component)
 function NavPill({ active, onClick, icon, label }) {
   return (
     <button
@@ -271,7 +268,6 @@ function NavPill({ active, onClick, icon, label }) {
   );
 }
 
-// 🏛️ مكون بطاقة مجلس الإدارة الزجاجية
 function ManagementCard({ title, role, img, badge, color }) {
   return (
     <div style={{
@@ -296,7 +292,6 @@ function ManagementCard({ title, role, img, badge, color }) {
   );
 }
 
-// الأنماط الخاصة بالتسجيل والنافذة
 const loginBtnStyle = {
   background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
   color: '#ffffff',
