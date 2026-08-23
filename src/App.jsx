@@ -11,7 +11,8 @@ import TeachersSection from './components/TeachersSection';
 import AccountsSection from './components/AccountsSection';
 import DashboardSection from './components/DashboardSection';
 import ResultsSection from './components/ResultsSection';
-import TransportsSection from './components/TransportsSection'; // <-- إضافة استيراد التراحيل
+import TransportsSection from './components/TransportsSection';
+import SubjectsSection from './components/SubjectsSection'; // <-- إضافة قسم المواد الدراسية
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -39,9 +40,10 @@ export default function App() {
           students: user.can_manage_students,
           classes: user.can_manage_classes,
           teachers: user.can_manage_teachers,
+          subjects: user.can_manage_subjects ?? true, // <-- صلاحية المواد الدراسية
           finance: user.can_manage_finance,
           results: user.can_manage_results ?? user.can_see_results,
-          transports: user.can_manage_transports ?? true, // <-- صلاحية التراحيل والمشرفين
+          transports: user.can_manage_transports ?? true,
           admin: user.can_manage_admin
         };
 
@@ -62,6 +64,8 @@ export default function App() {
           setActiveTab('students'); 
         } else if (permissions.classes) {
           setActiveTab('classes');
+        } else if (permissions.subjects) {
+          setActiveTab('subjects');
         } else if (permissions.teachers) {
           setActiveTab('teachers');
         } else if (permissions.finance) {
@@ -123,6 +127,10 @@ export default function App() {
             
             {(currentUser?.permissions?.classes || currentUser?.permissions?.admin) && (
               <button style={navBtnStyle(activeTab === 'classes')} onClick={() => setActiveTab('classes')}>الفصول 🏛️</button>
+            )}
+
+            {(currentUser?.permissions?.subjects || currentUser?.permissions?.admin) && (
+              <button style={navBtnStyle(activeTab === 'subjects')} onClick={() => setActiveTab('subjects')}>المواد الدراسية 📘</button>
             )}
             
             {(currentUser?.permissions?.teachers || currentUser?.permissions?.admin) && (
@@ -216,7 +224,7 @@ export default function App() {
 
               <div style={infoCardStyle('#f59e0b')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}><span style={{ fontSize: '24px' }}>💼</span><h3 style={{ color: '#d97706', margin: 0, fontWeight: '900', fontSize: '19px' }}>الحلول الرقمية الذكية</h3></div>
-                <p style={{ color: '#334155', lineHeight: '1.7', fontSize: '14.5px', margin: 0, fontWeight: '600' }}>تتضمن هذه البوابة الإلكترونية المتقدمة لوحة تحكم مخصصة لإدارة شؤون المعلمين، التراحيل والمشرفين، الفصول، الحسابات والنتائج بسرعة فائقة.</p>
+                <p style={{ color: '#334155', lineHeight: '1.7', fontSize: '14.5px', margin: 0, fontWeight: '600' }}>تتضمن هذه البوابة الإلكترونية المتقدمة لوحة تحكم مخصصة لإدارة شؤون المعلمين، التراحيل والمشرفين، الفصول، المواد الدراسية، الحسابات والنتائج بسرعة فائقة.</p>
               </div>
             </div>
 
@@ -228,10 +236,11 @@ export default function App() {
           <div style={{ background: '#ffffff', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
             {activeTab === 'students' && <StudentsSection />}
             {activeTab === 'classes' && <ClassesSection />}
+            {activeTab === 'subjects' && <SubjectsSection onBack={() => setActiveTab('dashboard')} />}
             {activeTab === 'teachers' && <TeachersSection />}
             {activeTab === 'transports' && <TransportsSection onBack={() => setActiveTab('dashboard')} />}
             {activeTab === 'accounts' && <AccountsSection />}
-            {activeTab === 'results' && <ResultsSection />}
+            {activeTab === 'results' && <ResultsSection onBack={() => setActiveTab('dashboard')} />}
             {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('dashboard')} />}
           </div>
         )}
@@ -269,7 +278,7 @@ export default function App() {
   );
 }
 
-// 🎨 التنسيقات المساعدة للظهور المميز
+// 🎨 التنسيقات المساعدة
 const navBtnStyle = (isActive) => ({
   padding: '8px 14px',
   borderRadius: '10px',
