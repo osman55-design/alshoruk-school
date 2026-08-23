@@ -9,6 +9,7 @@ import ClassesSection from './components/ClassesSection';
 import TeachersSection from './components/TeachersSection';
 import AccountsSection from './components/AccountsSection';
 import DashboardSection from './components/DashboardSection';
+import ResultsSection from './components/ResultsSection'; // <-- تم إضافة استيراد مكون النتيجة
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -38,6 +39,7 @@ export default function App() {
           classes: user.can_manage_classes,
           teachers: user.can_manage_teachers,
           finance: user.can_manage_finance,
+          results: user.can_manage_results ?? user.can_see_results, // <-- إضافة صلاحية النتيجة
           admin: user.can_manage_admin
         };
 
@@ -62,6 +64,8 @@ export default function App() {
           setActiveTab('teachers');
         } else if (permissions.finance) {
           setActiveTab('accounts');
+        } else if (permissions.results) {
+          setActiveTab('results');   // التوجيه التلقائي للنتيجة إذا امتلك الصلاحية
         } else {
           setActiveTab('landing'); // بدون صلاحيات يبقى في شاشة الترحيب الرسمية
         }
@@ -84,6 +88,7 @@ export default function App() {
     setPassword('');
     setActiveTab('landing'); 
   };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#fcfdfd', direction: 'rtl', fontFamily: 'Arial, sans-serif' }}>
       
@@ -123,6 +128,11 @@ export default function App() {
             {(currentUser?.permissions?.finance || currentUser?.permissions?.admin) && (
               <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'accounts' ? '#f59e0b' : '#ffffff', color: activeTab === 'accounts' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('accounts')}>الحسابات 💰</button>
             )}
+
+            {/* <-- تم إضافة زر النتيجة هنا --> */}
+            {(currentUser?.permissions?.results || currentUser?.permissions?.admin) && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'results' ? '#f59e0b' : '#ffffff', color: activeTab === 'results' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('results')}>النتيجة 📋</button>
+            )}
             
             <button onClick={handleLogout} style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>خروج 🚪</button>
           </div>
@@ -133,7 +143,7 @@ export default function App() {
         {activeTab === 'landing' && (
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '40px' }}>
             
-            {/* القسم الترحيبي الرئيسي بالأخضر المهرجاني المشرق الفاخر ونصوص بارزة بلون ملكي */}
+            {/* القسم الترحيبي الرئيسي */}
             <div style={{ background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)', color: '#ffffff', padding: '50px 40px', borderRadius: '24px', boxShadow: '0 12px 35px rgba(4,120,87,0.15)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '40px', alignItems: 'center' }}>
               
               <div style={{ textAlign: 'center', padding: '10px', maxWidth: '850px' }}>
@@ -145,7 +155,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* قسم مجلس الإدارة ببطاقات ملكية بيضاء ناصعة ومحاطة بالذهب والأخضر */}
+              {/* قسم مجلس الإدارة */}
               <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.06)', padding: '35px 25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
                 <h3 style={{ margin: '0 0 35px 0', color: '#fef08a', borderBottom: '2px solid rgba(245,158,11,0.3)', paddingBottom: '12px', fontSize: '24px', fontWeight: '900', textAlign: 'center' }}>🏛️ مجلس إدارة المدرسة </h3>
                 
@@ -157,6 +167,7 @@ export default function App() {
                     <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>رئيس مجلس الإدارة</h4>
                     <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذ كمال الدين مجذوب الطيب</p>
                   </div>
+
                   {/* البطاقة 2 */}
                   <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
                     <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
@@ -207,19 +218,20 @@ export default function App() {
           </div>
         )}
 
-        {/* عرض نوافذ الأقسام الستة التفاعلية في حال نجاح الدخول */}
+        {/* عرض نوافذ الأقسام التفاعلية في حال نجاح الدخول */}
         {isLoggedIn && (
           <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
             {activeTab === 'students' && <StudentsSection />}
             {activeTab === 'classes' && <ClassesSection />}
             {activeTab === 'teachers' && <TeachersSection />}
             {activeTab === 'accounts' && <AccountsSection />}
+            {activeTab === 'results' && <ResultsSection />} {/* <-- عرض قسم النتيجة عند اختياره */}
             {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('dashboard')} />}
           </div>
         )}
       </div>
 
-      {/* نافذة تسجيل الدخول الفاخرة بالأخضر الملكي - المصلحة والنظيفة */}
+      {/* نافذة تسجيل الدخول */}
       {showLoginModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(6,95,70,0.55)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000, backdropFilter: 'blur(4px)' }}>
           <form onSubmit={handleLogin} style={{ background: '#ffffff', padding: '35px', borderRadius: '20px', width: '340px', position: 'relative', borderTop: '6px solid #f59e0b', boxShadow: '0 25px 50px rgba(0,0,0,0.15)' }}>
@@ -242,7 +254,7 @@ export default function App() {
         </div>
       )}
 
-      {/* التذييل الفاخر */}
+      {/* التذييل */}
       <footer style={{ textAlign: 'center', padding: '25px', backgroundColor: '#ffffff', borderTop: '2px solid #e2e8f0', color: '#064e3b', fontSize: '16px', fontWeight: '900', width: '100%', boxSizing: 'border-box' }}>
         ✨ من تصميم : <span style={{ color: '#f59e0b', fontSize: '18px', textDecoration: 'underline' }}>الأستاذ عثمان صديق ( أبو حلا )</span> | 📱  <span style={{ color: '#047857' }}>01149169346</span>
       </footer>
