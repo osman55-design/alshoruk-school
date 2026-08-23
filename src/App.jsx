@@ -13,6 +13,7 @@ import DashboardSection from './components/DashboardSection';
 import ResultsSection from './components/ResultsSection';
 import TransportsSection from './components/TransportsSection';
 import SubjectsSection from './components/SubjectsSection';
+import ClassSupervisorsSection from './components/ClassSupervisorsSection'; // <-- إضافة قسم مشرفي الفصول
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -40,10 +41,11 @@ export default function App() {
           students: user.can_manage_students,
           classes: user.can_manage_classes,
           teachers: user.can_manage_teachers,
-          subjects: user.can_manage_subjects ?? true, // صلاحية المواد الدراسية
+          subjects: user.can_manage_subjects ?? true,
           finance: user.can_manage_finance,
           results: user.can_manage_results ?? user.can_see_results,
           transports: user.can_manage_transports ?? true,
+          supervisors: user.can_manage_supervisors ?? true, // <-- صلاحية مشرفي الفصول
           admin: user.can_manage_admin
         };
 
@@ -57,7 +59,7 @@ export default function App() {
         setIsLoggedIn(true);
         setShowLoginModal(false);
 
-        // توجيه المستخدم تلقائياً للقسم المناسب فور تسجيل الدخول
+        // التوجيه التلقائي
         if (permissions.admin) {
           setActiveTab('dashboard');
         } else if (permissions.students) {
@@ -66,6 +68,8 @@ export default function App() {
           setActiveTab('classes');
         } else if (permissions.subjects) {
           setActiveTab('subjects');
+        } else if (permissions.supervisors) {
+          setActiveTab('supervisors');
         } else if (permissions.teachers) {
           setActiveTab('teachers');
         } else if (permissions.finance) {
@@ -131,6 +135,10 @@ export default function App() {
 
             {(currentUser?.permissions?.subjects || currentUser?.permissions?.admin) && (
               <button style={navBtnStyle(activeTab === 'subjects')} onClick={() => setActiveTab('subjects')}>المواد الدراسية 📚</button>
+            )}
+
+            {(currentUser?.permissions?.supervisors || currentUser?.permissions?.admin) && (
+              <button style={navBtnStyle(activeTab === 'supervisors')} onClick={() => setActiveTab('supervisors')}>مشرفي الفصول 👩‍🏫</button>
             )}
             
             {(currentUser?.permissions?.teachers || currentUser?.permissions?.admin) && (
@@ -206,7 +214,7 @@ export default function App() {
 
             </div>
 
-            {/* بطاقات المعلومات */}
+            {/* بطاقات التعريف والمعلومات */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
               <div style={infoCardStyle('#047857')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}><span style={{ fontSize: '24px' }}>📖</span><h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: '19px' }}>مَن نحن؟</h3></div>
@@ -223,7 +231,7 @@ export default function App() {
 
               <div style={infoCardStyle('#f59e0b')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}><span style={{ fontSize: '24px' }}>💼</span><h3 style={{ color: '#d97706', margin: 0, fontWeight: '900', fontSize: '19px' }}>الحلول الرقمية الذكية</h3></div>
-                <p style={{ color: '#334155', lineHeight: '1.7', fontSize: '14.5px', margin: 0, fontWeight: '600' }}>تتضمن هذه البوابة الإلكترونية المتقدمة لوحة تحكم مخصصة لإدارة شؤون المعلمين، التراحيل والمشرفين، الفصول، المواد الدراسية، الحسابات والنتائج بسرعة فائقة.</p>
+                <p style={{ color: '#334155', lineHeight: '1.7', fontSize: '14.5px', margin: 0, fontWeight: '600' }}>تتضمن هذه البوابة الإلكترونية المتقدمة لوحة تحكم مخصصة لإدارة شؤون المعلمين، مشرفي الفصول، التراحيل، المواد الدراسية، الحسابات والنتائج بسرعه فائقة.</p>
               </div>
             </div>
 
@@ -236,6 +244,7 @@ export default function App() {
             {activeTab === 'students' && <StudentsSection />}
             {activeTab === 'classes' && <ClassesSection />}
             {activeTab === 'subjects' && <SubjectsSection onBack={() => setActiveTab('dashboard')} />}
+            {activeTab === 'supervisors' && <ClassSupervisorsSection onBack={() => setActiveTab('dashboard')} />}
             {activeTab === 'teachers' && <TeachersSection />}
             {activeTab === 'transports' && <TransportsSection onBack={() => setActiveTab('dashboard')} />}
             {activeTab === 'accounts' && <AccountsSection />}
