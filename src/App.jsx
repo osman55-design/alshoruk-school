@@ -151,53 +151,53 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 🌟 قسم مجلس الإدارة العصرى والأنيق 🌟 */}
-              <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(16px)', padding: '40px 25px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2)' }}>
+              {/* 🌟 قسم مجلس الإدارة العصرى والأنيق (بدون المربع الأبيض) 🌟 */}
+              <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(20px)', padding: '35px 20px', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }}>
                 
-                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                  <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fef08a', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.3)' }}>القيادة والتميز</span>
-                  <h3 style={{ margin: '10px 0 0 0', color: '#ffffff', fontSize: '28px', fontWeight: '900', letterSpacing: '0.5px' }}>🏛️ مجلس إدارة المدرسة</h3>
+                <div style={{ textAlign: 'center', marginBottom: '35px' }}>
+                  <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fef08a', padding: '6px 18px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.3)' }}>القيادة والتميز</span>
+                  <h3 style={{ margin: '12px 0 0 0', color: '#ffffff', fontSize: '26px', fontWeight: '900', letterSpacing: '0.5px' }}>🏛️ مجلس إدارة المدرسة</h3>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '30px', width: '100%', direction: 'rtl' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '25px', width: '100%', direction: 'rtl' }}>
                   
                   {/* بطاقة 1: رئيس مجلس الإدارة */}
-                  <div style={modernCardStyle}>
+                  <div style={glassCardStyle}>
                     <div style={imageContainerStyle}>
                       <img src="manager1.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#f59e0b')} />
                       <div style={badgeIconStyle('#f59e0b')}>👑</div>
                     </div>
-                    <span style={roleBadgeStyle('#f59e0b', 'rgba(245, 158, 11, 0.1)')}>رئيس مجلس الإدارة</span>
+                    <span style={roleBadgeStyle('#fef08a', 'rgba(245, 158, 11, 0.25)', '#f59e0b')}>رئيس مجلس الإدارة</span>
                     <h4 style={nameTitleStyle}>الأستاذ كمال الدين مجذوب الطيب</h4>
                   </div>
 
                   {/* بطاقة 2: الأم التربوية */}
-                  <div style={modernCardStyle}>
+                  <div style={glassCardStyle}>
                     <div style={imageContainerStyle}>
-                      <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#ec4899')} />
-                      <div style={badgeIconStyle('#ec4899')}>❤️</div>
+                      <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#f472b6')} />
+                      <div style={badgeIconStyle('#f472b6')}>❤️</div>
                     </div>
-                    <span style={roleBadgeStyle('#ec4899', 'rgba(236, 72, 153, 0.1)')}>الأم التربوية الحنون</span>
+                    <span style={roleBadgeStyle('#fbcfe8', 'rgba(244, 114, 182, 0.25)', '#f472b6')}>الأم التربوية الحنون</span>
                     <h4 style={nameTitleStyle}>ماما هند عبد الرازق</h4>
                   </div>
 
                   {/* بطاقة 3: المدير العام */}
-                  <div style={modernCardStyle}>
+                  <div style={glassCardStyle}>
                     <div style={imageContainerStyle}>
-                      <img src="admin_manager.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#10b981')} />
-                      <div style={badgeIconStyle('#10b981')}>⭐</div>
+                      <img src="admin_manager.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#34d399')} />
+                      <div style={badgeIconStyle('#34d399')}>⭐</div>
                     </div>
-                    <span style={roleBadgeStyle('#10b981', 'rgba(16, 185, 129, 0.1)')}>المدير العام</span>
+                    <span style={roleBadgeStyle('#a7f3d0', 'rgba(52, 211, 153, 0.25)', '#34d399')}>المدير العام</span>
                     <h4 style={nameTitleStyle}>الأستاذ محمد كمال الدين مجذوب</h4>
                   </div>
 
                   {/* بطاقة 4: المديرة الإدارية */}
-                  <div style={modernCardStyle}>
+                  <div style={glassCardStyle}>
                     <div style={imageContainerStyle}>
-                      <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#8b5cf6')} />
-                      <div style={badgeIconStyle('#8b5cf6')}>💎</div>
+                      <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#a78bfa')} />
+                      <div style={badgeIconStyle('#a78bfa')}>💎</div>
                     </div>
-                    <span style={roleBadgeStyle('#8b5cf6', 'rgba(139, 92, 246, 0.1)')}>مديرة إدارية</span>
+                    <span style={roleBadgeStyle('#ddd6fe', 'rgba(167, 139, 250, 0.25)', '#a78bfa')}>مديرة إدارية</span>
                     <h4 style={nameTitleStyle}>الأستاذة لينا كمال الدين مجذوب</h4>
                   </div>
 
@@ -276,70 +276,72 @@ export default function App() {
 }
 
 // ----------------------------------------------------
-// 🎨 الأنماط الحديثة لبطاقات الإدارة (Modern Styles)
+// 🎨 الأنماط الزجاجية العصرية (Glassmorphism Styles)
 // ----------------------------------------------------
 
-const modernCardStyle = {
-  background: '#ffffff',
-  borderRadius: '22px',
-  padding: '25px 20px',
+const glassCardStyle = {
+  background: 'rgba(255, 255, 255, 0.08)',
+  backdropFilter: 'blur(12px)',
+  borderRadius: '20px',
+  padding: '22px 15px',
   textAlign: 'center',
-  border: '1px solid rgba(255, 255, 255, 0.8)',
-  boxShadow: '0 15px 30px rgba(0, 0, 0, 0.08)',
+  border: '1px solid rgba(255, 255, 255, 0.18)',
+  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.15)',
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center',
-  transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+  alignItems: 'center'
 };
 
 const imageContainerStyle = {
   position: 'relative',
-  marginBottom: '18px',
+  marginBottom: '15px',
   display: 'inline-block'
 };
 
 const avatarStyle = (borderColor) => ({
-  width: '120px',
-  height: '120px',
+  width: '110px',
+  height: '110px',
   borderRadius: '50%',
   objectFit: 'cover',
-  border: `4px solid ${borderColor}`,
-  padding: '3px',
-  backgroundColor: '#ffffff',
-  boxShadow: `0 8px 20px rgba(0, 0, 0, 0.12)`
+  border: `3px solid ${borderColor}`,
+  padding: '4px',
+  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  boxShadow: `0 0 20px ${borderColor}40`
 });
 
 const badgeIconStyle = (color) => ({
   position: 'absolute',
-  bottom: '4px',
-  right: '4px',
+  bottom: '2px',
+  right: '2px',
   backgroundColor: color,
   color: '#ffffff',
-  width: '32px',
-  height: '32px',
+  width: '30px',
+  height: '30px',
   borderRadius: '50%',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: '15px',
-  boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+  fontSize: '14px',
+  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+  border: '2px solid #ffffff'
 });
 
-const roleBadgeStyle = (color, bgColor) => ({
+const roleBadgeStyle = (textColor, bgColor, borderColor) => ({
   backgroundColor: bgColor,
-  color: color,
-  padding: '6px 14px',
+  color: textColor,
+  padding: '5px 14px',
   borderRadius: '20px',
   fontSize: '12px',
-  fontWeight: '800',
+  fontWeight: 'bold',
   marginBottom: '10px',
-  border: `1px solid ${color}`
+  border: `1px solid ${borderColor}`
 });
 
 const nameTitleStyle = {
   margin: '0',
-  color: '#0f172a',
+  color: '#ffffff',
   fontWeight: '900',
-  fontSize: '15.5px',
-  lineHeight: '1.4'
+  fontSize: '15px',
+  lineHeight: '1.4',
+  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
 };
