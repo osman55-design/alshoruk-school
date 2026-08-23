@@ -9,7 +9,7 @@ import ClassesSection from './components/ClassesSection';
 import TeachersSection from './components/TeachersSection';
 import AccountsSection from './components/AccountsSection';
 import DashboardSection from './components/DashboardSection';
-import ResultsSection from './components/ResultsSection'; // <-- تم إضافة استيراد مكون النتيجة
+import ResultsSection from './components/ResultsSection';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -19,7 +19,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('landing'); 
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [usersList, setUsersList] = useState([]);
 
   // دالة تسجيل الدخول مع الحماية والتوجيه التلقائي للموظف حسب صلاحياته
   const handleLogin = async (e) => {
@@ -39,7 +38,7 @@ export default function App() {
           classes: user.can_manage_classes,
           teachers: user.can_manage_teachers,
           finance: user.can_manage_finance,
-          results: user.can_manage_results ?? user.can_see_results, // <-- إضافة صلاحية النتيجة
+          results: user.can_manage_results ?? user.can_see_results,
           admin: user.can_manage_admin
         };
 
@@ -53,11 +52,10 @@ export default function App() {
         setIsLoggedIn(true);
         setShowLoginModal(false);
 
-        // حماية مفرطة: فتح أول قسم يملك الموظف صلاحيته فوراً ومنعه من دخول لوحة الإدارة
         if (permissions.admin) {
-          setActiveTab('dashboard'); // الأدمن الحقيقي يفتح على لوحة الإدارة
+          setActiveTab('dashboard');
         } else if (permissions.students) {
-          setActiveTab('students');  // موظف الطلاب يفتح على شاشة الطلاب مباشرة
+          setActiveTab('students');
         } else if (permissions.classes) {
           setActiveTab('classes');
         } else if (permissions.teachers) {
@@ -65,9 +63,9 @@ export default function App() {
         } else if (permissions.finance) {
           setActiveTab('accounts');
         } else if (permissions.results) {
-          setActiveTab('results');   // التوجيه التلقائي للنتيجة إذا امتلك الصلاحية
+          setActiveTab('results');
         } else {
-          setActiveTab('landing'); // بدون صلاحيات يبقى في شاشة الترحيب الرسمية
+          setActiveTab('landing');
         }
 
       } else {
@@ -90,15 +88,15 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#fcfdfd', direction: 'rtl', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
-      {/* الشريط العلوي الأخضر الفاخر المشرق مع خط فخامة ذهبي */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px 5%', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(4,120,87,0.1)', borderBottom: '4px solid #f59e0b' }}>
+      {/* الشريط العلوي الأخضر الفاخر */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px 5%', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(4,120,87,0.15)', borderBottom: '4px solid #f59e0b' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <img src="logo.png" alt="الشعار" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #f59e0b', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
+          <img src="logo.png" alt="الشعار" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #f59e0b', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ color: '#ffffff', fontWeight: '900', fontSize: '20px', letterSpacing: '0.5px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>مدرسة الشروق السودانية </span>
-            <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>روضة    ابتدائي     متوسط  ثانوي </span>
+            <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>روضة   ابتدائي     متوسط  ثانوي </span>
           </div>
         </div>
         
@@ -108,7 +106,6 @@ export default function App() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
             <span style={{ color: '#fef08a', fontWeight: 'bold', marginLeft: '12px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 14px', borderRadius: '20px' }}>👤 مرحباً: {currentUser?.name}</span>
             
-            {/* إظهار الأزرار والأقسام فقط لمن يملك الصلاحية المحددة له في الداتابيز */}
             {currentUser?.permissions?.admin && (
               <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'dashboard' ? '#f59e0b' : '#ffffff', color: activeTab === 'dashboard' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('dashboard')}>لوحة الإدارة ⚙️</button>
             )}
@@ -129,7 +126,6 @@ export default function App() {
               <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'accounts' ? '#f59e0b' : '#ffffff', color: activeTab === 'accounts' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('accounts')}>الحسابات 💰</button>
             )}
 
-            {/* <-- تم إضافة زر النتيجة هنا --> */}
             {(currentUser?.permissions?.results || currentUser?.permissions?.admin) && (
               <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'results' ? '#f59e0b' : '#ffffff', color: activeTab === 'results' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('results')}>النتيجة 📋</button>
             )}
@@ -155,38 +151,54 @@ export default function App() {
                 </div>
               </div>
 
-              {/* قسم مجلس الإدارة */}
-              <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.06)', padding: '35px 25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
-                <h3 style={{ margin: '0 0 35px 0', color: '#fef08a', borderBottom: '2px solid rgba(245,158,11,0.3)', paddingBottom: '12px', fontSize: '24px', fontWeight: '900', textAlign: 'center' }}>🏛️ مجلس إدارة المدرسة </h3>
+              {/* 🌟 قسم مجلس الإدارة العصرى والأنيق 🌟 */}
+              <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(16px)', padding: '40px 25px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2)' }}>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '25px', width: '100%', direction: 'rtl' }}>
+                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                  <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fef08a', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.3)' }}>القيادة والتميز</span>
+                  <h3 style={{ margin: '10px 0 0 0', color: '#ffffff', fontSize: '28px', fontWeight: '900', letterSpacing: '0.5px' }}>🏛️ مجلس إدارة المدرسة</h3>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '30px', width: '100%', direction: 'rtl' }}>
                   
-                  {/* البطاقة 1 */}
-                  <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #f59e0b' }}>
-                    <img src="manager1.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #f59e0b', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
-                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>رئيس مجلس الإدارة</h4>
-                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذ كمال الدين مجذوب الطيب</p>
+                  {/* بطاقة 1: رئيس مجلس الإدارة */}
+                  <div style={modernCardStyle}>
+                    <div style={imageContainerStyle}>
+                      <img src="manager1.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#f59e0b')} />
+                      <div style={badgeIconStyle('#f59e0b')}>👑</div>
+                    </div>
+                    <span style={roleBadgeStyle('#f59e0b', 'rgba(245, 158, 11, 0.1)')}>رئيس مجلس الإدارة</span>
+                    <h4 style={nameTitleStyle}>الأستاذ كمال الدين مجذوب الطيب</h4>
                   </div>
 
-                  {/* البطاقة 2 */}
-                  <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
-                    <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
-                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}> الأم التربوية الحنون</h4>
-                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>ماما هند عبد الرازق</p>
+                  {/* بطاقة 2: الأم التربوية */}
+                  <div style={modernCardStyle}>
+                    <div style={imageContainerStyle}>
+                      <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#ec4899')} />
+                      <div style={badgeIconStyle('#ec4899')}>❤️</div>
+                    </div>
+                    <span style={roleBadgeStyle('#ec4899', 'rgba(236, 72, 153, 0.1)')}>الأم التربوية الحنون</span>
+                    <h4 style={nameTitleStyle}>ماما هند عبد الرازق</h4>
                   </div>
 
-                  {/* البطاقة 3 */}
-                  <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
-                    <img src="admin_manager.png" alt="مدير إداري" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
-                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}>المدير العام</h4>
-                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذ محمد كمال الدين مجذوب</p>
+                  {/* بطاقة 3: المدير العام */}
+                  <div style={modernCardStyle}>
+                    <div style={imageContainerStyle}>
+                      <img src="admin_manager.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#10b981')} />
+                      <div style={badgeIconStyle('#10b981')}>⭐</div>
+                    </div>
+                    <span style={roleBadgeStyle('#10b981', 'rgba(16, 185, 129, 0.1)')}>المدير العام</span>
+                    <h4 style={nameTitleStyle}>الأستاذ محمد كمال الدين مجذوب</h4>
                   </div>
 
-                  {/* البطاقة 4 */}
-                  <div style={{ background: '#ffffff', borderRadius: '18px', padding: '20px', textAlign: 'center', border: '2px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', borderTop: '4px solid #10b981' }}>
-                    <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co"; }} style={{ width: '125px', height: '125px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px', border: '3px solid #10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} />
-                    <h4 style={{ margin: '5px 0', color: '#047857', fontSize: '15px', fontWeight: '900' }}> مديرة إدارية</h4>
-                    <p style={{ margin: '0', color: '#064e3b', fontWeight: '900', fontSize: '16px' }}>الاستاذه لينا كمال الدين مجذوب</p>
+                  {/* بطاقة 4: المديرة الإدارية */}
+                  <div style={modernCardStyle}>
+                    <div style={imageContainerStyle}>
+                      <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#8b5cf6')} />
+                      <div style={badgeIconStyle('#8b5cf6')}>💎</div>
+                    </div>
+                    <span style={roleBadgeStyle('#8b5cf6', 'rgba(139, 92, 246, 0.1)')}>مديرة إدارية</span>
+                    <h4 style={nameTitleStyle}>الأستاذة لينا كمال الدين مجذوب</h4>
                   </div>
 
                 </div>
@@ -218,14 +230,14 @@ export default function App() {
           </div>
         )}
 
-        {/* عرض نوافذ الأقسام التفاعلية في حال نجاح الدخول */}
+        {/* عرض نوافذ الأقسام التفاعلية */}
         {isLoggedIn && (
           <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
             {activeTab === 'students' && <StudentsSection />}
             {activeTab === 'classes' && <ClassesSection />}
             {activeTab === 'teachers' && <TeachersSection />}
             {activeTab === 'accounts' && <AccountsSection />}
-            {activeTab === 'results' && <ResultsSection />} {/* <-- عرض قسم النتيجة عند اختياره */}
+            {activeTab === 'results' && <ResultsSection />}
             {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('dashboard')} />}
           </div>
         )}
@@ -262,3 +274,72 @@ export default function App() {
     </div>
   );
 }
+
+// ----------------------------------------------------
+// 🎨 الأنماط الحديثة لبطاقات الإدارة (Modern Styles)
+// ----------------------------------------------------
+
+const modernCardStyle = {
+  background: '#ffffff',
+  borderRadius: '22px',
+  padding: '25px 20px',
+  textAlign: 'center',
+  border: '1px solid rgba(255, 255, 255, 0.8)',
+  boxShadow: '0 15px 30px rgba(0, 0, 0, 0.08)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+};
+
+const imageContainerStyle = {
+  position: 'relative',
+  marginBottom: '18px',
+  display: 'inline-block'
+};
+
+const avatarStyle = (borderColor) => ({
+  width: '120px',
+  height: '120px',
+  borderRadius: '50%',
+  objectFit: 'cover',
+  border: `4px solid ${borderColor}`,
+  padding: '3px',
+  backgroundColor: '#ffffff',
+  boxShadow: `0 8px 20px rgba(0, 0, 0, 0.12)`
+});
+
+const badgeIconStyle = (color) => ({
+  position: 'absolute',
+  bottom: '4px',
+  right: '4px',
+  backgroundColor: color,
+  color: '#ffffff',
+  width: '32px',
+  height: '32px',
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '15px',
+  boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+});
+
+const roleBadgeStyle = (color, bgColor) => ({
+  backgroundColor: bgColor,
+  color: color,
+  padding: '6px 14px',
+  borderRadius: '20px',
+  fontSize: '12px',
+  fontWeight: '800',
+  marginBottom: '10px',
+  border: `1px solid ${color}`
+});
+
+const nameTitleStyle = {
+  margin: '0',
+  color: '#0f172a',
+  fontWeight: '900',
+  fontSize: '15.5px',
+  lineHeight: '1.4'
+};
