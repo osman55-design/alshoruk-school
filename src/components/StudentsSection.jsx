@@ -7,15 +7,15 @@ export default function StudentsSection() {
   
   // حالات حقول الإدخال
   const [fullName, setFullName] = useState('');
-  const [stage, setStage] = useState('ابتدائي');
+  const [stage, setStage] = useState('رياض');
   const [studentClass, setStudentClass] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [address, setAddress] = useState('');
   const [fees, setFees] = useState('');
 
-  // خريطة المراحل والصفوف الدراسية الشاملة
+  // خريطة المراحل والصفوف الدراسية الشاملة المحدثة
   const stageClassesMap = {
-    'روضة': ['روضة أولى (تمهيدي)', 'روضة ثانية (روضة)'],
+    'رياض': ['حضانه', 'مستمع', 'أول', 'ثاني'],
     'ابتدائي': ['الصف الأول الابتدائي', 'الصف الثاني الابتدائي', 'الصف الثالث الابتدائي', 'الصف الرابع الابتدائي', 'الصف الخامس الابتدائي', 'الصف السادس الابتدائي'],
     'متوسط': ['الصف الأول المتوسط', 'الصف الثاني المتوسط', 'الصف الثالث المتوسط'],
     'ثانوي': ['الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي']
@@ -123,7 +123,7 @@ export default function StudentsSection() {
                 }} 
                 style={inputStyle}
               >
-                <option value="روضة">👶 مرحلة الروضة</option>
+                <option value="رياض">👶 مرحلة الرياض</option>
                 <option value="ابتدائي">🌱 المرحلة الابتدائية</option>
                 <option value="متوسط">🌿 المرحلة المتوسطة</option>
                 <option value="ثانوي">🎓 المرحلة الثانوية</option>
@@ -132,7 +132,7 @@ export default function StudentsSection() {
 
             {/* 📚 اختيار الصف بناءً على المرحلة */}
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#047857' }}>📚 الصف الدراسي:</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#047857' }}>📚 الصف / المستوى الدراسي:</label>
               <select value={studentClass} onChange={(e) => setStudentClass(e.target.value)} required style={inputStyle}>
                 <option value="">-- اختر الصف الدراسي --</option>
                 {stageClassesMap[stage]?.map((cls, index) => (
