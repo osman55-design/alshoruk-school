@@ -1,6 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
+// 🎨 أنماط التصميم (مُعرفة في البداية لضمان الوضوح وإعادة الاستخدام)
+const stageBtnStyle = (isActive, activeColor, activeBg) => ({
+  padding: '10px 18px',
+  borderRadius: '25px',
+  border: isActive ? `2px solid ${activeColor}` : '1px solid #cbd5e1',
+  cursor: 'pointer',
+  fontWeight: '900',
+  fontSize: '13px',
+  backgroundColor: isActive ? activeBg : '#ffffff',
+  color: isActive ? activeColor : '#475569',
+  transition: 'all 0.2s ease'
+});
+
+const filterBtnStyle = (isActive) => ({
+  padding: '5px 10px',
+  border: 'none',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  fontSize: '12px',
+  fontWeight: 'bold',
+  backgroundColor: isActive ? '#047857' : 'transparent',
+  color: isActive ? '#ffffff' : '#475569'
+});
+
+const inputInlineStyle = {
+  width: '100%',
+  padding: '4px 6px',
+  borderRadius: '4px',
+  border: '1px solid #047857',
+  fontSize: '12px',
+  outline: 'none'
+};
+
+const thStyle = { padding: '10px', fontWeight: 'bold', borderBottom: '2px solid #cbd5e1' };
+const tdStyle = { padding: '10px' };
+
 export default function ClassesSection() {
   const [activeStage, setActiveStage] = useState('kindergarten');
   const [selectedClass, setSelectedClass] = useState(null);
@@ -8,7 +44,7 @@ export default function ClassesSection() {
   const [loading, setLoading] = useState(false);
 
   // 🌟 حالات الفلترة والتعديل
-  const [genderFilter, setGenderFilter] = useState('all'); // all, male, female
+  const [genderFilter, setGenderFilter] = useState('all');
   const [editingStudentId, setEditingStudentId] = useState(null);
   const [editFormData, setEditFormData] = useState({ name: '', parent_phone: '', payment_status: 'غير مكتمل', notes: '' });
 
@@ -78,7 +114,7 @@ export default function ClassesSection() {
         setStudents([]);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching students:', err);
       setStudents([]);
     } finally {
       setLoading(false);
@@ -118,11 +154,11 @@ export default function ClassesSection() {
 
       if (error) throw error;
 
-      setStudents(students.map(s => s.id === id ? { ...s, ...editFormData } : s));
+      setStudents(students.map(s => (s.id === id ? { ...s, ...editFormData } : s)));
       setEditingStudentId(null);
       alert('تم حفظ التعديلات بنجاح ✨');
     } catch (err) {
-      console.error(err);
+      console.error('Error updating student:', err);
       alert('حدث خطأ أثناء حفظ البيانات!');
     }
   };
@@ -132,24 +168,24 @@ export default function ClassesSection() {
     window.print();
   };
 
-  // 🌟 تصدير ملف Excel
+  // 🌟 تصدير ملف Excel (CSV)
   const handleExportExcel = () => {
     if (filteredStudents.length === 0) {
       alert('لا توجد بيانات للتصدير!');
       return;
     }
 
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-    csvContent += "الاسم,رقم ولي الأمر,الجنس,حالة السداد,ملاحظات\n";
+    let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
+    csvContent += 'الاسم,رقم ولي الأمر,الجنس,حالة السداد,ملاحظات\n';
 
     filteredStudents.forEach(s => {
       csvContent += `"${s.name || ''}","${s.parent_phone || ''}","${s.gender || ''}","${s.payment_status || ''}","${s.notes || ''}"\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `قائمة_طلاب_${selectedClass.name}.csv`);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `قائمة_طلاب_${selectedClass.name}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -195,7 +231,7 @@ export default function ClassesSection() {
                   backgroundColor: isSelected ? '#ecfdf5' : '#f8fafc',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between'
+                  justifyInContent: 'space-between'
                 }}
               >
                 <span style={{ fontWeight: '800', fontSize: '13px', color: isSelected ? '#047857' : '#334155' }}>
@@ -339,38 +375,3 @@ export default function ClassesSection() {
     </div>
   );
 }
-
-// 🎨 أنماط التصميم
-const stageBtnStyle = (isActive, activeColor, activeBg) => ({
-  padding: '10px 18px',
-  borderRadius: '25px',
-  border: isActive ? `2px solid ${activeColor}` : '1px solid #cbd5e1',
-  cursor: 'pointer',
-  fontWeight: '900',
-  fontSize: '13px',
-  backgroundColor: isActive ? activeBg : '#ffffff',
-  color: isActive ? activeColor : '#475569'
-});
-
-const filterBtnStyle = (isActive) => ({
-  padding: '5px 10px',
-  border: 'none',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  backgroundColor: isActive ? '#047857' : 'transparent',
-  color: isActive ? '#ffffff' : '#475569'
-});
-
-const inputInlineStyle = {
-  width: '100%',
-  padding: '4px 6px',
-  borderRadius: '4px',
-  border: '1px solid #047857',
-  fontSize: '12px',
-  outline: 'none'
-};
-
-const thStyle = { padding: '10px', fontWeight: 'bold', borderBottom: '2px solid #cbd5e1' };
-const tdStyle = { padding: '10px' };
