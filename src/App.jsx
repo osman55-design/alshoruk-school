@@ -487,7 +487,7 @@ export default function App() {
 
             </div>
 
-            {/* متفوقو الابتدائي (5 طلاب ثابتين) */}
+            {/* المتفوقين في امتحان الشهادة الابتدائية */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
                 <h3 style={{ color: '#f59e0b', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>🏆 متفوقو المرحلة الابتدائية (الأوائل 5)</h3>
@@ -495,7 +495,7 @@ export default function App() {
               {renderFixedSlots(primaryTopStudents, 5, 'مكان شاغر', 'primary_top', '#fffbe6', '#fef08a', '#f59e0b')}
             </div>
 
-            {/* متفوقو المتوسطة (5 طلاب ثابتين) */}
+            {/* المتفوقين في امتحان الشهادة المتوسطة */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
                 <h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>🎓 متفوقو المرحلة المتوسطة (الأوائل 5)</h3>
