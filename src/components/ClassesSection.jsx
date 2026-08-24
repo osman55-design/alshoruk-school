@@ -1,9 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
-export default function ClassDistributionSection({ onBack }) {
+export default function ClassDistributionSection({ onBack, currentUser }) {
   const [students, setStudents] = useState([]);
-  const [selectedLevel, setSelectedLevel] = useState('الابتدائية');
+  
+  // خريطة المراحل التعليمية الكاملة
+  const allStagesMap = {
+    'الروضة': 'الروضة',
+    'الابتدائية': 'المرحلة الابتدائية',
+    'المتوسطة': 'المرحلة المتوسطة',
+    'الثانوية': 'المرحلة الثانوية'
+  };
+
+  // تحديد المراحل المتاحة بناءً على صلاحية المستخدم
+  const userAllowedStage = currentUser?.allowed_stage || 'الكل';
+  
+  const getAvailableStages = () => {
+    if (userAllowedStage === 'الكل' || !userAllowedStage) {
+      return ['الروضة', 'الابتدائية', 'المتوسطة', 'الثانوية'];
+    }
+    // مطابقة اسم المرحلة المسندة للمستخدم
+    if (userAllowedStage.includes('روضة') || userAllowedStage.includes('الروضة')) return ['الروضة'];
+    if (userAllowedStage.includes('ابتدائ')) return ['الابتدائية'];
+    if (userAllowedStage.includes('متوسط')) return ['المتوسطة'];
+    if (userAllowedStage.includes('ثانو')) return ['الثانوية'];
+    return ['الابتدائية'];
+  };
+
+  const availableStages = getAvailableStages();
+
+  const [selectedLevel, setSelectedLevel] = useState(availableStages[0] || 'الابتدائية');
   const [selectedGrade, setSelectedGrade] = useState('الكل');
   const [selectedSubTrack, setSelectedSubTrack] = useState('الكل');
   const [selectedGender, setSelectedGender] = useState('الكل');
@@ -11,9 +37,10 @@ export default function ClassDistributionSection({ onBack }) {
   const [loading, setLoading] = useState(true);
 
   const gradesByLevel = {
+    'الروضة': ['الكل', 'روضة أولى', 'روضة ثانية', 'تمهيدي'],
     'الابتدائية': ['الكل', 'الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس'],
-    'المتوسطة': ['الكل', 'الصف الأول متوسط', 'الصف الثاني متوسط', 'الصف الثالث متوسط'],
-    'الثانوية': ['الكل', 'الصف الأول ثانوي', 'الصف الثاني ثانوي', 'الصف الثالث ثانوي']
+    'المتوسطة': ['الكل', 'الصف الأول المتوسط', 'الصف الثاني المتوسط', 'الصف الثالث المتوسط'],
+    'الثانوية': ['الكل', 'الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي']
   };
 
   const thirdSecondaryTracks = [
@@ -31,7 +58,7 @@ export default function ClassDistributionSection({ onBack }) {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('students_list')
+        .from('students')
         .select('*')
         .order('id', { ascending: false });
 
@@ -60,13 +87,18 @@ export default function ClassDistributionSection({ onBack }) {
   };
 
   const filteredStudents = students.filter(st => {
-    const matchesLevel = st.academic_level === selectedLevel;
-    const matchesGrade = selectedGrade === 'الكل' || (st.class_name && st.class_name.includes(selectedGrade));
-    const matchesSubTrack = selectedSubTrack === 'الكل' || (st.class_name && st.class_name.includes(selectedSubTrack));
-    const matchesGender = selectedGender === 'الكل' || st.gender === selectedGender;
+    const targetStage = allStagesMap[selectedLevel] || selectedLevel;
+    
+    // الفلترة بحقول جدول students وتطبيق الصلاحيات
+    const matchesLevel = st.stage === targetStage || st.stage === selectedLevel;
+    const matchesGrade = selectedGrade === 'الكل' || (st.grade && st.grade.includes(selectedGrade));
+    const matchesSubTrack = selectedSubTrack === 'الكل' || (st.grade && st.grade.includes(selectedSubTrack));
+    const matchesGender = selectedGender === 'الكل' || 
+      (selectedGender === 'ذكر' ? (st.gender === 'طالب' || st.gender === 'ذكر') : (st.gender === 'طالبة' || st.gender === 'أنثى'));
+    
     const matchesSearch = 
-      (st.student_name && st.student_name.includes(searchTerm)) ||
-      (st.parent_phone && st.parent_phone.includes(searchTerm));
+      (st.full_name && st.full_name.includes(searchTerm)) ||
+      (st.phone && st.phone.includes(searchTerm));
 
     return matchesLevel && matchesGrade && matchesSubTrack && matchesGender && matchesSearch;
   });
@@ -78,17 +110,17 @@ export default function ClassDistributionSection({ onBack }) {
     }
 
     let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-    csvContent += "اسم الطالب,النوع,المرحلة,الصف والتخصص,رقم الهاتف,موقف الرسوم\n";
+    csvContent += "اسم الطالب,النوع,المرحلة,الصف والتخصص,رقم الهاتف,الرسوم\n";
 
     filteredStudents.forEach(st => {
-      const row = `"${st.student_name || ''}","${st.gender || ''}","${st.academic_level || ''}","${st.class_name || ''}","${st.parent_phone || ''}","${st.payment_status || ''}"`;
+      const row = `"${st.full_name || ''}","${st.gender || ''}","${st.stage || ''}","${st.grade || ''}","${st.phone || ''}","${st.fees || ''}"`;
       csvContent += row + "\n";
     });
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `طلاب_${selectedLevel}_${selectedGrade}_${selectedSubTrack}.csv`);
+    link.setAttribute("download", `طلاب_${selectedLevel}_${selectedGrade}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -106,7 +138,7 @@ export default function ClassDistributionSection({ onBack }) {
           <h2 style={titleStyle}>
             <span>🏛️</span> المراقبة والفرز التلقائي للفصول الدراسية
           </h2>
-          <p style={subtitleStyle}>توزيع وفرز ذكي لصفوف الطلاب وتخصصات الفرع العلمي والأدبي</p>
+          <p style={subtitleStyle}>توزيع وفرز ذكي لصفوف الطلاب وحساب قوة الفصول</p>
         </div>
 
         {onBack && (
@@ -118,9 +150,9 @@ export default function ClassDistributionSection({ onBack }) {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* 📚 أزرار اختيار المرحلة التعليمية */}
+        {/* 📚 أزرار اختيار المرحلة التعليمية (مفلترة حسب صلاحية المستخدم) */}
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {['الابتدائية', 'المتوسطة', 'الثانوية'].map((lvl) => {
+          {availableStages.map((lvl) => {
             const isActive = selectedLevel === lvl;
             return (
               <button
@@ -134,6 +166,7 @@ export default function ClassDistributionSection({ onBack }) {
                   border: isActive ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(255,255,255,0.7)'
                 }}
               >
+                {lvl === 'الروضة' && '👶 '}
                 {lvl === 'الابتدائية' && '📕 '}
                 {lvl === 'المتوسطة' && '📚 '}
                 {lvl === 'الثانوية' && '🎓 '}
@@ -151,7 +184,7 @@ export default function ClassDistributionSection({ onBack }) {
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>🔎 فحص الصف الدراسي داخل ({selectedLevel}):</label>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
-                {gradesByLevel[selectedLevel].map((g) => {
+                {gradesByLevel[selectedLevel]?.map((g) => {
                   const isActive = selectedGrade === g;
                   return (
                     <button
@@ -172,7 +205,7 @@ export default function ClassDistributionSection({ onBack }) {
             </div>
 
             {/* تفريعات الصف الثالث ثانوي */}
-            {selectedLevel === 'الثانوية' && selectedGrade === 'الصف الثالث ثانوي' && (
+            {selectedLevel === 'الثانوية' && selectedGrade.includes('الثالث') && (
               <div style={subTrackCardStyle}>
                 <label style={{ ...labelStyle, color: '#b45309' }}>🧬 تصفية الفرع والتخصص الفرعي:</label>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
@@ -228,7 +261,7 @@ export default function ClassDistributionSection({ onBack }) {
             </div>
           </div>
 
-          {/* 📈 كارت عداد الطلاب الزجاجي الملون */}
+          {/* 📈 كارت عداد الطلاب الزجاجي */}
           <div style={counterGlassCardStyle}>
             <span style={{ fontSize: '15px', fontWeight: '700', opacity: 0.9 }}>📊 إجمالي قوة القيد الحالية</span>
             <div style={{ fontSize: '46px', fontWeight: '900', margin: '8px 0' }}>
@@ -253,7 +286,7 @@ export default function ClassDistributionSection({ onBack }) {
 
           <div style={{ display: 'flex', gap: '10px' }}>
             <button onClick={exportToExcel} style={glassBtnSuccess}>
-              📊 تصدير Excel
+              📊 تصدير CSV
             </button>
             <button onClick={handlePrint} style={glassBtnPrimary}>
               🖨️ طباعة / PDF
@@ -261,49 +294,45 @@ export default function ClassDistributionSection({ onBack }) {
           </div>
         </div>
 
-        {/* 📋 الجدول الزجاجي المبتكر */}
+        {/* 📋 الجدول */}
         <div style={tableWrapperStyle}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
             <thead>
               <tr style={tableHeaderStyle}>
-                <th style={thStyle}>اسم الطالب الفعّال</th>
+                <th style={thStyle}>اسم الطالب</th>
                 <th style={thStyle}>النوع</th>
                 <th style={thStyle}>المرحلة</th>
                 <th style={thStyle}>الصف والتخصص</th>
                 <th style={thStyle}>رقم ولي الأمر</th>
-                <th style={thStyle}>حالة الحساب المالي</th>
+                <th style={thStyle}>الرسوم</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan="6" style={{ padding: '35px', textAlign: 'center', color: '#64748b' }}>
-                    ✨ جاري تحميل البيانات بسلاسة...
+                    ✨ جاري تحميل البيانات...
                   </td>
                 </tr>
               ) : filteredStudents.length > 0 ? (
                 filteredStudents.map((st) => (
                   <tr key={st.id} style={tableRowStyle}>
-                    <td style={{ ...tdStyle, fontWeight: '700', color: '#0f172a' }}>{st.student_name}</td>
+                    <td style={{ ...tdStyle, fontWeight: '700', color: '#0f172a' }}>{st.full_name}</td>
                     <td style={tdStyle}>
                       <span style={{
                         ...statusTagStyle,
-                        backgroundColor: st.gender === 'أنثى' ? 'rgba(252, 231, 243, 0.9)' : 'rgba(224, 242, 254, 0.9)',
-                        color: st.gender === 'أنثى' ? '#be185d' : '#0369a1'
+                        backgroundColor: st.gender === 'طالبة' || st.gender === 'أنثى' ? 'rgba(252, 231, 243, 0.9)' : 'rgba(224, 242, 254, 0.9)',
+                        color: st.gender === 'طالبة' || st.gender === 'أنثى' ? '#be185d' : '#0369a1'
                       }}>
-                        {st.gender === 'أنثى' ? '👧 أنثى' : '👦 ذكر'}
+                        {st.gender === 'طالبة' || st.gender === 'أنثى' ? '👧 أنثى' : '👦 ذكر'}
                       </span>
                     </td>
-                    <td style={tdStyle}>{st.academic_level}</td>
-                    <td style={{ ...tdStyle, fontWeight: '700', color: '#0f766e' }}>{st.class_name}</td>
-                    <td style={tdStyle}>{st.parent_phone || '---'}</td>
+                    <td style={tdStyle}>{st.stage}</td>
+                    <td style={{ ...tdStyle, fontWeight: '700', color: '#0f766e' }}>{st.grade}</td>
+                    <td style={tdStyle}>{st.phone || '---'}</td>
                     <td style={tdStyle}>
-                      <span style={{
-                        ...statusTagStyle,
-                        backgroundColor: st.payment_status === 'مسدد بالكامل' ? 'rgba(220, 252, 231, 0.9)' : st.payment_status === 'مسدد جزئياً' ? 'rgba(254, 243, 199, 0.9)' : 'rgba(254, 226, 226, 0.9)',
-                        color: st.payment_status === 'مسدد بالكامل' ? '#15803d' : st.payment_status === 'مسدد جزئياً' ? '#b45309' : '#b91c1c'
-                      }}>
-                        {st.payment_status || 'غير مسدد'}
+                      <span style={{ ...statusTagStyle, backgroundColor: 'rgba(220, 252, 231, 0.9)', color: '#15803d' }}>
+                        {st.fees || 'غير محدد'}
                       </span>
                     </td>
                   </tr>
@@ -325,7 +354,7 @@ export default function ClassDistributionSection({ onBack }) {
 }
 
 // ----------------------------------------------------
-// 💎 التنسيقات والأنماط الزجاجية (Glassmorphism Styles)
+// 💎 التنسيقات والأنماط الزجاجية
 // ----------------------------------------------------
 
 const containerStyle = {
@@ -378,7 +407,7 @@ const counterGlassCardStyle = {
   color: '#ffffff',
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'center',
+  justify: 'center',
   alignItems: 'center',
   textAlign: 'center',
   boxShadow: '0 15px 30px rgba(16, 185, 129, 0.25)'
