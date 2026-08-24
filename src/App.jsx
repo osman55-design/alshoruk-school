@@ -23,6 +23,59 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ---------------- بيانات الصفحة الرئيسية الديناميكية ----------------
+  const [newsList, setNewsList] = useState([
+    { id: 1, title: 'بدء التسجيل للعام الدراسي الجديد', date: '2026-08-01', content: 'نُعلم جميع أولياء الأمور الكرام بفتح باب التسجيل لجميع المراحل الدراسية.' },
+    { id: 2, title: 'تكريم الطلاب المتفوقين', date: '2026-08-15', content: 'تم إقامة حفل تكريم متميز للطلاب الأوائل في امتحانات الفترة.' }
+  ]);
+
+  const [activitiesList, setActivitiesList] = useState([
+    { id: 1, title: 'اليوم الرياضي المفتوح', image: 'https://placehold.co/400x250?text=اليوم+الرياضي' },
+    { id: 2, title: 'معرض العلوم والتكنولوجيا', image: 'https://placehold.co/400x250?text=معرض+العلوم' }
+  ]);
+
+  const [topStudents, setTopStudents] = useState([
+    { id: 1, name: 'أحمد محمد علي', grade: 'الصف السادس', avg: '98.5%', image: 'https://placehold.co/150' },
+    { id: 2, name: 'فاطمة عمر عثمان', grade: 'الصف الثالث متوسط', avg: '99.1%', image: 'https://placehold.co/150' }
+  ]);
+
+  // فصول وجداول اليوم الدراسي
+  const [selectedClass, setSelectedClass] = useState('الصف الأول الابتدائي');
+  const [schedules, setSchedules] = useState({
+    'الصف الأول الابتدائي': [
+      { period: 'الحصة الأولى', subject: 'القرآن الكريم', teacher: 'أ. أحمد عثمان' },
+      { period: 'الحصة الثانية', subject: 'اللغة العربية', teacher: 'أ. سارة محمود' },
+      { period: 'الحصة الثالثة', subject: 'الرياضيات', teacher: 'أ. خالد مصطفى' },
+      { period: 'الحصة الرابعة', subject: 'العلوم', teacher: 'أ. إيمان علي' }
+    ],
+    'الصف الثاني الابتدائي': [
+      { period: 'الحصة الأولى', subject: 'اللغة العربية', teacher: 'أ. سارة محمود' },
+      { period: 'الحصة الثانية', subject: 'الرياضيات', teacher: 'أ. خالد مصطفى' },
+      { period: 'الحصة الثالثة', subject: 'التربية الإسلامية', teacher: 'أ. أحمد عثمان' }
+    ],
+    'الصف الثالث متوسط': [
+      { period: 'الحصة الأولى', subject: 'الفيزياء', teacher: 'أ. محمد كمال' },
+      { period: 'الحصة الثانية', subject: 'اللغة الإنجليزية', teacher: 'أ. لينا كمال' },
+      { period: 'الحصة الثالثة', subject: 'الرياضيات المتقدمة', teacher: 'أ. عثمان صديق' }
+    ]
+  });
+
+  // إضافة خبر جديد
+  const [newNewsTitle, setNewNewsTitle] = useState('');
+  const [newNewsContent, setNewNewsContent] = useState('');
+  const [showAddNewsModal, setShowAddNewsModal] = useState(false);
+
+  // إضافة نشاط جديد
+  const [newActivityTitle, setNewActivityTitle] = useState('');
+  const [newActivityImage, setNewActivityImage] = useState('');
+  const [showAddActivityModal, setShowAddActivityModal] = useState(false);
+
+  // إضافة متفوق جديد
+  const [newTopName, setNewTopName] = useState('');
+  const [newTopGrade, setNewTopGrade] = useState('');
+  const [newTopAvg, setNewTopAvg] = useState('');
+  const [showAddTopModal, setShowAddTopModal] = useState(false);
+
   // دالة تسجيل الدخول
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -57,25 +110,8 @@ export default function App() {
         setIsLoggedIn(true);
         setShowLoginModal(false);
 
-        if (permissions.admin) {
-          setActiveTab('dashboard');
-        } else if (permissions.students) {
-          setActiveTab('students');
-        } else if (permissions.classes) {
-          setActiveTab('classes');
-        } else if (permissions.teachers) {
-          setActiveTab('teachers');
-        } else if (permissions.finance) {
-          setActiveTab('accounts');
-        } else if (permissions.results) {
-          setActiveTab('results');
-        } else if (permissions.transport) {
-          setActiveTab('transport');
-        } else if (permissions.supervisors) {
-          setActiveTab('supervisors');
-        } else {
-          setActiveTab('landing');
-        }
+        // 🎯 التوجيه دائماً للرئيسية بعد تسجيل الدخول حسب طلبك
+        setActiveTab('landing');
 
       } else {
         alert('اسم المستخدم أو رمز الدخول غير صحيح!');
@@ -94,6 +130,55 @@ export default function App() {
     setUsername('');
     setPassword('');
     setActiveTab('landing'); 
+  };
+
+  // إضافة خبر
+  const handleAddNews = (e) => {
+    e.preventDefault();
+    if (!newNewsTitle || !newNewsContent) return;
+    const newItem = {
+      id: Date.now(),
+      title: newNewsTitle,
+      content: newNewsContent,
+      date: new Date().toISOString().split('T')[0]
+    };
+    setNewsList([newItem, ...newsList]);
+    setNewNewsTitle('');
+    setNewNewsContent('');
+    setShowAddNewsModal(false);
+  };
+
+  // إضافة نشاط
+  const handleAddActivity = (e) => {
+    e.preventDefault();
+    if (!newActivityTitle) return;
+    const newItem = {
+      id: Date.now(),
+      title: newActivityTitle,
+      image: newActivityImage || 'https://placehold.co/400x250?text=نشاط+مدرسي'
+    };
+    setActivitiesList([newItem, ...activitiesList]);
+    setNewActivityTitle('');
+    setNewActivityImage('');
+    setShowAddActivityModal(false);
+  };
+
+  // إضافة متفوق
+  const handleAddTopStudent = (e) => {
+    e.preventDefault();
+    if (!newTopName || !newTopGrade) return;
+    const newItem = {
+      id: Date.now(),
+      name: newTopName,
+      grade: newTopGrade,
+      avg: newTopAvg || '100%',
+      image: 'https://placehold.co/150'
+    };
+    setTopStudents([newItem, ...topStudents]);
+    setNewTopName('');
+    setNewTopGrade('');
+    setNewTopAvg('');
+    setShowAddTopModal(false);
   };
 
   return (
@@ -218,6 +303,128 @@ export default function App() {
 
             </div>
 
+            {/* 📰 قسم أحدث أخبار وإعلانات المدرسة */}
+            <div style={{ background: '#ffffff', padding: '30px', borderRadius: '24px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '10px' }}>
+                <h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>📰 آخر أخبار المدرسة والإعلانات</h3>
+                {isLoggedIn && (
+                  <button onClick={() => setShowAddNewsModal(true)} style={{ backgroundColor: '#047857', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+ إضافة خبر جديد</button>
+                )}
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                {newsList.map(news => (
+                  <div key={news.id} style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f9fafb', borderRight: '5px solid #047857' }}>
+                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>📅 {news.date}</span>
+                    <h4 style={{ color: '#065f46', margin: '8px 0', fontSize: '18px', fontWeight: '800' }}>{news.title}</h4>
+                    <p style={{ color: '#334155', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{news.content}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 📸 قسم صور النشاطات والمعرض */}
+            <div style={{ background: '#ffffff', padding: '30px', borderRadius: '24px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '10px' }}>
+                <h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>🎨 معرض الصور والأنشطة الطلابية</h3>
+                {isLoggedIn && (
+                  <button onClick={() => setShowAddActivityModal(true)} style={{ backgroundColor: '#047857', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+ إضافة نشاط جديد</button>
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                {activitiesList.map(act => (
+                  <div key={act.id} style={{ overflow: 'hidden', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <img src={act.image} alt={act.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/400x250?text=نشاط+مدرسي"; }} />
+                    <div style={{ padding: '15px', backgroundColor: '#ffffff', textAlign: 'center' }}>
+                      <h4 style={{ margin: 0, color: '#064e3b', fontWeight: '800' }}>{act.title}</h4>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 🌟 قسم صور الطلاب المتفوقين */}
+            <div style={{ background: '#ffffff', padding: '30px', borderRadius: '24px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '10px' }}>
+                <h3 style={{ color: '#f59e0b', margin: 0, fontWeight: '900', fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>🌟 لوحة المتفوقين والأوائل</h3>
+                {isLoggedIn && (
+                  <button onClick={() => setShowAddTopModal(true)} style={{ backgroundColor: '#f59e0b', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+ إضافة طالب متفوق</button>
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                {topStudents.map(student => (
+                  <div key={student.id} style={{ background: 'linear-gradient(180deg, #fffbe6 0%, #ffffff 100%)', border: '2px solid #fef08a', borderRadius: '20px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 15px rgba(245,158,11,0.1)' }}>
+                    <img src={student.image} alt={student.name} style={{ width: '90px', height: '90px', borderRadius: '50%', border: '3px solid #f59e0b', marginBottom: '12px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
+                    <h4 style={{ margin: '0 0 5px 0', color: '#064e3b', fontWeight: '900' }}>{student.name}</h4>
+                    <span style={{ fontSize: '13px', color: '#475569', display: 'block', marginBottom: '8px' }}>{student.grade}</span>
+                    <span style={{ backgroundColor: '#f59e0b', color: '#fff', padding: '4px 12px', borderRadius: '15px', fontSize: '12px', fontWeight: 'bold' }}>المعدل: {student.avg}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 📅 قسم جدول حصص اليوم الدراسي للفصول */}
+            <div style={{ background: '#ffffff', padding: '30px', borderRadius: '24px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0' }}>
+              <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                <h3 style={{ color: '#047857', margin: '0 0 10px 0', fontWeight: '900', fontSize: '24px' }}>📅 جدول حصص اليوم الدراسي</h3>
+                <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>اضغط على اسم الفصل لعرض الجدول الخاص به فوراً</p>
+              </div>
+
+              {/* أزرار اختيار الفصول */}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '25px' }}>
+                {Object.keys(schedules).map((className) => (
+                  <button
+                    key={className}
+                    onClick={() => setSelectedClass(className)}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      backgroundColor: selectedClass === className ? '#047857' : '#f1f5f9',
+                      color: selectedClass === className ? '#ffffff' : '#334155',
+                      boxShadow: selectedClass === className ? '0 4px 12px rgba(4,120,87,0.2)' : 'none',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    🏛️ {className}
+                  </button>
+                ))}
+              </div>
+
+              {/* عرض الجدول المختار */}
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#047857', color: '#ffffff' }}>
+                      <th style={{ padding: '14px', fontSize: '15px' }}>الحصة</th>
+                      <th style={{ padding: '14px', fontSize: '15px' }}>المادة الدراسية</th>
+                      <th style={{ padding: '14px', fontSize: '15px' }}>أستاذ المادة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {schedules[selectedClass] ? (
+                      schedules[selectedClass].map((item, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                          <td style={{ padding: '14px', fontWeight: 'bold', color: '#f59e0b' }}>{item.period}</td>
+                          <td style={{ padding: '14px', fontWeight: 'bold', color: '#064e3b' }}>{item.subject}</td>
+                          <td style={{ padding: '14px', color: '#475569', fontWeight: 'bold' }}>{item.teacher}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" style={{ padding: '20px', color: '#94a3b8' }}>لا يوجد جدول حصص مدخل لهذا الفصل حالياً.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             {/* بطاقات التعريف */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '30px' }}>
               <div style={{ background: '#ffffff', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', borderTop: '6px solid #047857', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
@@ -242,7 +449,7 @@ export default function App() {
           </div>
         )}
 
-        {/* عرض نوافذ الأقسام */}
+        {/* عرض نوافذ الأقسام الأخرى */}
         {isLoggedIn && activeTab !== 'landing' && (
           <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
             {activeTab === 'students' && <StudentsSection />}
@@ -256,6 +463,52 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* ➕ modal إضافة خبر */}
+      {showAddNewsModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
+          <form onSubmit={handleAddNews} style={{ background: '#fff', padding: '30px', borderRadius: '16px', width: '350px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <h4 style={{ margin: 0, color: '#047857' }}>إضافة خبر جديد</h4>
+            <input type="text" placeholder="عنوان الخبر" value={newNewsTitle} onChange={e => setNewNewsTitle(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} required />
+            <textarea placeholder="تفاصيل الخبر" value={newNewsContent} onChange={e => setNewNewsContent(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc', minHeight: '80px' }} required />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" style={{ flex: 1, padding: '10px', background: '#047857', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>حفظ</button>
+              <button type="button" onClick={() => setShowAddNewsModal(false)} style={{ flex: 1, padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>إلغاء</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ➕ modal إضافة نشاط */}
+      {showAddActivityModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
+          <form onSubmit={handleAddActivity} style={{ background: '#fff', padding: '30px', borderRadius: '16px', width: '350px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <h4 style={{ margin: 0, color: '#047857' }}>إضافة نشاط جديد</h4>
+            <input type="text" placeholder="اسم النشاط" value={newActivityTitle} onChange={e => setNewActivityTitle(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} required />
+            <input type="text" placeholder="رابط الصورة (اختياري)" value={newActivityImage} onChange={e => setNewActivityImage(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" style={{ flex: 1, padding: '10px', background: '#047857', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>حفظ</button>
+              <button type="button" onClick={() => setShowAddActivityModal(false)} style={{ flex: 1, padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>إلغاء</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ➕ modal إضافة متفوق */}
+      {showAddTopModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
+          <form onSubmit={handleAddTopStudent} style={{ background: '#fff', padding: '30px', borderRadius: '16px', width: '350px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <h4 style={{ margin: 0, color: '#f59e0b' }}>إضافة طالب متفوق</h4>
+            <input type="text" placeholder="اسم الطالب" value={newTopName} onChange={e => setNewTopName(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} required />
+            <input type="text" placeholder="الفصل / الصف" value={newTopGrade} onChange={e => setNewTopGrade(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} required />
+            <input type="text" placeholder="المعدل (مثلاً 99%)" value={newTopAvg} onChange={e => setNewTopAvg(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" style={{ flex: 1, padding: '10px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>حفظ</button>
+              <button type="button" onClick={() => setShowAddTopModal(false)} style={{ flex: 1, padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>إلغاء</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* نافذة تسجيل الدخول */}
       {showLoginModal && (
@@ -330,7 +583,7 @@ const badgeIconStyle = (color) => ({
   borderRadius: '50%',
   display: 'flex',
   alignItems: 'center',
-  justify: 'center',
+  justifyContent: 'center',
   fontSize: '14px',
   boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
   border: '2px solid #ffffff'
