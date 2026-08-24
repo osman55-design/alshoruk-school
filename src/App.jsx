@@ -33,14 +33,8 @@ export default function App() {
   const [primaryTopStudents, setPrimaryTopStudents] = useState([]);
   const [middleTopStudents, setMiddleTopStudents] = useState([]);
 
-  // ---------------- بيانات هيئة التدريس ----------------
-  const initialTeachers = Array.from({ length: 20 }, (_, i) => ({
-    id: i + 1,
-    name: `الأستاذ / المعلم ${i + 1}`,
-    subject: i % 2 === 0 ? 'اللغة العربية' : 'الرياضيات',
-    image: 'https://placehold.co/150'
-  }));
-  const [teachersList, setTeachersList] = useState(initialTeachers);
+  // ---------------- بيانات هيئة التدريس (20 معلم) ----------------
+  const [teachersList, setTeachersList] = useState([]);
 
   // ---------------- حالات التعديل السريع ----------------
   const [editingItem, setEditingItem] = useState(null);
@@ -53,6 +47,7 @@ export default function App() {
   useEffect(() => {
     fetchNews();
     fetchTopStudents();
+    fetchTeachers();
   }, []);
 
   const fetchNews = async () => {
@@ -75,25 +70,19 @@ export default function App() {
     try {
       const { data } = await supabase.from('top_students').select('*');
       if (data && data.length > 0) {
-        setPrimaryTopStudents(data.filter(s => s.stage === 'primary').slice(0, 5));
-        setMiddleTopStudents(data.filter(s => s.stage === 'middle').slice(0, 5));
-      } else {
-        const initialPrimary = Array.from({ length: 5 }, (_, i) => ({
-          id: i + 1,
-          name: `طالب ابتدائي ${i + 1}`,
-          score: '100%',
-          image: 'https://placehold.co/150',
-          stage: 'primary'
-        }));
-        const initialMiddle = Array.from({ length: 5 }, (_, i) => ({
-          id: i + 1,
-          name: `طالب متوسط ${i + 1}`,
-          score: '99%',
-          image: 'https://placehold.co/150',
-          stage: 'middle'
-        }));
-        setPrimaryTopStudents(initialPrimary);
-        setMiddleTopStudents(initialMiddle);
+        setPrimaryTopStudents(data.filter(s => s.stage === 'primary'));
+        setMiddleTopStudents(data.filter(s => s.stage === 'middle'));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchTeachers = async () => {
+    try {
+      const { data } = await supabase.from('teachers').select('*');
+      if (data && data.length > 0) {
+        setTeachersList(data);
       }
     } catch (err) {
       console.error(err);
@@ -179,12 +168,13 @@ export default function App() {
     setShowAddNewsModal(false);
   };
 
-  const openEditModal = (type, item) => {
+  const openEditModal = (type, item, index) => {
     setEditType(type);
-    setEditingItem(item);
-    setEditName(item.name);
-    setEditExtra(type === 'teacher' ? item.subject : item.score);
-    setEditImage(item.image);
+    // إذا لم يكن للعنصر بيانات سابقة، نضع معرف افتراضي وتفاصيل أولية
+    setEditingItem(item || { id: `new_${index}`, isNew: true });
+    setEditName(item?.name || '');
+    setEditExtra(type === 'teacher' ? (item?.subject || '') : (item?.score || ''));
+    setEditImage(item?.image || item?.image_url || '');
   };
 
   const handleSaveEdit = async (e) => {
@@ -195,27 +185,76 @@ export default function App() {
       const updatedStudent = { name: editName, score: editExtra, image: editImage, stage };
 
       try {
-        if (typeof editingItem.id === 'number' && editingItem.id > 100) {
+        if (editingItem.id && !editingItem.isNew) {
           await supabase.from('top_students').update(updatedStudent).eq('id', editingItem.id);
         } else {
           const { data } = await supabase.from('top_students').insert([updatedStudent]).select();
-          if (data && data[0]) editingItem.id = data[0].id;
+          if (data && data[0]) updatedStudent.id = data[0].id;
         }
       } catch (err) {
         console.error(err);
       }
 
       if (editType === 'primary_top') {
-        setPrimaryTopStudents(primaryTopStudents.map(s => s.id === editingItem.id ? { ...s, name: editName, score: editExtra, image: editImage } : s));
+        const list = [...primaryTopStudents];
+        const idx = list.findIndex(s => s.id === editingItem.id);
+        if (idx >= 0) list[idx] = { ...list[idx], ...updatedStudent };
+        else list.push(updatedStudent);
+        setPrimaryTopStudents(list);
       } else {
-        setMiddleTopStudents(middleTopStudents.map(s => s.id === editingItem.id ? { ...s, name: editName, score: editExtra, image: editImage } : s));
+        const list = [...middleTopStudents];
+        const idx = list.findIndex(s => s.id === editingItem.id);
+        if (idx >= 0) list[idx] = { ...list[idx], ...updatedStudent };
+        else list.push(updatedStudent);
+        setMiddleTopStudents(list);
       }
 
     } else if (editType === 'teacher') {
-      setTeachersList(teachersList.map(t => t.id === editingItem.id ? { ...t, name: editName, subject: editExtra, image: editImage } : t));
+      const updatedTeacher = { name: editName, subject: editExtra, image: editImage };
+      const list = [...teachersList];
+      const idx = list.findIndex(t => t.id === editingItem.id);
+      if (idx >= 0) list[idx] = { ...list[idx], ...updatedTeacher };
+      else list.push(updatedTeacher);
+      setTeachersList(list);
     }
 
     setEditingItem(null);
+  };
+
+  // 🌟 دالة توليد خانات عروض الطلاب والمعلمين لضمان 5 أماكن و20 معلماً دائماً 🌟
+  const renderFixedSlots = (dataList, totalSlots, typeLabel, editTypeTag, cardBg, borderColor, badgeBg) => {
+    const slots = Array.from({ length: totalSlots }, (_, index) => dataList[index] || null);
+
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
+        {slots.map((item, index) => (
+          <div key={index} style={{ background: cardBg, border: `1.5px solid ${borderColor}`, borderRadius: '12px', padding: '12px 8px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            {item ? (
+              <>
+                <img src={item.image || item.image_url || 'https://placehold.co/150'} alt={item.name} style={{ width: '60px', height: '60px', borderRadius: '50%', border: `2px solid ${badgeBg}`, marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
+                <h5 style={{ margin: '0 0 4px 0', color: '#064e3b', fontWeight: '900', fontSize: '11.5px' }}>{item.name}</h5>
+                {editTypeTag === 'teacher' ? (
+                  <span style={{ color: '#047857', fontSize: '10px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>📖 {item.subject}</span>
+                ) : (
+                  <span style={{ backgroundColor: badgeBg, color: '#fff', padding: '2px 8px', borderRadius: '8px', fontSize: '10.5px', fontWeight: 'bold', display: 'inline-block' }}>{item.score}</span>
+                )}
+              </>
+            ) : (
+              <div style={{ padding: '8px 0', opacity: 0.6 }}>
+                <div style={{ fontSize: '24px' }}>👤</div>
+                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', marginTop: '2px' }}>{typeLabel} #{index + 1}</div>
+              </div>
+            )}
+
+            {isLoggedIn && (
+              <button onClick={() => openEditModal(editTypeTag, item, index)} style={{ marginTop: '6px', width: '100%', padding: '4px', background: badgeBg, color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>
+                ✏️ {item ? 'تعديل' : 'إضافة'}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -361,67 +400,28 @@ export default function App() {
               </div>
             </div>
 
-            {/* متفوقو الابتدائي (5 طلاب) */}
+            {/* متفوقو الابتدائي (5 طلاب ثابتين) */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
                 <h3 style={{ color: '#f59e0b', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>🏆 متفوقو المرحلة الابتدائية (الأوائل 5)</h3>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
-                {primaryTopStudents.map((student) => (
-                  <div key={student.id} style={{ background: '#fffbe6', border: '1.5px solid #fef08a', borderRadius: '12px', padding: '12px 8px', textAlign: 'center' }}>
-                    <img src={student.image} alt={student.name} style={{ width: '65px', height: '65px', borderRadius: '50%', border: '2px solid #f59e0b', marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
-                    <h5 style={{ margin: '0 0 4px 0', color: '#064e3b', fontWeight: '900', fontSize: '12px' }}>{student.name}</h5>
-                    <span style={{ backgroundColor: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block' }}>{student.score}</span>
-                    
-                    {isLoggedIn && (
-                      <button onClick={() => openEditModal('primary_top', student)} style={{ marginTop: '6px', width: '100%', padding: '4px', background: '#047857', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>✏️ تعديل</button>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {renderFixedSlots(primaryTopStudents, 5, 'مكان شاغر', 'primary_top', '#fffbe6', '#fef08a', '#f59e0b')}
             </div>
 
-            {/* متفوقو المتوسطة (5 طلاب) */}
+            {/* متفوقو المتوسطة (5 طلاب ثابتين) */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
                 <h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>🎓 متفوقو المرحلة المتوسطة (الأوائل 5)</h3>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
-                {middleTopStudents.map((student) => (
-                  <div key={student.id} style={{ background: '#ecfdf5', border: '1.5px solid #a7f3d0', borderRadius: '12px', padding: '12px 8px', textAlign: 'center' }}>
-                    <img src={student.image} alt={student.name} style={{ width: '65px', height: '65px', borderRadius: '50%', border: '2px solid #047857', marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
-                    <h5 style={{ margin: '0 0 4px 0', color: '#064e3b', fontWeight: '900', fontSize: '12px' }}>{student.name}</h5>
-                    <span style={{ backgroundColor: '#047857', color: '#fff', padding: '2px 8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block' }}>{student.score}</span>
-                    
-                    {isLoggedIn && (
-                      <button onClick={() => openEditModal('middle_top', student)} style={{ marginTop: '6px', width: '100%', padding: '4px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>✏️ تعديل</button>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {renderFixedSlots(middleTopStudents, 5, 'مكان شاغر', 'middle_top', '#ecfdf5', '#a7f3d0', '#047857')}
             </div>
 
-            {/* هيئة التدريس */}
+            {/* هيئة التدريس (20 معلماً ثابتين) */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
                 <h3 style={{ color: '#065f46', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>👨‍🏫 كادر هيئة التدريس (20 معلماً)</h3>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))', gap: '10px' }}>
-                {teachersList.map((teacher) => (
-                  <div key={teacher.id} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '10px 6px', textAlign: 'center' }}>
-                    <img src={teacher.image} alt={teacher.name} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #10b981', marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
-                    <h5 style={{ margin: '0 0 2px 0', color: '#0f172a', fontWeight: '800', fontSize: '11px' }}>{teacher.name}</h5>
-                    <span style={{ color: '#047857', fontSize: '10px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>📖 {teacher.subject}</span>
-                    
-                    {isLoggedIn && (
-                      <button onClick={() => openEditModal('teacher', teacher)} style={{ width: '100%', padding: '3px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>✏️ تعديل</button>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {renderFixedSlots(teachersList, 20, 'معلم', 'teacher', '#f8fafc', '#cbd5e1', '#0284c7')}
             </div>
 
             {/* بطاقات التعريف */}
@@ -463,7 +463,7 @@ export default function App() {
         )}
       </main>
 
-      {/* مودال التعديل */}
+      {/* مودال التعديل / الإضافة */}
       {editingItem && (
         <div style={modalOverlayStyle}>
           <form onSubmit={handleSaveEdit} style={modalBoxStyle}>
@@ -476,7 +476,7 @@ export default function App() {
             <input type="text" value={editExtra} onChange={e => setEditExtra(e.target.value)} style={inputStyle} required />
 
             <label style={{ fontSize: '11px', fontWeight: 'bold' }}>رابط الصورة:</label>
-            <input type="text" value={editImage} onChange={e => setEditImage(e.target.value)} style={inputStyle} required />
+            <input type="text" value={editImage} onChange={e => setEditImage(e.target.value)} style={inputStyle} />
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button type="submit" style={{ flex: 1, padding: '8px', background: '#047857', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>حفظ التعديل</button>
@@ -533,7 +533,7 @@ export default function App() {
   );
 }
 
-// 🎨 الأنماط
+// 🎨 الأنماط المساعدة والتصميم
 const navBtnStyle = (isActive) => ({
   padding: '5px 10px',
   borderRadius: '6px',
@@ -578,59 +578,58 @@ const cleanBadgeStyle = (textColor, bgColor, borderColor) => ({
   fontSize: '11px',
   fontWeight: 'bold',
   marginBottom: '6px',
-  border: `1px solid ${borderColor}`,
-  whiteSpace: 'nowrap'
+  border: `1px solid ${borderColor}`
 });
 
 const cleanNameStyle = {
-  margin: '0',
-  color: '#1e293b',
-  fontWeight: '800',
+  margin: 0,
   fontSize: '13px',
-  lineHeight: '1.4'
+  color: '#0f172a',
+  fontWeight: '800'
 };
 
 const cardInfoStyle = (borderColor) => ({
   background: '#ffffff',
   padding: '16px',
-  borderRadius: '14px',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-  borderTop: `4px solid ${borderColor}`,
-  borderLeft: '1px solid #e2e8f0',
-  borderRight: '1px solid #e2e8f0',
-  borderBottom: '1px solid #e2e8f0'
+  borderRadius: '12px',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+  border: '1px solid #e2e8f0',
+  borderTop: `4px solid ${borderColor}`
 });
 
 const modalOverlayStyle = {
   position: 'fixed',
-  top: 0, left: 0, right: 0, bottom: 0,
-  backgroundColor: 'rgba(0,0,0,0.55)',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(15, 23, 42, 0.65)',
   display: 'flex',
-  justifyContent: 'center',
   alignItems: 'center',
-  zIndex: 3000,
-  padding: '15px',
+  justifyContent: 'center',
+  zIndex: 1000,
   backdropFilter: 'blur(3px)'
 };
 
 const modalBoxStyle = {
-  background: '#fff',
-  padding: '20px',
-  borderRadius: '14px',
-  width: '100%',
-  maxWidth: '340px',
+  backgroundColor: '#ffffff',
+  padding: '24px',
+  borderRadius: '16px',
+  width: '90%',
+  maxWidth: '380px',
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
   display: 'flex',
   flexDirection: 'column',
   gap: '10px',
-  position: 'relative',
-  boxSizing: 'border-box'
+  position: 'relative'
 };
 
 const inputStyle = {
-  width: '100%',
-  padding: '8px 10px',
-  borderRadius: '6px',
+  padding: '9px 12px',
+  borderRadius: '8px',
   border: '1px solid #cbd5e1',
-  boxSizing: 'border-box',
-  fontSize: '12px'
+  fontSize: '12px',
+  outline: 'none',
+  width: '100%',
+  boxSizing: 'border-box'
 };
