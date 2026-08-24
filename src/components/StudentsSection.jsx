@@ -1,253 +1,253 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 
-export default function StudentsSection() {
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  // حالات حقول الإدخال
+export default function StudentsSection({ onBack }) {
+  // --- حالة نموذج إضافة طالب جديد ---
   const [fullName, setFullName] = useState('');
-  const [stage, setStage] = useState('رياض');
-  const [studentClass, setStudentClass] = useState('');
-  const [parentPhone, setParentPhone] = useState('');
+  const [stage, setStage] = useState('المرحلة الثانوية');
+  const [grade, setGrade] = useState('الصف الأول الثانوي');
+  const [gender, setGender] = useState('طالب'); // نوع الطالب (طالب / طالبة)
+  const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [fees, setFees] = useState('');
+  const [fees, setFees] = useState(0);
+  const [saving, setSaving] = useState(false);
 
-  // خريطة المراحل والصفوف الدراسية الشاملة المحدثة
-  const stageClassesMap = {
-    'رياض': ['حضانه', 'مستمع', 'أول', 'ثاني'],
-    'ابتدائي': ['الصف الأول الابتدائي', 'الصف الثاني الابتدائي', 'الصف الثالث الابتدائي', 'الصف الرابع الابتدائي', 'الصف الخامس الابتدائي', 'الصف السادس الابتدائي'],
-    'متوسط': ['الصف الأول المتوسط', 'الصف الثاني المتوسط', 'الصف الثالث المتوسط'],
-    'ثانوي': ['الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي']
+  // --- حالة الاستعلام وتصفية الطلاب ---
+  const [searchStage, setSearchStage] = useState('المرحلة الثانوية');
+  const [searchGrade, setSearchGrade] = useState('الصف الأول الثانوي');
+  const [searchGender, setSearchGender] = useState('الكل');
+  const [searchResults, setSearchResults] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [searching, setSearching] = useState(false);
+
+  // قوائم المراحل والصفوف
+  const stagesList = ['الروضة', 'المرحلة الابتدائية', 'المرحلة المتوسطة', 'المرحلة الثانوية'];
+  const gradesByStage = {
+    'الروضة': ['روضة أولى', 'روضة ثانية', 'تمهيدي'],
+    'المرحلة الابتدائية': ['الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس'],
+    'المرحلة المتوسطة': ['الصف الأول المتوسط', 'الصف الثاني المتوسط', 'الصف الثالث المتوسط'],
+    'المرحلة الثانوية': ['الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي']
   };
 
-  // جلب قائمة الطلاب من قاعدة البيانات
-  const fetchStudents = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .order('id', { ascending: false });
-
-      if (error) throw error;
-      setStudents(data || []);
-    } catch (err) {
-      console.error('خطأ في جلب الطلاب:', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  // إضافة طالب جديد
-  const handleAddStudent = async (e) => {
+  // حفظ طالب جديد
+  const handleSaveStudent = async (e) => {
     e.preventDefault();
-    if (!studentClass) {
-      alert('يرجى اختيار الصف الدراسي!');
+    if (!fullName || !phone) {
+      alert('يرجى كتابة اسم الطالب ورقم الهاتف!');
       return;
     }
 
+    setSaving(true);
     try {
-      const { error } = await supabase.from('students').insert([
-        {
-          full_name: fullName,
-          stage: stage,
-          class: studentClass,
-          parent_phone: parentPhone,
-          address: address,
-          fees: fees ? parseFloat(fees) : 0
-        }
-      ]);
+      const newStudent = {
+        full_name: fullName,
+        stage: stage,
+        grade: grade,
+        gender: gender,
+        phone: phone,
+        address: address,
+        fees: parseFloat(fees) || 0
+      };
 
-      if (error) throw error;
+      const { error } = await supabase.from('students').insert([newStudent]);
 
-      alert('✅ تم تسجيل الطالب بنجاح!');
-      // إعادة ضبط الاستمارة
-      setFullName('');
-      setStudentClass('');
-      setParentPhone('');
-      setAddress('');
-      setFees('');
-      fetchStudents();
+      if (error) {
+        alert('حدث خطأ أثناء حفظ بيانات الطالب: ' + error.message);
+      } else {
+        alert('تم حفظ الطالب بنجاح في الفصل المحدد!');
+        // تفريغ النموذج بدون إظهار أي بيانات في الصفحة
+        setFullName('');
+        setPhone('');
+        setAddress('');
+        setFees(0);
+      }
     } catch (err) {
-      alert('حدث خطأ أثناء حفظ البيانات: ' + err.message);
+      console.error(err);
+      alert('حدث خطأ غير متوقع!');
+    } finally {
+      setSaving(false);
     }
   };
 
-  // حذف طالب
-  const handleDeleteStudent = async (id) => {
-    if (window.confirm('هل أنت تأكد من حذف هذا الطالب؟')) {
-      try {
-        const { error } = await supabase.from('students').delete().eq('id', id);
-        if (error) throw error;
-        fetchStudents();
-      } catch (err) {
-        alert('خطأ في الحذف: ' + err.message);
+  // الاستعلام عن الطلاب من الفصل
+  const handleSearchStudents = async () => {
+    setSearching(true);
+    setHasSearched(true);
+    try {
+      let query = supabase
+        .from('students')
+        .select('*')
+        .eq('stage', searchStage)
+        .eq('grade', searchGrade);
+
+      if (searchGender !== 'الكل') {
+        query = query.eq('gender', searchGender);
       }
+
+      const { data, error } = await query;
+
+      if (error) {
+        alert('حدث خطأ أثناء الاستعلام: ' + error.message);
+      } else {
+        setSearchResults(data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSearching(false);
     }
   };
 
   return (
-    <div style={{ padding: '10px', direction: 'rtl' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', direction: 'rtl' }}>
       
-      {/* عنوان القسم */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', borderBottom: '3px solid #047857', paddingBottom: '10px' }}>
-        <span style={{ fontSize: '28px' }}>📚</span>
-        <h2 style={{ margin: 0, color: '#047857', fontWeight: '900' }}>إدارة وشؤون الطلاب</h2>
+      {/* الشريط العلوي */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e2e8f0', paddingBottom: '12px' }}>
+        <div>
+          <h3 style={{ margin: 0, color: '#047857', fontWeight: '900', fontSize: '18px' }}>📝 بوابة تسجل واستعلام الطلاب</h3>
+          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '12px' }}>تسجيل جديد وحفظ في الفصول، أو استعلام مباشر عن الطلاب</p>
+        </div>
+        {onBack && (
+          <button onClick={onBack} style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>↩️ عودة للوحة التحكم</button>
+        )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px' }}>
+      {/* 1. قسم إضافة طالب جديد */}
+      <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+        <h4 style={{ margin: '0 0 16px 0', color: '#047857', fontSize: '16px', fontWeight: 'bold' }}>✍️ إضافة طالب جديد وإسناده للفصل</h4>
         
-        {/* نموذج تسجيل طالب جديد */}
-        <div style={{ background: '#ffffff', padding: '25px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-          <h3 style={{ margin: '0 0 20px 0', color: '#065f46', fontSize: '18px', fontWeight: 'bold' }}>📝 إضافة طالب جديد</h3>
-          
-          <form onSubmit={handleAddStudent}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#1e293b' }}>اسم الطالب بالكامل:</label>
-              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required style={inputStyle} placeholder="مثال: أحمد محمد علي" />
-            </div>
+        <form onSubmit={handleSaveStudent} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+          <div>
+            <label style={labelStyle}>اسم الطالب بالكامل:</label>
+            <input type="text" placeholder="مثال: علي محمد أحمد" value={fullName} onChange={e => setFullName(e.target.value)} style={inputStyle} required />
+          </div>
 
-            {/* 🏛️ اختيار المرحلة الدراسية */}
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#047857' }}>🏛️ المرحلة الدراسية:</label>
-              <select 
-                value={stage} 
-                onChange={(e) => {
-                  setStage(e.target.value);
-                  setStudentClass(''); // إعادة ضبط الصف عند تغيير المرحلة
-                }} 
-                style={inputStyle}
-              >
-                <option value="رياض">👶 مرحلة الرياض</option>
-                <option value="ابتدائي">🌱 المرحلة الابتدائية</option>
-                <option value="متوسط">🌿 المرحلة المتوسطة</option>
-                <option value="ثانوي">🎓 المرحلة الثانوية</option>
-              </select>
-            </div>
+          <div>
+            <label style={labelStyle}>المرحلة الدراسية:</label>
+            <select value={stage} onChange={e => { setStage(e.target.value); setGrade(gradesByStage[e.target.value][0]); }} style={inputStyle}>
+              {stagesList.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
 
-            {/* 📚 اختيار الصف بناءً على المرحلة */}
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#047857' }}>📚 الصف / المستوى الدراسي:</label>
-              <select value={studentClass} onChange={(e) => setStudentClass(e.target.value)} required style={inputStyle}>
-                <option value="">-- اختر الصف الدراسي --</option>
-                {stageClassesMap[stage]?.map((cls, index) => (
-                  <option key={index} value={cls}>{cls}</option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label style={labelStyle}>الصف / الفصل الدراسية:</label>
+            <select value={grade} onChange={e => setGrade(e.target.value)} style={inputStyle}>
+              {gradesByStage[stage]?.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#1e293b' }}>رقم هاتف ولي الأمر:</label>
-              <input type="tel" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} style={inputStyle} placeholder="01xxxxxxxxx" />
-            </div>
+          <div>
+            <label style={labelStyle}>نوع الطالب:</label>
+            <select value={gender} onChange={e => setGender(e.target.value)} style={inputStyle}>
+              <option value="طالب">👦 طالب (ذكر)</option>
+              <option value="طالبة">👧 طالبة (أنثى)</option>
+            </select>
+          </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#1e293b' }}>العنوان:</label>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} style={inputStyle} placeholder="مثال: الخرطوم / أم درمان" />
-            </div>
+          <div>
+            <label style={labelStyle}>رقم هاتف ولي الأمر:</label>
+            <input type="text" placeholder="09xxxxxxxx" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} required />
+          </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#1e293b' }}>الرسوم المحددة:</label>
-              <input type="number" value={fees} onChange={(e) => setFees(e.target.value)} style={inputStyle} placeholder="0.00" />
-            </div>
+          <div>
+            <label style={labelStyle}>العنوان / المنطقة:</label>
+            <input type="text" placeholder="أسوان" value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} />
+          </div>
 
-            <button type="submit" style={buttonStyle}>حفظ الطالب ➕</button>
-          </form>
-        </div>
+          <div>
+            <label style={labelStyle}>الرسوم المحددة:</label>
+            <input type="number" value={fees} onChange={e => setFees(e.target.value)} style={inputStyle} min="0" />
+          </div>
 
-        {/* جدول عرض الطلاب المسجلين */}
-        <div style={{ background: '#ffffff', padding: '25px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-          <h3 style={{ margin: '0 0 20px 0', color: '#065f46', fontSize: '18px', fontWeight: 'bold' }}>📋 قائمة الطلاب المسجلين ({students.length})</h3>
-
-          {loading ? (
-            <p style={{ textAlign: 'center', color: '#64748b' }}>جاري تحميل البيانات...</p>
-          ) : students.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#64748b' }}>لا يوجد طلاب مسجلين حالياً.</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
-                  <th style={thStyle}>اسم الطالب</th>
-                  <th style={thStyle}>المرحلة والصف</th>
-                  <th style={thStyle}>الهاتف</th>
-                  <th style={thStyle}>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((std) => (
-                  <tr key={std.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={tdStyle}>{std.full_name}</td>
-                    <td style={tdStyle}>
-                      <span style={badgeStyle}>{std.stage || 'غير محدد'}</span>
-                      <br />
-                      <small style={{ color: '#475569', fontWeight: 'bold' }}>{std.class}</small>
-                    </td>
-                    <td style={tdStyle}>{std.parent_phone || '---'}</td>
-                    <td style={tdStyle}>
-                      <button onClick={() => handleDeleteStudent(std.id)} style={deleteButtonStyle}>حذف ❌</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
+          <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+            <button type="submit" disabled={saving} style={{ padding: '10px 24px', background: '#047857', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
+              {saving ? 'جاري الحفظ...' : '💾 حفظ الطالب في الفصل'}
+            </button>
+          </div>
+        </form>
       </div>
+
+      {/* 2. قسم الاستعلام بحسب المرحلة والفصل والنوع */}
+      <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <h4 style={{ margin: '0 0 16px 0', color: '#0284c7', fontSize: '16px', fontWeight: 'bold' }}>🔍 الاستعلام واستعراض بيانات الطلاب من الفصول</h4>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+          <div>
+            <label style={labelStyle}>اختر المرحلة:</label>
+            <select value={searchStage} onChange={e => { setSearchStage(e.target.value); setSearchGrade(gradesByStage[e.target.value][0]); }} style={inputStyle}>
+              {stagesList.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>اختر الفصل / الصف:</label>
+            <select value={searchGrade} onChange={e => setSearchGrade(e.target.value)} style={inputStyle}>
+              {gradesByStage[searchStage]?.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>اختر النوع:</label>
+            <select value={searchGender} onChange={e => setSearchGender(e.target.value)} style={inputStyle}>
+              <option value="الكل">الكل (طلاب وطالبات)</option>
+              <option value="طالب">👦 طلاب فقط</option>
+              <option value="طالبة">👧 طالبات فقط</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button onClick={handleSearchStudents} disabled={searching} style={{ width: '100%', padding: '9px 16px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
+              {searching ? 'جاري الاستعلام...' : '🔍 عرض الطلاب'}
+            </button>
+          </div>
+        </div>
+
+        {/* عرض نتائج الاستعلام */}
+        {hasSearched && (
+          <div>
+            <h5 style={{ margin: '15px 0 10px 0', fontSize: '13px', color: '#334155' }}>
+              نتائج الاستعلام عن: <b style={{ color: '#047857' }}>{searchStage}</b> - <b style={{ color: '#0284c7' }}>{searchGrade}</b> ({searchResults.length} طالب)
+            </h5>
+
+            {searchResults.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#94a3b8', margin: '20px 0' }}>لا يوجد طلاب مسجلون بحسب معايير البحث المختارة.</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'right' }}>
+                  <thead>
+                    <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '2px solid #cbd5e1' }}>
+                      <th style={thStyle}>#</th>
+                      <th style={thStyle}>اسم الطالب</th>
+                      <th style={thStyle}>النوع</th>
+                      <th style={thStyle}>رقم الهاتف</th>
+                      <th style={thStyle}>العنوان</th>
+                      <th style={thStyle}>الرسوم</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {searchResults.map((st, idx) => (
+                      <tr key={st.id || idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={tdStyle}>{idx + 1}</td>
+                        <td style={{ ...tdStyle, fontWeight: 'bold' }}>{st.full_name}</td>
+                        <td style={tdStyle}>{st.gender === 'طالبة' ? '👧 طالبة' : '👦 طالب'}</td>
+                        <td style={tdStyle}>{st.phone}</td>
+                        <td style={tdStyle}>{st.address || '-'}</td>
+                        <td style={tdStyle}>{st.fees}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
 
-// تنسيقات العناصر
-const inputStyle = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: '8px',
-  border: '1px solid #cbd5e1',
-  boxSizing: 'border-box',
-  fontWeight: 'bold',
-  color: '#0f172a'
-};
-
-const buttonStyle = {
-  width: '100%',
-  padding: '12px',
-  backgroundColor: '#047857',
-  color: '#ffffff',
-  border: 'none',
-  borderRadius: '8px',
-  fontWeight: 'bold',
-  fontSize: '15px',
-  cursor: 'pointer',
-  boxShadow: '0 4px 10px rgba(4,120,87,0.2)'
-};
-
-const thStyle = { padding: '12px 8px', color: '#0f172a', fontWeight: 'bold', fontSize: '14px' };
-const tdStyle = { padding: '12px 8px', color: '#334155', fontSize: '14px' };
-
-const badgeStyle = {
-  backgroundColor: '#d1fae5',
-  color: '#047857',
-  padding: '2px 8px',
-  borderRadius: '12px',
-  fontSize: '11px',
-  fontWeight: 'bold',
-  display: 'inline-block',
-  marginBottom: '4px'
-};
-
-const deleteButtonStyle = {
-  backgroundColor: '#fef2f2',
-  color: '#dc2626',
-  border: '1px solid #fee2e2',
-  padding: '4px 10px',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontWeight: 'bold',
-  fontSize: '12px'
-};
+const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px', display: 'block' };
+const inputStyle = { width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', boxSizing: 'border-box' };
+const thStyle = { padding: '8px 10px', fontWeight: 'bold' };
+const tdStyle = { padding: '8px 10px', color: '#1e293b' };
