@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
-export default function AddStudentModal({ isOpen, onClose, onSave, studentToEdit = null }) {
+export default function AddStudentModal({ isOpen, onClose, onSave, studentToEdit = null, currentUser = null }) {
   const [name, setName] = useState('');
   const [studentClass, setStudentClass] = useState('');
   const [gender, setGender] = useState('ذكر');
@@ -10,41 +10,68 @@ export default function AddStudentModal({ isOpen, onClose, onSave, studentToEdit
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // 🌟 قائمة الفصول والتخصصات الشاملة والمطابقة لقسم الفصول
-  const classOptions = [
-    // 🧸 مرحلة الروضة
-    "روضة - فصل مستمع",
-    "روضة - الصف الأول",
-    "روضة - الصف الثاني",
+  // 🌟 قائمة الفصول والتخصصات مقسمة حسب المرحلة
+  const allClassOptions = {
+    preschool: [
+      "روضة - فصل مستمع",
+      "روضة - الصف الأول",
+      "روضة - الصف الثاني"
+    ],
+    primary: [
+      "الابتدائي - الصف الأول",
+      "الابتدائي - الصف الثاني",
+      "الابتدائي - الصف الثالث",
+      "الابتدائي - الصف الرابع",
+      "الابتدائي - الصف الخامس",
+      "الابتدائي - الصف السادس"
+    ],
+    middle: [
+      "المتوسط - الصف الأول",
+      "المتوسط - الصف الثاني",
+      "المتوسط - الصف الثالث"
+    ],
+    secondary: [
+      "الثانوي - الصف الأول",
+      "الثانوي - الصف الثاني",
+      "ثالث ثانوي - علمي (أحياء)",
+      "ثالث ثانوي - علمي (حاسوب)",
+      "ثالث ثانوي - علمي (هندسية)",
+      "ثالث ثانوي - أدبي (دراسات إسلامية)",
+      "ثالث ثانوي - أدبي (الأدب الإنجليزي)",
+      "ثالث ثانوي - أدبي (الفنون)",
+      "ثالث ثانوي - أدبي (تخصصات أخرى)"
+    ]
+  };
 
-    // 🏫 المرحلة الابتدائية
-    "الابتدائي - الصف الأول",
-    "الابتدائي - الصف الثاني",
-    "الابتدائي - الصف الثالث",
-    "الابتدائي - الصف الرابع",
-    "الابتدائي - الصف الخامس",
-    "الابتدائي - الصف السادس",
+  // 🔒 فلترة الفصول المتاحة بناءً على صلاحيات المشرف الحالي
+  const getAvailableClasses = () => {
+    // إذا لم تتوفر بيانات المستخدم أو كان مديراً، تظهر كافة الفصول
+    if (!currentUser || currentUser.can_manage_admin) {
+      return Object.values(allClassOptions).flat();
+    }
 
-    // 🎒 المرحلة المتوسطة
-    "المتوسط - الصف الأول",
-    "المتوسط - الصف الثاني",
-    "المتوسط - الصف الثالث",
+    let available = [];
 
-    // 🎓 المرحلة الثانوية
-    "الثانوي - الصف الأول",
-    "الثانوي - الصف الثاني",
+    // التحقق من الصلاحيات الممررة سواء كانت كـ Object أو مسطحة في currentUser
+    const stages = currentUser.stages || currentUser;
 
-    // 🧪 ثالث ثانوي - المسار العلمي
-    "ثالث ثانوي - علمي (أحياء)",
-    "ثالث ثانوي - علمي (حاسوب)",
-    "ثالث ثانوي - علمي (هندسية)",
+    if (stages.stage_preschool || stages.preschool) {
+      available = available.concat(allClassOptions.preschool);
+    }
+    if (stages.stage_primary || stages.primary) {
+      available = available.concat(allClassOptions.primary);
+    }
+    if (stages.stage_middle || stages.middle) {
+      available = available.concat(allClassOptions.middle);
+    }
+    if (stages.stage_secondary || stages.secondary) {
+      available = available.concat(allClassOptions.secondary);
+    }
 
-    // 📖 ثالث ثانوي - المسار الأدبي
-    "ثالث ثانوي - أدبي (دراسات إسلامية)",
-    "ثالث ثانوي - أدبي (الأدب الإنجليزي)",
-    "ثالث ثانوي - أدبي (الفنون)",
-    "ثالث ثانوي - أدبي (تخصصات أخرى)"
-  ];
+    return available;
+  };
+
+  const availableClassOptions = getAvailableClasses();
 
   useEffect(() => {
     if (studentToEdit) {
@@ -142,7 +169,7 @@ export default function AddStudentModal({ isOpen, onClose, onSave, studentToEdit
             />
           </div>
 
-          {/* اختيار الفصل / التخصص */}
+          {/* اختيار الفصل / التخصص (مفلتر حسب المرحلة المصرح بها) */}
           <div style={{ marginBottom: '12px' }}>
             <label style={labelStyle}>الفصل / المرحلة والتخصص:</label>
             <select
@@ -152,7 +179,7 @@ export default function AddStudentModal({ isOpen, onClose, onSave, studentToEdit
               required
             >
               <option value="">-- اختر الفصل / التخصص --</option>
-              {classOptions.map((cls, idx) => (
+              {availableClassOptions.map((cls, idx) => (
                 <option key={idx} value={cls}>
                   {cls}
                 </option>
@@ -243,7 +270,7 @@ const modalOverlayStyle = {
   bottom: 0,
   backgroundColor: 'rgba(15, 23, 42, 0.6)',
   display: 'flex',
-  justifyContent: 'center',
+  justify: 'center',
   alignItems: 'center',
   zIndex: 1000,
   direction: 'rtl',
