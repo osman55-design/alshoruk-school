@@ -11,7 +11,7 @@ export default function DashboardSection({ onBack }) {
   const [passwordCode, setPasswordCode] = useState('');
   const [role, setRole] = useState('معلم');
 
-  // صلاحيات البوابات
+  // صلاحيات الأقسام الثلاثة الرئيسية
   const [canSeeLanding, setCanSeeLanding] = useState(true);
   const [canManageStudents, setCanManageStudents] = useState(false);
   const [canManageClasses, setCanManageClasses] = useState(false);
@@ -57,6 +57,7 @@ export default function DashboardSection({ onBack }) {
       return;
     }
 
+    // ✨ تحسين: تضمين جميع الصلاحيات والمراحل بدقة في الكائن الجديد
     const newUser = {
       full_name: fullName.trim(),
       username: username.trim(),
@@ -170,7 +171,7 @@ export default function DashboardSection({ onBack }) {
             </div>
           </div>
 
-          {/* تحديد بوابات النظام */}
+          {/* تحديد بوابات النظام حسب الأقسام */}
           <div>
             <label style={{ ...labelStyle, marginBottom: '8px', display: 'block', color: '#047857' }}>🔑 بوابات الوصول المتاحة:</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', background: '#fff', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
@@ -205,7 +206,7 @@ export default function DashboardSection({ onBack }) {
 
       {/* قائمة الموظفين وإدارة الصلاحيات والمراحل المباشرة */}
       <div>
-        <h4 style={{ margin: '0 0 10px 0', color: '#0f172a', fontSize: '15px' }}>🎥 قائمة الموظفين والتحكم المباشر بالصلاحيات والمراحل ({users.length})</h4>
+        <h4 style={{ margin: '0 0 10px 0', color: '#0f172a', fontSize: '15px' }}>👥 قائمة الموظفين والتحكم المباشر بالصلاحيات والمراحل ({users.length})</h4>
         
         {loading ? (
           <p style={{ textAlign: 'center', color: '#64748b' }}>جاري تحميل قائمة الموظفين...</p>
@@ -232,13 +233,13 @@ export default function DashboardSection({ onBack }) {
 
                   {/* بوابات الوصول */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', background: '#f8fafc', padding: '6px 10px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#047857', width: '100%' }}>الاقسام:</span>
+                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#047857', width: '100%' }}>الأقسام المصرحة:</span>
                     <label style={checkLabelStyle}><input type="checkbox" checked={u.can_see_landing ?? true} onChange={() => handleTogglePermission(u.id, 'can_see_landing', u.can_see_landing ?? true)} /> الرئيسية</label>
                     <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_students || false} onChange={() => handleTogglePermission(u.id, 'can_manage_students', u.can_manage_students)} /> الطلاب</label>
                     <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_classes || false} onChange={() => handleTogglePermission(u.id, 'can_manage_classes', u.can_manage_classes)} /> الفصول</label>
                     <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_teachers || false} onChange={() => handleTogglePermission(u.id, 'can_manage_teachers', u.can_manage_teachers)} /> المعلمين</label>
                     <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_finance || false} onChange={() => handleTogglePermission(u.id, 'can_manage_finance', u.can_manage_finance)} /> الحسابات</label>
-                    <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_results || u.can_see_results || false} onChange={() => handleTogglePermission(u.id, 'can_manage_results', u.can_manage_results)} /> النتيجة</label>
+                    <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_results || false} onChange={() => handleTogglePermission(u.id, 'can_manage_results', u.can_manage_results)} /> النتيجة</label>
                     <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_transport || false} onChange={() => handleTogglePermission(u.id, 'can_manage_transport', u.can_manage_transport)} /> التراحيل</label>
                     <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_supervisors || false} onChange={() => handleTogglePermission(u.id, 'can_manage_supervisors', u.can_manage_supervisors)} /> المشرفات</label>
                     <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_admin || false} onChange={() => handleTogglePermission(u.id, 'can_manage_admin', u.can_manage_admin)} /> الإدارة</label>
