@@ -43,7 +43,7 @@ export default function App() {
   const [editExtra, setEditExtra] = useState('');
   const [editImage, setEditImage] = useState('');
 
-  // جلب الأخبار والمتفوقين من Supabase عند تحميل الصفحة
+  // جلب الأخبار والمتفوقين والمعلمين عند تحميل الصفحة
   useEffect(() => {
     fetchNews();
     fetchTopStudents();
@@ -170,8 +170,7 @@ export default function App() {
 
   const openEditModal = (type, item, index) => {
     setEditType(type);
-    // إذا لم يكن للعنصر بيانات سابقة، نضع معرف افتراضي وتفاصيل أولية
-    setEditingItem(item || { id: `new_${index}`, isNew: true });
+    setEditingItem(item || { id: `new_${index}`, isNew: true, index });
     setEditName(item?.name || '');
     setEditExtra(type === 'teacher' ? (item?.subject || '') : (item?.score || ''));
     setEditImage(item?.image || item?.image_url || '');
@@ -211,17 +210,32 @@ export default function App() {
 
     } else if (editType === 'teacher') {
       const updatedTeacher = { name: editName, subject: editExtra, image: editImage };
+
+      try {
+        if (editingItem.id && !editingItem.isNew) {
+          await supabase.from('teachers').update(updatedTeacher).eq('id', editingItem.id);
+        } else {
+          const { data } = await supabase.from('teachers').insert([updatedTeacher]).select();
+          if (data && data[0]) updatedTeacher.id = data[0].id;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
       const list = [...teachersList];
       const idx = list.findIndex(t => t.id === editingItem.id);
-      if (idx >= 0) list[idx] = { ...list[idx], ...updatedTeacher };
-      else list.push(updatedTeacher);
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...updatedTeacher };
+      } else {
+        list.push(updatedTeacher);
+      }
       setTeachersList(list);
     }
 
     setEditingItem(null);
   };
 
-  // 🌟 دالة توليد خانات عروض الطلاب والمعلمين لضمان 5 أماكن و20 معلماً دائماً 🌟
+  // 🌟 دالة توليد الخانات الثابتة
   const renderFixedSlots = (dataList, totalSlots, typeLabel, editTypeTag, cardBg, borderColor, badgeBg) => {
     const slots = Array.from({ length: totalSlots }, (_, index) => dataList[index] || null);
 
@@ -260,6 +274,77 @@ export default function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
+      {/* 🌟 أنماط CSS للمحرك والتصميم الزجاجي */}
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+        .ticker-wrap {
+          display: flex;
+          align-items: center;
+          background: linear-gradient(90deg, #047857 0%, #065f46 100%);
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(4, 120, 87, 0.15);
+          border: 1px solid #059669;
+          margin-bottom: 16px;
+        }
+        .ticker-title {
+          background: #f59e0b;
+          color: #ffffff;
+          padding: 10px 18px;
+          font-weight: 900;
+          font-size: 13px;
+          white-space: nowrap;
+          z-index: 2;
+          box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .ticker-content-container {
+          overflow: hidden;
+          white-space: nowrap;
+          width: 100%;
+          position: relative;
+        }
+        .ticker-move {
+          display: inline-block;
+          white-space: nowrap;
+          animation: marquee 30s linear infinite;
+          padding-left: 100%;
+        }
+        .ticker-move:hover {
+          animation-play-state: paused;
+        }
+        .ticker-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #ffffff;
+          font-size: 13px;
+          font-weight: 700;
+          margin-left: 30px;
+        }
+        .ticker-logo {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          border: 1px solid #f59e0b;
+          object-fit: cover;
+        }
+
+        /* زجاجي أنيق للتذييل */
+        .glass-footer {
+          background: rgba(255, 255, 255, 0.75);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-top: 1px solid rgba(226, 232, 240, 0.8);
+          box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
+        }
+      `}</style>
+
       {/* الشريط العلوي */}
       <header style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', padding: '10px 4%', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 15px rgba(4,120,87,0.15)', borderBottom: '3px solid #f59e0b' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -320,6 +405,28 @@ export default function App() {
         {activeTab === 'landing' && (
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
+            {/* 🌟 شريط الأخبار والإعلانات المتحرك العصري فوق مجلس الإدارة 🌟 */}
+            <div className="ticker-wrap">
+              <div className="ticker-title">
+                <span>إعلان</span> 📢
+              </div>
+              <div className="ticker-content-container">
+                <div className="ticker-move">
+                  {newsList.map((news, idx) => (
+                    <span key={news.id || idx} className="ticker-item">
+                      <img src="logo.png" alt="logo" className="ticker-logo" onError={(e) => { e.target.src = "https://placehold.co/50"; }} />
+                      <span style={{ color: '#fef08a' }}>[{news.title}]:</span>
+                      <span>{news.content}</span>
+                      <img src="logo.png" alt="logo" className="ticker-logo" onError={(e) => { e.target.src = "https://placehold.co/50"; }} />
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {isLoggedIn && (
+                <button onClick={() => setShowAddNewsModal(true)} style={{ backgroundColor: '#f59e0b', color: '#fff', border: 'none', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px', whiteSpace: 'nowrap', marginLeft: '8px', borderRadius: '6px' }}>+ خبر</button>
+              )}
+            </div>
+
             {/* القسم الترحيبي وبنّر مجلس الإدارة */}
             <div style={{ 
               backgroundColor: '#ffffff', 
@@ -380,26 +487,6 @@ export default function App() {
 
             </div>
 
-            {/* الأخبار */}
-            <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                <h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>📰 آخر الأخبار والإعلانات</h3>
-                {isLoggedIn && (
-                  <button onClick={() => setShowAddNewsModal(true)} style={{ backgroundColor: '#047857', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' }}>+ إضافة خبر</button>
-                )}
-              </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-                {newsList.map(news => (
-                  <div key={news.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRight: '4px solid #047857' }}>
-                    <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold' }}>📅 {news.date}</span>
-                    <h4 style={{ color: '#065f46', margin: '4px 0', fontSize: '15px', fontWeight: '800' }}>{news.title}</h4>
-                    <p style={{ color: '#334155', fontSize: '12.5px', margin: 0, lineHeight: '1.4' }}>{news.content}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* متفوقو الابتدائي (5 طلاب ثابتين) */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
@@ -416,7 +503,7 @@ export default function App() {
               {renderFixedSlots(middleTopStudents, 5, 'مكان شاغر', 'middle_top', '#ecfdf5', '#a7f3d0', '#047857')}
             </div>
 
-            {/* هيئة التدريس (20 معلماً ثابتين) */}
+            {/* هيئة التدريس (20 معلماً ثابتين مع تفعيل التعديل والإضافة) */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
                 <h3 style={{ color: '#065f46', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>👨‍🏫 كادر هيئة التدريس (20 معلماً)</h3>
@@ -467,7 +554,7 @@ export default function App() {
       {editingItem && (
         <div style={modalOverlayStyle}>
           <form onSubmit={handleSaveEdit} style={modalBoxStyle}>
-            <h4 style={{ margin: 0, color: '#047857', fontSize: '15px' }}>تعديل البيانات من الرئيسية</h4>
+            <h4 style={{ margin: 0, color: '#047857', fontSize: '15px' }}>{editType === 'teacher' ? 'تعديل بيانات المعلم' : 'تعديل بيانات المتفوق'}</h4>
             
             <label style={{ fontSize: '11px', fontWeight: 'bold' }}>الاسم:</label>
             <input type="text" value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} required />
@@ -476,7 +563,7 @@ export default function App() {
             <input type="text" value={editExtra} onChange={e => setEditExtra(e.target.value)} style={inputStyle} required />
 
             <label style={{ fontSize: '11px', fontWeight: 'bold' }}>رابط الصورة:</label>
-            <input type="text" value={editImage} onChange={e => setEditImage(e.target.value)} style={inputStyle} />
+            <input type="text" value={editImage} onChange={e => setEditImage(e.target.value)} style={inputStyle} placeholder="https://..." />
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button type="submit" style={{ flex: 1, padding: '8px', background: '#047857', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>حفظ التعديل</button>
@@ -490,7 +577,7 @@ export default function App() {
       {showAddNewsModal && (
         <div style={modalOverlayStyle}>
           <form onSubmit={handleAddNews} style={modalBoxStyle}>
-            <h4 style={{ margin: 0, color: '#047857', fontSize: '15px' }}>إضافة خبر جديد</h4>
+            <h4 style={{ margin: 0, color: '#047857', fontSize: '15px' }}>إضافة خبر / إعلان جديد</h4>
             <input type="text" placeholder="عنوان الخبر" value={newNewsTitle} onChange={e => setNewNewsTitle(e.target.value)} style={inputStyle} required />
             <textarea placeholder="تفاصيل الخبر" value={newNewsContent} onChange={e => setNewNewsContent(e.target.value)} style={{ ...inputStyle, minHeight: '70px' }} required />
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -524,16 +611,23 @@ export default function App() {
         </div>
       )}
 
-      {/* التذييل */}
-      <footer style={{ textAlign: 'center', padding: '14px 10px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', color: '#064e3b', fontSize: '13px', fontWeight: '900', width: '100%', boxSizing: 'border-box' }}>
-        ✨ من تصميم : <span style={{ color: '#f59e0b', textDecoration: 'underline' }}>الأستاذ عثمان صديق ( أبو حلا )</span> | 📱 <span style={{ color: '#047857' }}>01149169346</span>
+      {/* 🌟 التذييل الزجاجي العصري 🌟 */}
+      <footer className="glass-footer" style={{ textAlign: 'center', padding: '16px 12px', marginTop: 'auto', width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.6)', padding: '8px 20px', borderRadius: '30px', border: '1px solid rgba(4, 120, 87, 0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#047857', fontSize: '13px', fontWeight: '700' }}>✨ تصميم وتطوير:</span>
+          <span style={{ color: '#d97706', fontSize: '13.5px', fontWeight: '900', letterSpacing: '0.3px' }}>الأستاذ عثمان صديق ( أبو حلا )</span>
+          <span style={{ color: '#cbd5e1' }}>|</span>
+          <a href="tel:01149169346" style={{ color: '#059669', textDecoration: 'none', fontSize: '13px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            📱 <span>01149169346</span>
+          </a>
+        </div>
       </footer>
 
     </div>
   );
 }
 
-// 🎨 الأنماط المساعدة والتصميم
+// 🎨 الأنماط المساعدة
 const navBtnStyle = (isActive) => ({
   padding: '5px 10px',
   borderRadius: '6px',
