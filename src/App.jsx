@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 // استدعاء ملف الربط مع قاعدة البيانات سوبابيز
@@ -24,31 +24,14 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   // ---------------- بيانات الأخبار ----------------
-  const [newsList, setNewsList] = useState([
-    { id: 1, title: 'بدء التسجيل للعام الدراسي الجديد', date: '2026-08-01', content: 'نُعلم جميع أولياء الأمور الكرام بفتح باب التسجيل لجميع المراحل الدراسية.' },
-    { id: 2, title: 'تكريم الطلاب المتفوقين', date: '2026-08-15', content: 'تم إقامة حفل تكريم متميز للطلاب الأوائل في امتحانات الفترة.' }
-  ]);
+  const [newsList, setNewsList] = useState([]);
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
   const [newNewsTitle, setNewNewsTitle] = useState('');
   const [newNewsContent, setNewNewsContent] = useState('');
 
-  // ---------------- بيانات المتفوقين (5 طلاب فقط) ----------------
-  const initialPrimary = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1,
-    name: `طالب ابتدائي ${i + 1}`,
-    score: '100%',
-    image: 'https://placehold.co/150'
-  }));
-
-  const initialMiddle = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1,
-    name: `طالب متوسط ${i + 1}`,
-    score: '99%',
-    image: 'https://placehold.co/150'
-  }));
-
-  const [primaryTopStudents, setPrimaryTopStudents] = useState(initialPrimary);
-  const [middleTopStudents, setMiddleTopStudents] = useState(initialMiddle);
+  // ---------------- بيانات المتفوقين (5 طلاب لكل مرحلة) ----------------
+  const [primaryTopStudents, setPrimaryTopStudents] = useState([]);
+  const [middleTopStudents, setMiddleTopStudents] = useState([]);
 
   // ---------------- بيانات هيئة التدريس ----------------
   const initialTeachers = Array.from({ length: 20 }, (_, i) => ({
@@ -57,7 +40,6 @@ export default function App() {
     subject: i % 2 === 0 ? 'اللغة العربية' : 'الرياضيات',
     image: 'https://placehold.co/150'
   }));
-
   const [teachersList, setTeachersList] = useState(initialTeachers);
 
   // ---------------- حالات التعديل السريع ----------------
@@ -66,6 +48,57 @@ export default function App() {
   const [editName, setEditName] = useState('');
   const [editExtra, setEditExtra] = useState('');
   const [editImage, setEditImage] = useState('');
+
+  // جلب الأخبار والمتفوقين من Supabase عند تحميل الصفحة
+  useEffect(() => {
+    fetchNews();
+    fetchTopStudents();
+  }, []);
+
+  const fetchNews = async () => {
+    try {
+      const { data } = await supabase.from('news').select('*').order('id', { ascending: false });
+      if (data && data.length > 0) {
+        setNewsList(data);
+      } else {
+        setNewsList([
+          { id: 1, title: 'بدء التسجيل للعام الدراسي الجديد', date: '2026-08-01', content: 'نُعلم جميع أولياء الأمور الكرام بفتح باب التسجيل لجميع المراحل الدراسية.' },
+          { id: 2, title: 'تكريم الطلاب المتفوقين', date: '2026-08-15', content: 'تم إقامة حفل تكريم متميز للطلاب الأوائل في امتحانات الفترة.' }
+        ]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchTopStudents = async () => {
+    try {
+      const { data } = await supabase.from('top_students').select('*');
+      if (data && data.length > 0) {
+        setPrimaryTopStudents(data.filter(s => s.stage === 'primary').slice(0, 5));
+        setMiddleTopStudents(data.filter(s => s.stage === 'middle').slice(0, 5));
+      } else {
+        const initialPrimary = Array.from({ length: 5 }, (_, i) => ({
+          id: i + 1,
+          name: `طالب ابتدائي ${i + 1}`,
+          score: '100%',
+          image: 'https://placehold.co/150',
+          stage: 'primary'
+        }));
+        const initialMiddle = Array.from({ length: 5 }, (_, i) => ({
+          id: i + 1,
+          name: `طالب متوسط ${i + 1}`,
+          score: '99%',
+          image: 'https://placehold.co/150',
+          stage: 'middle'
+        }));
+        setPrimaryTopStudents(initialPrimary);
+        setMiddleTopStudents(initialMiddle);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -120,16 +153,27 @@ export default function App() {
     setActiveTab('landing'); 
   };
 
-  const handleAddNews = (e) => {
+  const handleAddNews = async (e) => {
     e.preventDefault();
     if (!newNewsTitle || !newNewsContent) return;
-    const newItem = {
-      id: Date.now(),
+
+    const newNewsData = {
       title: newNewsTitle,
       content: newNewsContent,
       date: new Date().toISOString().split('T')[0]
     };
-    setNewsList([newItem, ...newsList]);
+
+    try {
+      const { data, error } = await supabase.from('news').insert([newNewsData]).select();
+      if (!error && data) {
+        setNewsList([data[0], ...newsList]);
+      } else {
+        setNewsList([{ ...newNewsData, id: Date.now() }, ...newsList]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
     setNewNewsTitle('');
     setNewNewsContent('');
     setShowAddNewsModal(false);
@@ -143,15 +187,34 @@ export default function App() {
     setEditImage(item.image);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    if (editType === 'primary_top') {
-      setPrimaryTopStudents(primaryTopStudents.map(s => s.id === editingItem.id ? { ...s, name: editName, score: editExtra, image: editImage } : s));
-    } else if (editType === 'middle_top') {
-      setMiddleTopStudents(middleTopStudents.map(s => s.id === editingItem.id ? { ...s, name: editName, score: editExtra, image: editImage } : s));
+
+    if (editType === 'primary_top' || editType === 'middle_top') {
+      const stage = editType === 'primary_top' ? 'primary' : 'middle';
+      const updatedStudent = { name: editName, score: editExtra, image: editImage, stage };
+
+      try {
+        if (typeof editingItem.id === 'number' && editingItem.id > 100) {
+          await supabase.from('top_students').update(updatedStudent).eq('id', editingItem.id);
+        } else {
+          const { data } = await supabase.from('top_students').insert([updatedStudent]).select();
+          if (data && data[0]) editingItem.id = data[0].id;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      if (editType === 'primary_top') {
+        setPrimaryTopStudents(primaryTopStudents.map(s => s.id === editingItem.id ? { ...s, name: editName, score: editExtra, image: editImage } : s));
+      } else {
+        setMiddleTopStudents(middleTopStudents.map(s => s.id === editingItem.id ? { ...s, name: editName, score: editExtra, image: editImage } : s));
+      }
+
     } else if (editType === 'teacher') {
       setTeachersList(teachersList.map(t => t.id === editingItem.id ? { ...t, name: editName, subject: editExtra, image: editImage } : t));
     }
+
     setEditingItem(null);
   };
 
@@ -243,23 +306,13 @@ export default function App() {
                 </div>
               </div>
 
-              {/* مجلس الإدارة - صور مكبرة وواضحة */}
-              <div style={{ 
-                backgroundColor: '#f8fafc', 
-                padding: '20px 15px', 
-                borderRadius: '14px', 
-                border: '1px solid #f1f5f9' 
-              }}>
+              {/* مجلس الإدارة */}
+              <div style={{ backgroundColor: '#f8fafc', padding: '20px 15px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                   <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: '800' }}>🏛️ مجلس إدارة المدرسة</span>
                 </div>
                 
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-                  gap: '16px', 
-                  width: '100%' 
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', width: '100%' }}>
                   <div style={cleanCardStyle('#f59e0b')}>
                     <img src="manager1.png" alt="رئيس مجلس الإدارة" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#f59e0b')} />
                     <span style={cleanBadgeStyle('#b45309', '#fef3c7', '#fde68a')}>رئيس مجلس الإدارة</span>
@@ -480,7 +533,7 @@ export default function App() {
   );
 }
 
-// 🎨 الأنماط المعدلة
+// 🎨 الأنماط
 const navBtnStyle = (isActive) => ({
   padding: '5px 10px',
   borderRadius: '6px',
@@ -494,7 +547,6 @@ const navBtnStyle = (isActive) => ({
   whiteSpace: 'nowrap'
 });
 
-// بطاقة أعضاء الإدارة - أكثر اتساعاً ووضوحاً
 const cleanCardStyle = (accentColor) => ({
   backgroundColor: '#ffffff',
   borderRadius: '12px',
@@ -508,7 +560,6 @@ const cleanCardStyle = (accentColor) => ({
   borderTop: `4px solid ${accentColor}`
 });
 
-// تكبير حجم صورة الإدارة من 50px إلى 85px لتبدو واضحة جداً
 const cleanAvatarStyle = (borderColor) => ({
   width: '85px',
   height: '85px',
