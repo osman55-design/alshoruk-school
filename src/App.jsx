@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// استدعاء ملف الربط مع قاعدة البيانات سوبابيز
+// استدعاء ملف الربط مع قاعدة البيانات سوبابيز من الجذر الرئيسي
 import { supabase } from './supabaseClient';
 
+// 🟢 استدعاء كافة المكونات من داخل مجلد components
 import StudentsSection from './components/StudentsSection';
 import ClassesSection from './components/ClassesSection';
 import TeachersSection from './components/TeachersSection';
 import AccountsSection from './components/AccountsSection';
 import DashboardSection from './components/DashboardSection';
 import ResultsSection from './components/ResultsSection';
-// 🟢 1. استدعاء المكونات الجديدة
-import TransportSection from './components/TransportSection';
-import SupervisorsSection from './components/SupervisorsSection';
+import TransportSection from './components/TransportsSection';        // ملف التراحيل
+import SupervisorsSection from './components/ClassSupervisorsSection'; // ملف المشرفات
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -23,7 +23,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // دالة تسجيل الدخول مع الحماية والتوجيه التلقائي للموظف حسب صلاحياته
+  // دالة تسجيل الدخول
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -36,15 +36,14 @@ export default function App() {
         .single();
 
       if (user && user.password_code === password.trim()) {
-        // 🟢 2. إضافة صلاحيات التراحيل والمشرفات
         const permissions = {
           students: user.can_manage_students,
           classes: user.can_manage_classes,
           teachers: user.can_manage_teachers,
           finance: user.can_manage_finance,
           results: user.can_manage_results ?? user.can_see_results,
-          transport: user.can_manage_transport,   // صلاحية التراحيل
-          supervisors: user.can_manage_supervisors, // صلاحية المشرفات
+          transport: user.can_manage_transport,
+          supervisors: user.can_manage_supervisors,
           admin: user.can_manage_admin
         };
 
@@ -58,7 +57,6 @@ export default function App() {
         setIsLoggedIn(true);
         setShowLoginModal(false);
 
-        // التوجيه التلقائي
         if (permissions.admin) {
           setActiveTab('dashboard');
         } else if (permissions.students) {
@@ -101,7 +99,7 @@ export default function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
-      {/* الشريط العلوي الأخضر الفاخر */}
+      {/* الشريط العلوي */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px 5%', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(4,120,87,0.15)', borderBottom: '4px solid #f59e0b' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <img src="logo.png" alt="الشعار" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #f59e0b', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
@@ -117,7 +115,6 @@ export default function App() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
             <span style={{ color: '#fef08a', fontWeight: 'bold', marginLeft: '12px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 14px', borderRadius: '20px' }}>👤 مرحباً: {currentUser?.name}</span>
             
-            {/* زر العودة للصفحة الرئيسية دائماً عند تسجيل الدخول */}
             <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'landing' ? '#f59e0b' : '#ffffff', color: activeTab === 'landing' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('landing')}>الرئيسية 🏠</button>
 
             {currentUser?.permissions?.admin && (
@@ -144,7 +141,6 @@ export default function App() {
               <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'results' ? '#f59e0b' : '#ffffff', color: activeTab === 'results' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('results')}>النتيجة 📋</button>
             )}
 
-            {/* 🟢 3. أزرار التراحيل والمشرفات في الشريط العلوي */}
             {(currentUser?.permissions?.transport || currentUser?.permissions?.admin) && (
               <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'transport' ? '#f59e0b' : '#ffffff', color: activeTab === 'transport' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('transport')}>التراحيل 🚌</button>
             )}
@@ -162,7 +158,7 @@ export default function App() {
         {activeTab === 'landing' && (
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '40px' }}>
             
-            {/* القسم الترحيبي الرئيسي */}
+            {/* القسم الترحيبي */}
             <div style={{ background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)', color: '#ffffff', padding: '50px 40px', borderRadius: '24px', boxShadow: '0 12px 35px rgba(4,120,87,0.15)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '40px', alignItems: 'center' }}>
               
               <div style={{ textAlign: 'center', padding: '10px', maxWidth: '850px' }}>
@@ -174,17 +170,14 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 🌟 قسم مجلس الإدارة العصرى والأنيق 🌟 */}
+              {/* قسم مجلس الإدارة */}
               <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(20px)', padding: '35px 20px', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }}>
-                
                 <div style={{ textAlign: 'center', marginBottom: '35px' }}>
                   <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fef08a', padding: '6px 18px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.3)' }}>القيادة والتميز</span>
                   <h3 style={{ margin: '12px 0 0 0', color: '#ffffff', fontSize: '26px', fontWeight: '900', letterSpacing: '0.5px' }}>🏛️ مجلس إدارة المدرسة</h3>
                 </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '25px', width: '100%', direction: 'rtl' }}>
-                  
-                  {/* بطاقة 1: رئيس مجلس الإدارة */}
                   <div style={glassCardStyle}>
                     <div style={imageContainerStyle}>
                       <img src="manager1.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#f59e0b')} />
@@ -194,7 +187,6 @@ export default function App() {
                     <h4 style={nameTitleStyle}>الأستاذ كمال الدين مجذوب الطيب</h4>
                   </div>
 
-                  {/* بطاقة 2: الأم التربوية */}
                   <div style={glassCardStyle}>
                     <div style={imageContainerStyle}>
                       <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#f472b6')} />
@@ -204,7 +196,6 @@ export default function App() {
                     <h4 style={nameTitleStyle}>ماما هند عبد الرازق</h4>
                   </div>
 
-                  {/* بطاقة 3: المدير العام */}
                   <div style={glassCardStyle}>
                     <div style={imageContainerStyle}>
                       <img src="admin_manager.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#34d399')} />
@@ -214,7 +205,6 @@ export default function App() {
                     <h4 style={nameTitleStyle}>الأستاذ محمد كمال الدين مجذوب</h4>
                   </div>
 
-                  {/* بطاقة 4: المديرة الإدارية */}
                   <div style={glassCardStyle}>
                     <div style={imageContainerStyle}>
                       <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#a78bfa')} />
@@ -223,13 +213,12 @@ export default function App() {
                     <span style={roleBadgeStyle('#ddd6fe', 'rgba(167, 139, 250, 0.25)', '#a78bfa')}>مديرة إدارية</span>
                     <h4 style={nameTitleStyle}>الأستاذة لينا كمال الدين مجذوب</h4>
                   </div>
-
                 </div>
               </div>
 
             </div>
 
-            {/* بطاقات التعريف والمعلومات */}
+            {/* بطاقات التعريف */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '30px' }}>
               <div style={{ background: '#ffffff', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', borderTop: '6px solid #047857', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}><span style={{ fontSize: '24px' }}>📖</span><h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: '20px' }}>مَن نحن؟</h3></div>
@@ -253,7 +242,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 🟢 4. عرض نوافذ الأقسام التفاعلية بالكامل */}
+        {/* عرض نوافذ الأقسام */}
         {isLoggedIn && activeTab !== 'landing' && (
           <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
             {activeTab === 'students' && <StudentsSection />}
@@ -299,10 +288,6 @@ export default function App() {
     </div>
   );
 }
-
-// ----------------------------------------------------
-// 🎨 الأنماط الزجاجية العصرية (Glassmorphism Styles)
-// ----------------------------------------------------
 
 const glassCardStyle = {
   background: 'rgba(255, 255, 255, 0.08)',
