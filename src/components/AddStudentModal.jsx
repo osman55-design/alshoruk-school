@@ -1,122 +1,289 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 
-export default function AddStudentModal({ onClose, onSave, classOptions }) {
-  const [studentName, setStudentName] = useState('');
-  const [studentAddress, setStudentAddress] = useState('');
-  
-  // تحديث القيمة الافتراضية برمجياً لتتوافق مع بداية خيارات فصولك المقترحة
-  const [studentClass, setStudentClass] = useState(
-    classOptions && classOptions[0] ? classOptions[0].items[0] : 'الأول ابتدائي'
-  );
-  
-  const [studentGender, setStudentGender] = useState('ذكور');
-  const [studentPhone, setStudentPhone] = useState('');
-  const [studentWhatsapp, setStudentWhatsapp] = useState('');
+export default function AddStudentModal({ isOpen, onClose, onSave, studentToEdit = null }) {
+  const [name, setName] = useState('');
+  const [studentClass, setStudentClass] = useState('');
+  const [gender, setGender] = useState('ذكر');
+  const [parentPhone, setParentPhone] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('غير مكتمل');
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // 🌟 قائمة الفصول والتخصصات الشاملة والمطابقة لقسم الفصول
+  const classOptions = [
+    // 🧸 مرحلة الروضة
+    "روضة - فصل مستمع",
+    "روضة - الصف الأول",
+    "روضة - الصف الثاني",
+
+    // 🏫 المرحلة الابتدائية
+    "الابتدائي - الصف الأول",
+    "الابتدائي - الصف الثاني",
+    "الابتدائي - الصف الثالث",
+    "الابتدائي - الصف الرابع",
+    "الابتدائي - الصف الخامس",
+    "الابتدائي - الصف السادس",
+
+    // 🎒 المرحلة المتوسطة
+    "المتوسط - الصف الأول",
+    "المتوسط - الصف الثاني",
+    "المتوسط - الصف الثالث",
+
+    // 🎓 المرحلة الثانوية
+    "الثانوي - الصف الأول",
+    "الثانوي - الصف الثاني",
+
+    // 🧪 ثالث ثانوي - المسار العلمي
+    "ثالث ثانوي - علمي (أحياء)",
+    "ثالث ثانوي - علمي (حاسوب)",
+    "ثالث ثانوي - علمي (هندسية)",
+
+    // 📖 ثالث ثانوي - المسار الأدبي
+    "ثالث ثانوي - أدبي (دراسات إسلامية)",
+    "ثالث ثانوي - أدبي (الأدب الإنجليزي)",
+    "ثالث ثانوي - أدبي (الفنون)",
+    "ثالث ثانوي - أدبي (تخصصات أخرى)"
+  ];
+
+  useEffect(() => {
+    if (studentToEdit) {
+      setName(studentToEdit.name || '');
+      setStudentClass(studentToEdit.student_class || '');
+      setGender(studentToEdit.gender || 'ذكر');
+      setParentPhone(studentToEdit.parent_phone || '');
+      setPaymentStatus(studentToEdit.payment_status || 'غير مكتمل');
+      setNotes(studentToEdit.notes || '');
+    } else {
+      resetForm();
+    }
+  }, [studentToEdit, isOpen]);
+
+  const resetForm = () => {
+    setName('');
+    setStudentClass('');
+    setGender('ذكر');
+    setParentPhone('');
+    setPaymentStatus('غير مكتمل');
+    setNotes('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!studentName.trim()) return;
+    if (!name.trim() || !studentClass) {
+      alert('يرجى ملء اسم الطالب واختيار الفصل الدراسي');
+      return;
+    }
 
     setLoading(true);
-
-    // 1. تجهيز بيانات الطالب لتتوافق مع أعمدة سحابة جوجل
-    const cloudStudentData = {
-      id: "ST" + Date.now().toString().slice(-6), // توليد رقم طالب مميز وقصير
-      name: studentName.trim(),
-      address: studentAddress.trim(),
-      class: studentClass,
-      gender: studentGender,
-      phone: studentPhone.trim(),
-      whatsapp: studentWhatsapp.trim(),
-      dateAdded: new Date().toLocaleDateString('ar-EG')
+    const studentData = {
+      name: name.trim(),
+      student_class: studentClass,
+      gender: gender,
+      parent_phone: parentPhone.trim(),
+      payment_status: paymentStatus,
+      notes: notes.trim()
     };
 
     try {
-      // 2. رابط الـ Web App السحابي الموحد المنتهي بـ /exec الخاص بك
-      const googleScriptUrl = "https://script.google.com/macros/s/AKfycbw72pRba1ZaqRXHqsnkCkoS1ebAbyzTwIaeMpP6M8AIJM6tbg4hTfuKV4E9_PG5949n/exec"; 
+      if (studentToEdit) {
+        // تعديل طالب حالي
+        const { error } = await supabase
+          .from('students')
+          .update(studentData)
+          .eq('id', studentToEdit.id);
 
-      // 3. إرسال طلب الحفظ كـ text/plain لكسر حظر الـ CORS تماماً في المتصفحات
-      const response = await fetch(googleScriptUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(cloudStudentData)
-      });
-
-      const result = await response.json();
-
-      // 4. التحقق إذا نجحت عملية الحفظ في السيرفر السحابي لجوجل
-      if (result && result.status === "success") {
-        // تمرير البيانات محلياً لتحديث القائمة المفتوحة بالصفحة فوراً
-        onSave(cloudStudentData);
-        alert(`✅ تم الحفظ السحابي بنجاح!\nتم تسجيل الطالب: ${studentName}`);
-        onClose(); // إغلاق النافذة المنبثقة تلقائياً
+        if (error) throw error;
+        alert('تم تعديل بيانات الطالب بنجاح ✨');
       } else {
-        alert("❌ رفض السيرفر السحابي حفظ البيانات: " + (result.message || "خطأ غير معروف"));
+        // إضافة طالب جديد
+        const { error } = await supabase
+          .from('students')
+          .insert([studentData]);
+
+        if (error) throw error;
+        alert('تمت إضافة الطالب بنجاح 👏');
       }
 
-    } catch (error) {
-      console.error("حدث خطأ في الاتصال بسحابة جوجل وحفظ الطالب:", error);
-      alert("❌ فشل الاتصال بالسحابة بسبب قيود CORS، ولكن سيتم إضافته محلياً بشكل مؤقت.");
-      // كخيار احتياطي نقوم بالحفظ محلياً في الصفحة إذا انقطع الإنترنت
-      onSave(cloudStudentData);
+      resetForm();
+      if (onSave) onSave();
       onClose();
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء حفظ بيانات الطالب!');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
-      <div className="modal-content" style={{ backgroundColor: '#fff', padding: '25px', borderRadius: '8px', width: '500px', maxWidth: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', direction: 'rtl' }}>
-        <h3 style={{ marginTop: 0, marginBottom: '20px', textAlign: 'center', color: '#007bff' }}>نافذة إضافة طالب جديدة</h3>
-        
+    <div style={modalOverlayStyle}>
+      <div style={modalContentStyle}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, color: '#047857', fontWeight: 'bold', fontSize: '18px' }}>
+            {studentToEdit ? '✏️ تعديل بيانات طالب' : '➕ إضافة طالب جديد'}
+          </h3>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            
-            <label style={{ fontWeight: 'bold', textAlign: 'right' }}>اسم الطالب ثلاثي:</label>
-            <input type="text" value={studentName} onChange={(e) => setStudentName(e.target.value)} required style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+          {/* اسم الطالب */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={labelStyle}>اسم الطالب الرباعي:</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="مثال: محمد أحمد علي حسن"
+              style={inputStyle}
+              required
+            />
+          </div>
 
-            <label style={{ fontWeight: 'bold', textAlign: 'right' }}>السكن:</label>
-            <input type="text" value={studentAddress} onChange={(e) => setStudentAddress(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+          {/* اختيار الفصل / التخصص */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={labelStyle}>الفصل / المرحلة والتخصص:</label>
+            <select
+              value={studentClass}
+              onChange={(e) => setStudentClass(e.target.value)}
+              style={inputStyle}
+              required
+            >
+              <option value="">-- اختر الفصل / التخصص --</option>
+              {classOptions.map((cls, idx) => (
+                <option key={idx} value={cls}>
+                  {cls}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div style={{ display: 'flex', gap: '15px' }}>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label style={{ fontWeight: 'bold', textAlign: 'right' }}>الفصل الدراسي:</label>
-                <select value={studentClass} onChange={(e) => setStudentClass(e.target.value)} required style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
-                  {classOptions && classOptions.map(g => (
-                    <optgroup key={g.group} label={g.group}>
-                      {g.items.map(c => <option key={c} value={c}>{c}</option>)}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
+          {/* النوع / الجنس */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={labelStyle}>الجنس:</label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="ذكر">👦 ذكر (ولد)</option>
+              <option value="أنثى">👧 أنثى (بنت)</option>
+            </select>
+          </div>
 
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label style={{ fontWeight: 'bold', textAlign: 'right' }}>الجنس:</label>
-                <select value={studentGender} onChange={(e) => setStudentGender(e.target.value)} required style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
-                  <option value="ذكور">ذكور (بنين)</option>
-                  <option value="إناث">إناث (بنات)</option>
-                </select>
-              </div>
-            </div>
+          {/* رقم هاتف ولي الأمر */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={labelStyle}>رقم هاتف ولي الأمر:</label>
+            <input
+              type="text"
+              value={parentPhone}
+              onChange={(e) => setParentPhone(e.target.value)}
+              placeholder="01XXXXXXXXX"
+              style={inputStyle}
+            />
+          </div>
 
-            <label style={{ fontWeight: 'bold', textAlign: 'right' }}>رقم الهاتف:</label>
-            <input type="tel" value={studentPhone} onChange={(e) => setStudentPhone(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+          {/* حالة السداد */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={labelStyle}>حالة السداد المالية:</label>
+            <select
+              value={paymentStatus}
+              onChange={(e) => setPaymentStatus(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="غير مكتمل">غير مكتمل</option>
+              <option value="مكتمل">مكتمل</option>
+              <option value="مُعفى">مُعفى</option>
+            </select>
+          </div>
 
-            <label style={{ fontWeight: 'bold', textAlign: 'right' }}>رقم واتس:</label>
-            <input type="tel" value={studentWhatsapp} onChange={(e) => setStudentWhatsapp(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+          {/* ملاحظات */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={labelStyle}>ملاحظات إضافية:</label>
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="أي ملاحظات أكاديمية أو صحية"
+              style={inputStyle}
+            />
+          </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={onClose} style={{ backgroundColor: '#6c757d', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>إلغاء</button>
-              <button type="submit" disabled={loading} style={{ backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '8px 24px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                {loading ? "جاري الحفظ في السحابة..." : "حفظ البيانات"}
-              </button>
-            </div>
-
+          {/* أزرار الإجراءات */}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ padding: '10px 16px', backgroundColor: '#cbd5e1', color: '#334155', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ padding: '10px 20px', backgroundColor: '#047857', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              {loading ? 'جاري الحفظ...' : (studentToEdit ? 'تحديث البيانات' : 'حفظ الطالب 💾')}
+            </button>
           </div>
         </form>
       </div>
     </div>
   );
 }
+
+// 🎨 أنماط التصميم
+const modalOverlayStyle = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 1000,
+  direction: 'rtl',
+  fontFamily: "'Segoe UI', Roboto, sans-serif"
+};
+
+const modalContentStyle = {
+  backgroundColor: '#ffffff',
+  padding: '24px',
+  borderRadius: '16px',
+  width: '100%',
+  maxWidth: '480px',
+  boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+  maxHeight: '90vh',
+  overflowY: 'auto'
+};
+
+const labelStyle = {
+  display: 'block',
+  fontSize: '13px',
+  fontWeight: 'bold',
+  color: '#334155',
+  marginBottom: '6px'
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '10px',
+  borderRadius: '8px',
+  border: '1px solid #cbd5e1',
+  fontSize: '13.5px',
+  boxSizing: 'border-box',
+  outline: 'none',
+  fontWeight: 'bold'
+};
+
+const closeBtnStyle = {
+  background: 'none',
+  border: 'none',
+  fontSize: '18px',
+  cursor: 'pointer',
+  color: '#64748b'
+};
