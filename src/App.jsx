@@ -32,15 +32,15 @@ export default function App() {
   const [newNewsTitle, setNewNewsTitle] = useState('');
   const [newNewsContent, setNewNewsContent] = useState('');
 
-  // ---------------- بيانات المتفوقين ----------------
-  const initialPrimary = Array.from({ length: 10 }, (_, i) => ({
+  // ---------------- بيانات المتفوقين (5 طلاب فقط) ----------------
+  const initialPrimary = Array.from({ length: 5 }, (_, i) => ({
     id: i + 1,
     name: `طالب ابتدائي ${i + 1}`,
     score: '100%',
     image: 'https://placehold.co/150'
   }));
 
-  const initialMiddle = Array.from({ length: 10 }, (_, i) => ({
+  const initialMiddle = Array.from({ length: 5 }, (_, i) => ({
     id: i + 1,
     name: `طالب متوسط ${i + 1}`,
     score: '99%',
@@ -218,16 +218,16 @@ export default function App() {
         {activeTab === 'landing' && (
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            {/* القسم الترحيبي وبنّر مجلس الإدارة بدون المربع الأخضر */}
+            {/* القسم الترحيبي وبنّر مجلس الإدارة */}
             <div style={{ 
               backgroundColor: '#ffffff', 
-              padding: '20px', 
+              padding: '24px 20px', 
               borderRadius: '16px', 
               boxShadow: '0 2px 12px rgba(0,0,0,0.04)', 
               border: '1px solid #e2e8f0',
               display: 'flex', 
               flexDirection: 'column', 
-              gap: '16px' 
+              gap: '20px' 
             }}>
               
               <div style={{ textAlign: 'center' }}>
@@ -243,42 +243,43 @@ export default function App() {
                 </div>
               </div>
 
+              {/* مجلس الإدارة - صور مكبرة وواضحة */}
               <div style={{ 
                 backgroundColor: '#f8fafc', 
-                padding: '14px', 
-                borderRadius: '12px', 
+                padding: '20px 15px', 
+                borderRadius: '14px', 
                 border: '1px solid #f1f5f9' 
               }}>
-                <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                  <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '800' }}>🏛️ مجلس إدارة المدرسة</span>
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: '800' }}>🏛️ مجلس إدارة المدرسة</span>
                 </div>
                 
                 <div style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
-                  gap: '10px', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+                  gap: '16px', 
                   width: '100%' 
                 }}>
                   <div style={cleanCardStyle('#f59e0b')}>
-                    <img src="manager1.png" alt="رئيس مجلس الإدارة" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={cleanAvatarStyle('#f59e0b')} />
+                    <img src="manager1.png" alt="رئيس مجلس الإدارة" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#f59e0b')} />
                     <span style={cleanBadgeStyle('#b45309', '#fef3c7', '#fde68a')}>رئيس مجلس الإدارة</span>
                     <h5 style={cleanNameStyle}>الأستاذ كمال الدين مجذوب</h5>
                   </div>
 
                   <div style={cleanCardStyle('#ec4899')}>
-                    <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={cleanAvatarStyle('#ec4899')} />
+                    <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#ec4899')} />
                     <span style={cleanBadgeStyle('#be185d', '#fce7f3', '#fbcfe8')}>الأم التربوية</span>
                     <h5 style={cleanNameStyle}>ماما هند عبد الرازق</h5>
                   </div>
 
                   <div style={cleanCardStyle('#10b981')}>
-                    <img src="admin_manager.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={cleanAvatarStyle('#10b981')} />
+                    <img src="admin_manager.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#10b981')} />
                     <span style={cleanBadgeStyle('#047857', '#d1fae5', '#a7f3d0')}>المدير العام</span>
                     <h5 style={cleanNameStyle}>الأستاذ محمد كمال الدين</h5>
                   </div>
 
                   <div style={cleanCardStyle('#8b5cf6')}>
-                    <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={cleanAvatarStyle('#8b5cf6')} />
+                    <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#8b5cf6')} />
                     <span style={cleanBadgeStyle('#6d28d9', '#ede9fe', '#ddd6fe')}>مديرة إدارية</span>
                     <h5 style={cleanNameStyle}>الأستاذة لينا كمال الدين</h5>
                   </div>
@@ -307,42 +308,42 @@ export default function App() {
               </div>
             </div>
 
-            {/* متفوقو الابتدائي */}
+            {/* متفوقو الابتدائي (5 طلاب) */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
-                <h3 style={{ color: '#f59e0b', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>🏆 متفوقو المرحلة الابتدائية (الأوائل 10)</h3>
+                <h3 style={{ color: '#f59e0b', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>🏆 متفوقو المرحلة الابتدائية (الأوائل 5)</h3>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
                 {primaryTopStudents.map((student) => (
-                  <div key={student.id} style={{ background: '#fffbe6', border: '1.5px solid #fef08a', borderRadius: '12px', padding: '10px 6px', textAlign: 'center' }}>
-                    <img src={student.image} alt={student.name} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #f59e0b', marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
+                  <div key={student.id} style={{ background: '#fffbe6', border: '1.5px solid #fef08a', borderRadius: '12px', padding: '12px 8px', textAlign: 'center' }}>
+                    <img src={student.image} alt={student.name} style={{ width: '65px', height: '65px', borderRadius: '50%', border: '2px solid #f59e0b', marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
                     <h5 style={{ margin: '0 0 4px 0', color: '#064e3b', fontWeight: '900', fontSize: '12px' }}>{student.name}</h5>
-                    <span style={{ backgroundColor: '#f59e0b', color: '#fff', padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', display: 'inline-block' }}>{student.score}</span>
+                    <span style={{ backgroundColor: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block' }}>{student.score}</span>
                     
                     {isLoggedIn && (
-                      <button onClick={() => openEditModal('primary_top', student)} style={{ marginTop: '6px', width: '100%', padding: '3px', background: '#047857', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>✏️ تعديل</button>
+                      <button onClick={() => openEditModal('primary_top', student)} style={{ marginTop: '6px', width: '100%', padding: '4px', background: '#047857', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>✏️ تعديل</button>
                     )}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* متفوقو المتوسطة */}
+            {/* متفوقو المتوسطة (5 طلاب) */}
             <div style={{ background: '#ffffff', padding: '16px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               <div style={{ marginBottom: '12px' }}>
-                <h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>🎓 متفوقو المرحلة المتوسطة (الأوائل 10)</h3>
+                <h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: 'clamp(16px, 3vw, 19px)' }}>🎓 متفوقو المرحلة المتوسطة (الأوائل 5)</h3>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
                 {middleTopStudents.map((student) => (
-                  <div key={student.id} style={{ background: '#ecfdf5', border: '1.5px solid #a7f3d0', borderRadius: '12px', padding: '10px 6px', textAlign: 'center' }}>
-                    <img src={student.image} alt={student.name} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #047857', marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
+                  <div key={student.id} style={{ background: '#ecfdf5', border: '1.5px solid #a7f3d0', borderRadius: '12px', padding: '12px 8px', textAlign: 'center' }}>
+                    <img src={student.image} alt={student.name} style={{ width: '65px', height: '65px', borderRadius: '50%', border: '2px solid #047857', marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
                     <h5 style={{ margin: '0 0 4px 0', color: '#064e3b', fontWeight: '900', fontSize: '12px' }}>{student.name}</h5>
-                    <span style={{ backgroundColor: '#047857', color: '#fff', padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', display: 'inline-block' }}>{student.score}</span>
+                    <span style={{ backgroundColor: '#047857', color: '#fff', padding: '2px 8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block' }}>{student.score}</span>
                     
                     {isLoggedIn && (
-                      <button onClick={() => openEditModal('middle_top', student)} style={{ marginTop: '6px', width: '100%', padding: '3px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>✏️ تعديل</button>
+                      <button onClick={() => openEditModal('middle_top', student)} style={{ marginTop: '6px', width: '100%', padding: '4px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>✏️ تعديل</button>
                     )}
                   </div>
                 ))}
@@ -479,7 +480,7 @@ export default function App() {
   );
 }
 
-// 🎨 الأنماط
+// 🎨 الأنماط المعدلة
 const navBtnStyle = (isActive) => ({
   padding: '5px 10px',
   borderRadius: '6px',
@@ -493,36 +494,39 @@ const navBtnStyle = (isActive) => ({
   whiteSpace: 'nowrap'
 });
 
+// بطاقة أعضاء الإدارة - أكثر اتساعاً ووضوحاً
 const cleanCardStyle = (accentColor) => ({
   backgroundColor: '#ffffff',
-  borderRadius: '10px',
-  padding: '10px 6px',
+  borderRadius: '12px',
+  padding: '16px 10px',
   textAlign: 'center',
   border: '1px solid #e2e8f0',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+  boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  borderTop: `3px solid ${accentColor}`
+  borderTop: `4px solid ${accentColor}`
 });
 
+// تكبير حجم صورة الإدارة من 50px إلى 85px لتبدو واضحة جداً
 const cleanAvatarStyle = (borderColor) => ({
-  width: '50px',
-  height: '50px',
+  width: '85px',
+  height: '85px',
   borderRadius: '50%',
   objectFit: 'cover',
-  border: `2px solid ${borderColor}`,
-  marginBottom: '6px'
+  border: `3px solid ${borderColor}`,
+  marginBottom: '10px',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
 });
 
 const cleanBadgeStyle = (textColor, bgColor, borderColor) => ({
   backgroundColor: bgColor,
   color: textColor,
-  padding: '2px 8px',
-  borderRadius: '10px',
-  fontSize: '10px',
+  padding: '3px 10px',
+  borderRadius: '12px',
+  fontSize: '11px',
   fontWeight: 'bold',
-  marginBottom: '4px',
+  marginBottom: '6px',
   border: `1px solid ${borderColor}`,
   whiteSpace: 'nowrap'
 });
@@ -531,8 +535,8 @@ const cleanNameStyle = {
   margin: '0',
   color: '#1e293b',
   fontWeight: '800',
-  fontSize: '12px',
-  lineHeight: '1.3'
+  fontSize: '13px',
+  lineHeight: '1.4'
 };
 
 const cardInfoStyle = (borderColor) => ({
