@@ -29,8 +29,14 @@ export default function DashboardSection({ onBack }) {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('users_list').select('*').order('id', { ascending: true });
-      if (!error && data) {
+      const { data, error } = await supabase
+        .from('users_list')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching users:', error.message);
+      } else if (data) {
         setUsers(data);
       }
     } catch (err) {
@@ -42,13 +48,13 @@ export default function DashboardSection({ onBack }) {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!fullName || !username || !passwordCode) {
+    if (!fullName.trim() || !username.trim() || !passwordCode.trim()) {
       alert('يرجى تعبئة كافة الحقول الأساسية!');
       return;
     }
 
     const newUser = {
-      full_name: fullName,
+      full_name: fullName.trim(),
       username: username.trim(),
       password_code: passwordCode.trim(),
       role: role,
@@ -91,16 +97,17 @@ export default function DashboardSection({ onBack }) {
   };
 
   const handleTogglePermission = async (userId, fieldName, currentValue) => {
+    const newValue = !currentValue;
     try {
       const { error } = await supabase
         .from('users_list')
-        .update({ [fieldName]: !currentValue })
+        .update({ [fieldName]: newValue })
         .eq('id', userId);
 
       if (!error) {
-        setUsers(users.map(u => u.id === userId ? { ...u, [fieldName]: !currentValue } : u));
+        setUsers(users.map(u => u.id === userId ? { ...u, [fieldName]: newValue } : u));
       } else {
-        alert('حدث خطأ أثناء تحديث الصلاحية');
+        alert('حدث خطأ أثناء تحديث الصلاحية: ' + error.message);
       }
     } catch (err) {
       console.error(err);
@@ -114,6 +121,8 @@ export default function DashboardSection({ onBack }) {
       const { error } = await supabase.from('users_list').delete().eq('id', userId);
       if (!error) {
         setUsers(users.filter(u => u.id !== userId));
+      } else {
+        alert('حدث خطأ أثناء الحذف: ' + error.message);
       }
     } catch (err) {
       console.error(err);
@@ -193,32 +202,66 @@ export default function DashboardSection({ onBack }) {
         
         {loading ? (
           <p style={{ textAlign: 'center', color: '#64748b' }}>جاري تحميل قائمة الموظفين...</p>
+        ) : users.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#64748b', padding: '20px', background: '#f8fafc', borderRadius: '8px' }}>لا يوجد موظفون حالياً في النظام.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {users.map((u) => (
-              <div key={u.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                
-                <div>
-                  <h5 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#0f172a', fontWeight: '800' }}>{u.full_name}</h5>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>اسم الدخول: <b style={{ color: '#047857' }}>{u.username}</b> | الرمز: <b style={{ color: '#d97706' }}>{u.password_code}</b> | الرتبة: <b style={{ color: '#2563eb' }}>{u.role}</b></span>
-                </div>
+            {users.map((u) => {
+              const seeLanding = u.can_see_landing ?? true;
+              const manageStudents = u.can_manage_students ?? false;
+              const manageClasses = u.can_manage_classes ?? false;
+              const manageTeachers = u.can_manage_teachers ?? false;
+              const manageFinance = u.can_manage_finance ?? false;
+              const manageResults = u.can_manage_results ?? u.can_see_results ?? false;
+              const manageTransport = u.can_manage_transport ?? false;
+              const manageSupervisors = u.can_manage_supervisors ?? false;
+              const manageAdmin = u.can_manage_admin ?? false;
 
-                {/* مربعات التحكم المباشر بالصلاحيات */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', background: '#f8fafc', padding: '6px 10px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_see_landing ?? true} onChange={() => handleTogglePermission(u.id, 'can_see_landing', u.can_see_landing ?? true)} /> 🏠 الرئيسية</label>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_students || false} onChange={() => handleTogglePermission(u.id, 'can_manage_students', u.can_manage_students)} /> 📚 الطلاب</label>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_classes || false} onChange={() => handleTogglePermission(u.id, 'can_manage_classes', u.can_manage_classes)} /> 🏛️ الفصول</label>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_teachers || false} onChange={() => handleTogglePermission(u.id, 'can_manage_teachers', u.can_manage_teachers)} /> 👨‍🏫 المعلمين</label>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_finance || false} onChange={() => handleTogglePermission(u.id, 'can_manage_finance', u.can_manage_finance)} /> 💰 الحسابات</label>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_results || u.can_see_results || false} onChange={() => handleTogglePermission(u.id, 'can_manage_results', u.can_manage_results)} /> 📋 النتيجة</label>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_transport || false} onChange={() => handleTogglePermission(u.id, 'can_manage_transport', u.can_manage_transport)} /> 🚌 التراحيل</label>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_supervisors || false} onChange={() => handleTogglePermission(u.id, 'can_manage_supervisors', u.can_manage_supervisors)} /> 👩‍💼 المشرفات</label>
-                  <label style={checkLabelStyle}><input type="checkbox" checked={u.can_manage_admin || false} onChange={() => handleTogglePermission(u.id, 'can_manage_admin', u.can_manage_admin)} /> 👑 الإدارة</label>
-                </div>
+              return (
+                <div key={u.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                  
+                  <div>
+                    <h5 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#0f172a', fontWeight: '800' }}>{u.full_name}</h5>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>
+                      اسم الدخول: <b style={{ color: '#047857' }}>{u.username}</b> | الرمز: <b style={{ color: '#d97706' }}>{u.password_code}</b> | الرتبة: <b style={{ color: '#2563eb' }}>{u.role}</b>
+                    </span>
+                  </div>
 
-                <button onClick={() => handleDeleteUser(u.id)} style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' }}>🗑️ حذف</button>
-              </div>
-            ))}
+                  {/* مربعات التحكم المباشر بالصلاحيات */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', background: '#f8fafc', padding: '6px 10px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={seeLanding} onChange={() => handleTogglePermission(u.id, 'can_see_landing', seeLanding)} /> 🏠 الرئيسية
+                    </label>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={manageStudents} onChange={() => handleTogglePermission(u.id, 'can_manage_students', manageStudents)} /> 📚 الطلاب
+                    </label>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={manageClasses} onChange={() => handleTogglePermission(u.id, 'can_manage_classes', manageClasses)} /> 🏛️ الفصول
+                    </label>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={manageTeachers} onChange={() => handleTogglePermission(u.id, 'can_manage_teachers', manageTeachers)} /> 👨‍🏫 المعلمين
+                    </label>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={manageFinance} onChange={() => handleTogglePermission(u.id, 'can_manage_finance', manageFinance)} /> 💰 الحسابات
+                    </label>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={manageResults} onChange={() => handleTogglePermission(u.id, 'can_manage_results', manageResults)} /> 📋 النتيجة
+                    </label>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={manageTransport} onChange={() => handleTogglePermission(u.id, 'can_manage_transport', manageTransport)} /> 🚌 التراحيل
+                    </label>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={manageSupervisors} onChange={() => handleTogglePermission(u.id, 'can_manage_supervisors', manageSupervisors)} /> 👩‍💼 المشرفات
+                    </label>
+                    <label style={checkLabelStyle}>
+                      <input type="checkbox" checked={manageAdmin} onChange={() => handleTogglePermission(u.id, 'can_manage_admin', manageAdmin)} /> 👑 الإدارة
+                    </label>
+                  </div>
+
+                  <button onClick={() => handleDeleteUser(u.id)} style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' }}>🗑️ حذف</button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
