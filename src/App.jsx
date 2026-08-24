@@ -1,255 +1,347 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
+
+// استدعاء ملف الربط مع قاعدة البيانات سوبابيز
+import { supabase } from './supabaseClient';
+
+import StudentsSection from './components/StudentsSection';
+import ClassesSection from './components/ClassesSection';
+import TeachersSection from './components/TeachersSection';
+import AccountsSection from './components/AccountsSection';
+import DashboardSection from './components/DashboardSection';
+import ResultsSection from './components/ResultsSection';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false); 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [activeTab, setActiveTab] = useState('landing'); 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // أعضاء مجلس الإدارة
-  const boardMembers = [
-    { name: 'أ. عثمان صديق (أبو حلا)', role: 'رئيس مجلس الإدارة والمشرف العام', icon: '👑' },
-    { name: 'د. أحمد محمود', role: 'نائب رئيس المجلس', icon: '👨‍💼' },
-    { name: 'أ. فاطمة الزهراء', role: 'المستشار التعليمي والتربوي', icon: '👩‍🏫' },
-    { name: 'أ. محمد عبد الله', role: 'المدير المالي والتطوير', icon: '💰' }
-  ];
-
-  // معرض الصور المحدث
-  const galleryImages = [
-    { title: 'الطابور الصباحي', category: 'activities', url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=800' },
-    { title: 'معمل العلوم الحديث', category: 'facilities', url: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&q=80&w=800' },
-    { title: 'المكتبة المدرسية', category: 'facilities', url: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&q=80&w=800' },
-    { title: 'تكريم الطلاب المتفوقين', category: 'events', url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800' },
-    { title: 'الأنشطة الرياضية', category: 'activities', url: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&q=80&w=800' },
-    { title: 'حافلات التراحيل المدرسية', category: 'facilities', url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800' }
-  ];
-
-  const filteredImages = selectedCategory === 'all' 
-    ? galleryImages 
-    : galleryImages.filter(img => img.category === selectedCategory);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('school_user');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-      setIsLoggedIn(true);
-    }
-  }, []);
-
-  const handleLogin = (e) => {
+  // دالة تسجيل الدخول مع الحماية والتوجيه التلقائي للموظف حسب صلاحياته
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const userData = { name: username || 'المسؤول', role: 'admin' };
-    setCurrentUser(userData);
-    localStorage.setItem('school_user', JSON.stringify(userData));
-    setIsLoggedIn(true);
-    setShowLoginModal(false);
-    setActiveTab('dashboard');
+    setLoading(true);
+
+    try {
+      const { data: user, error } = await supabase
+        .from('users_list')
+        .select('*')
+        .eq('username', username.trim())
+        .single();
+
+      if (user && user.password_code === password.trim()) {
+        const permissions = {
+          students: user.can_manage_students,
+          classes: user.can_manage_classes,
+          teachers: user.can_manage_teachers,
+          finance: user.can_manage_finance,
+          results: user.can_manage_results ?? user.can_see_results,
+          admin: user.can_manage_admin
+        };
+
+        setCurrentUser({
+          id: user.id,
+          name: user.full_name,
+          role: user.role,
+          permissions: permissions
+        });
+        
+        setIsLoggedIn(true);
+        setShowLoginModal(false);
+
+        if (permissions.admin) {
+          setActiveTab('dashboard');
+        } else if (permissions.students) {
+          setActiveTab('students');
+        } else if (permissions.classes) {
+          setActiveTab('classes');
+        } else if (permissions.teachers) {
+          setActiveTab('teachers');
+        } else if (permissions.finance) {
+          setActiveTab('accounts');
+        } else if (permissions.results) {
+          setActiveTab('results');
+        } else {
+          setActiveTab('landing');
+        }
+
+      } else {
+        alert('اسم المستخدم أو رمز الدخول غير صحيح!');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء الاتصال بالنظام، يرجى المحاولة لاحقاً!');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('school_user');
     setIsLoggedIn(false);
     setCurrentUser(null);
+    setUsername('');
+    setPassword('');
+    setActiveTab('landing'); 
   };
 
-  // 1️⃣ الواجهة الرئيسية الخارجية للزوار (تتضمن مجلس الإدارة والمعرض والتعديلات)
-  if (!isLoggedIn) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #022c22 0%, #064e3b 50%, #0f766e 100%)', fontFamily: "'Segoe UI', Roboto, sans-serif", direction: 'rtl', color: '#ffffff' }}>
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
+      
+      {/* الشريط العلوي الأخضر الفاخر */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px 5%', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(4,120,87,0.15)', borderBottom: '4px solid #f59e0b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <img src="logo.png" alt="الشعار" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '2px solid #f59e0b', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ color: '#ffffff', fontWeight: '900', fontSize: '20px', letterSpacing: '0.5px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>مدرسة الشروق السودانية </span>
+            <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>روضة   ابتدائي     متوسط  ثانوي </span>
+          </div>
+        </div>
         
-        {/* الشريط العلوي الزجاجي */}
-        <header style={{ background: 'rgba(6, 78, 59, 0.75)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255, 255, 255, 0.12)', padding: '16px 5%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 1000 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '32px' }}>🏫</span>
-            <div>
-              <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#fef08a' }}>مدرسة الشروق الخاصة</h1>
-              <span style={{ fontSize: '12px', color: '#6ee7b7' }}>منظومة التميز والتعليم الذكي</span>
-            </div>
+        {!isLoggedIn ? (
+          <button style={{ padding: '10px 28px', borderRadius: '25px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: '#f59e0b', color: '#ffffff', fontSize: '14px', boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }} onClick={() => setShowLoginModal(true)}>🔐 بوابة النظام</button>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+            <span style={{ color: '#fef08a', fontWeight: 'bold', marginLeft: '12px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 14px', borderRadius: '20px' }}>👤 مرحباً: {currentUser?.name}</span>
+            
+            {currentUser?.permissions?.admin && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'dashboard' ? '#f59e0b' : '#ffffff', color: activeTab === 'dashboard' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('dashboard')}>لوحة الإدارة ⚙️</button>
+            )}
+            
+            {(currentUser?.permissions?.students || currentUser?.permissions?.admin) && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'students' ? '#f59e0b' : '#ffffff', color: activeTab === 'students' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('students')}>الطلاب 📚</button>
+            )}
+            
+            {(currentUser?.permissions?.classes || currentUser?.permissions?.admin) && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'classes' ? '#f59e0b' : '#ffffff', color: activeTab === 'classes' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('classes')}>الفصول 🏛️</button>
+            )}
+            
+            {(currentUser?.permissions?.teachers || currentUser?.permissions?.admin) && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'teachers' ? '#f59e0b' : '#ffffff', color: activeTab === 'teachers' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('teachers')}>المعلمين 👨‍🏫</button>
+            )}
+            
+            {(currentUser?.permissions?.finance || currentUser?.permissions?.admin) && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'accounts' ? '#f59e0b' : '#ffffff', color: activeTab === 'accounts' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('accounts')}>الحسابات 💰</button>
+            )}
+
+            {(currentUser?.permissions?.results || currentUser?.permissions?.admin) && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'results' ? '#f59e0b' : '#ffffff', color: activeTab === 'results' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('results')}>النتيجة 📋</button>
+            )}
+            
+            <button onClick={handleLogout} style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>خروج 🚪</button>
           </div>
-          <button onClick={() => setShowLoginModal(true)} style={loginBtnStyle}>
-            🔐 دخول النظام
-          </button>
-        </header>
+        )}
+      </div>
 
-        {/* محتوى الصفحة الرئيسية */}
-        <main style={{ padding: '40px 5%', maxWidth: '1300px', margin: '0 auto' }}>
-          
-          {/* قسم الترحيب الرئيسي */}
-          <div style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)', padding: '50px 30px', borderRadius: '32px', textAlign: 'center', marginBottom: '50px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
-            <h2 style={{ fontSize: '36px', color: '#ffffff', marginBottom: '15px' }}>أهلاً بكم في البوابة الرسمية لمدرسة الشروق الخاصة</h2>
-            <p style={{ fontSize: '18px', color: '#a7f3d0', maxWidth: '750px', margin: '0 auto 30px auto', lineHeight: '1.7' }}>
-              نقدم بيئة تعليمية وتربوية متكاملة تعتمد على التقنيات الحديثة لبناء جيل متميز ومبدع.
-            </p>
-            <button onClick={() => setShowLoginModal(true)} style={{ ...loginBtnStyle, padding: '14px 40px', fontSize: '18px' }}>
-              تسجيل الدخول للنظام الإداري 🚀
-            </button>
-          </div>
-
-          {/* 👥 قسم مجلس الإدارة */}
-          <section style={{ marginBottom: '60px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-              <h3 style={{ fontSize: '28px', color: '#fef08a', margin: '0 0 10px 0' }}>🏛️ مجلس الإدارة</h3>
-              <p style={{ color: '#6ee7b7', margin: 0 }}>القيادة والتربوية المشرفة على تطوير واستقرار المدرسة</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-              {boardMembers.map((member, index) => (
-                <div key={index} style={{ background: 'rgba(255, 255, 255, 0.07)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '20px', padding: '25px 20px', textAlign: 'center', transition: 'transform 0.3s' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '10px' }}>{member.icon}</div>
-                  <h4 style={{ margin: '5px 0', fontSize: '18px', color: '#ffffff' }}>{member.name}</h4>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#f59e0b', fontWeight: 'bold' }}>{member.role}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* 🖼️ قسم معرض الصور والتعديلات */}
-          <section style={{ marginBottom: '50px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-              <h3 style={{ fontSize: '28px', color: '#fef08a', margin: '0 0 10px 0' }}>📸 معرض الصور المدرسية</h3>
-              <p style={{ color: '#6ee7b7', margin: '0 0 20px 0' }}>جولة مصورة داخل مرافق وأنشطة مدرسة الشروق</p>
+      <div style={{ padding: '40px 5%', flex: '1', backgroundColor: '#f8fafc' }}>
+        {activeTab === 'landing' && (
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '40px' }}>
+            
+            {/* القسم الترحيبي الرئيسي */}
+            <div style={{ background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)', color: '#ffffff', padding: '50px 40px', borderRadius: '24px', boxShadow: '0 12px 35px rgba(4,120,87,0.15)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '40px', alignItems: 'center' }}>
               
-              {/* أزرار تصفية التصنيفات */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <button onClick={() => setSelectedCategory('all')} style={categoryBtnStyle(selectedCategory === 'all')}>الكل</button>
-                <button onClick={() => setSelectedCategory('facilities')} style={categoryBtnStyle(selectedCategory === 'facilities')}>المرافق والمباني</button>
-                <button onClick={() => setSelectedCategory('activities')} style={categoryBtnStyle(selectedCategory === 'activities')}>الأنشطة المدرسية</button>
-                <button onClick={() => setSelectedCategory('events')} style={categoryBtnStyle(selectedCategory === 'events')}>الفعاليات والتكريم</button>
+              <div style={{ textAlign: 'center', padding: '10px', maxWidth: '850px' }}>
+                <h1 style={{ margin: '0 0 18px 0', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: '900', color: '#ffffff' }}>مرحباً بكم في صرح الشروق التعليمي </h1>
+                <p style={{ margin: '0 auto', fontSize: 'clamp(16px, 2vw, 19px)', color: '#d1fae5', lineHeight: '1.7', fontWeight: '500' }}>بوابتكم التعليمية الذكية والعصرية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز ومشرق يليق بأبنائنا</p>
+                <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <span style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#f59e0b', padding: '8px 18px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', border: '1px solid #f59e0b' }}>✨ توكل نجاح  تفوق</span>
+                  <span style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#34d399', padding: '8px 18px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.2)' }}>📚 المنهج السوداني المطور</span>
+                </div>
+              </div>
+
+              {/* 🌟 قسم مجلس الإدارة العصرى والأنيق (بدون المربع الأبيض) 🌟 */}
+              <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(20px)', padding: '35px 20px', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }}>
+                
+                <div style={{ textAlign: 'center', marginBottom: '35px' }}>
+                  <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fef08a', padding: '6px 18px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.3)' }}>القيادة والتميز</span>
+                  <h3 style={{ margin: '12px 0 0 0', color: '#ffffff', fontSize: '26px', fontWeight: '900', letterSpacing: '0.5px' }}>🏛️ مجلس إدارة المدرسة</h3>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '25px', width: '100%', direction: 'rtl' }}>
+                  
+                  {/* بطاقة 1: رئيس مجلس الإدارة */}
+                  <div style={glassCardStyle}>
+                    <div style={imageContainerStyle}>
+                      <img src="manager1.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#f59e0b')} />
+                      <div style={badgeIconStyle('#f59e0b')}>👑</div>
+                    </div>
+                    <span style={roleBadgeStyle('#fef08a', 'rgba(245, 158, 11, 0.25)', '#f59e0b')}>رئيس مجلس الإدارة</span>
+                    <h4 style={nameTitleStyle}>الأستاذ كمال الدين مجذوب الطيب</h4>
+                  </div>
+
+                  {/* بطاقة 2: الأم التربوية */}
+                  <div style={glassCardStyle}>
+                    <div style={imageContainerStyle}>
+                      <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#f472b6')} />
+                      <div style={badgeIconStyle('#f472b6')}>❤️</div>
+                    </div>
+                    <span style={roleBadgeStyle('#fbcfe8', 'rgba(244, 114, 182, 0.25)', '#f472b6')}>الأم التربوية الحنون</span>
+                    <h4 style={nameTitleStyle}>ماما هند عبد الرازق</h4>
+                  </div>
+
+                  {/* بطاقة 3: المدير العام */}
+                  <div style={glassCardStyle}>
+                    <div style={imageContainerStyle}>
+                      <img src="admin_manager.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#34d399')} />
+                      <div style={badgeIconStyle('#34d399')}>⭐</div>
+                    </div>
+                    <span style={roleBadgeStyle('#a7f3d0', 'rgba(52, 211, 153, 0.25)', '#34d399')}>المدير العام</span>
+                    <h4 style={nameTitleStyle}>الأستاذ محمد كمال الدين مجذوب</h4>
+                  </div>
+
+                  {/* بطاقة 4: المديرة الإدارية */}
+                  <div style={glassCardStyle}>
+                    <div style={imageContainerStyle}>
+                      <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co/200"; }} style={avatarStyle('#a78bfa')} />
+                      <div style={badgeIconStyle('#a78bfa')}>💎</div>
+                    </div>
+                    <span style={roleBadgeStyle('#ddd6fe', 'rgba(167, 139, 250, 0.25)', '#a78bfa')}>مديرة إدارية</span>
+                    <h4 style={nameTitleStyle}>الأستاذة لينا كمال الدين مجذوب</h4>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            {/* بطاقات التعريف والمعلومات */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '30px' }}>
+              <div style={{ background: '#ffffff', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', borderTop: '6px solid #047857', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}><span style={{ fontSize: '24px' }}>📖</span><h3 style={{ color: '#047857', margin: 0, fontWeight: '900', fontSize: '20px' }}>مَن نحن؟</h3></div>
+                <p style={{ color: '#064e3b', lineHeight: '1.8', fontSize: '15.5px', margin: 0, fontWeight: '700' }}>مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد مخصص لتقديم المنهج السوداني الرصين بكفاءة وجودة عالية عبر مراحلها الثلاث.</p>
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', borderTop: '6px solid #065f46', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}><span style={{ fontSize: '24px' }}>🎯</span><h3 style={{ color: '#065f46', margin: 0, fontWeight: '900', fontSize: '20px' }}>أهدافنا ورسالتنا</h3></div>
+                <ul style={{ color: '#064e3b', lineHeight: '1.9', fontSize: '15px', paddingRight: '20px', margin: 0, fontWeight: '700' }}>
+                  <li>تقديم تعليم متميز يتوافق مع المعايير التربوية الحديثة والمطورة.</li>
+                  <li>بناء شخصية الطالب القيادية وتعزيز القيم الأخلاقية والوطنية الراسخة.</li>
+                </ul>
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', borderTop: '6px solid #f59e0b', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}><span style={{ fontSize: '24px' }}>💼</span><h3 style={{ color: '#f59e0b', margin: 0, fontWeight: '900', fontSize: '20px' }}>الحلول الرقمية الذكية</h3></div>
+                <p style={{ color: '#064e3b', lineHeight: '1.8', fontSize: '15.5px', margin: 0, fontWeight: '700' }}>تتضمن هذه البوابة الإلكترونية المتقدمة لوحة تحكم مخصصة لإدارة شؤون المعلمين، الفصول والمستويات الدراسية، الحسابات والنتائج بسرعة فائقة.</p>
               </div>
             </div>
 
-            {/* شبكة عرض الصور */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '25px' }}>
-              {filteredImages.map((img, idx) => (
-                <div key={idx} style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-                  <img src={img.url} alt={img.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
-                  <div style={{ padding: '15px', textAlign: 'center', background: 'rgba(6, 78, 59, 0.8)' }}>
-                    <h5 style={{ margin: 0, fontSize: '16px', color: '#ffffff' }}>{img.title}</h5>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-        </main>
-
-        {/* نافذة تسجيل الدخول Modal */}
-        {showLoginModal && (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 44, 34, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
-            <form onSubmit={handleLogin} style={{ background: 'rgba(6, 78, 59, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '35px', borderRadius: '24px', width: '320px', textAlign: 'right' }}>
-              <h3 style={{ color: '#fef08a', margin: '0 0 20px 0', textAlign: 'center', fontSize: '20px' }}>تسجيل الدخول للنظام</h3>
-              <input type="text" placeholder="اسم المستخدم" value={username} onChange={e => setUsername(e.target.value)} style={modalInputStyle} required />
-              <input type="password" placeholder="كلمة المرور" value={password} onChange={e => setPassword(e.target.value)} style={modalInputStyle} required />
-              <button type="submit" style={loginBtnSubmitStyle}>دخول 🔓</button>
-              <button type="button" onClick={() => setShowLoginModal(false)} style={{ width: '100%', marginTop: '12px', background: 'transparent', color: '#cbd5e1', border: 'none', cursor: 'pointer' }}>إلغاء</button>
-            </form>
           </div>
         )}
 
-        <footer style={{ textAlign: 'center', padding: '25px', color: '#6ee7b7', fontSize: '14px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          ✨ تنفيذ وإشراف: <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>الأستاذ عثمان صديق (أبو حلا)</span>
-        </footer>
+        {/* عرض نوافذ الأقسام التفاعلية */}
+        {isLoggedIn && (
+          <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
+            {activeTab === 'students' && <StudentsSection />}
+            {activeTab === 'classes' && <ClassesSection />}
+            {activeTab === 'teachers' && <TeachersSection />}
+            {activeTab === 'accounts' && <AccountsSection />}
+            {activeTab === 'results' && <ResultsSection />}
+            {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('dashboard')} />}
+          </div>
+        )}
       </div>
-    );
-  }
 
-  // 2️⃣ لوحة التحكم الشاملة (تظهر فقط بعد الدخول)
-  return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #022c22 0%, #064e3b 50%, #0f766e 100%)', fontFamily: "'Segoe UI', Roboto, sans-serif", direction: 'rtl', color: '#ffffff' }}>
-      
-      <header style={{ background: 'rgba(6, 78, 59, 0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255, 255, 255, 0.12)', padding: '14px 4%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 1000, flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '26px' }}>🏫</span>
-          <h1 style={{ margin: 0, fontSize: '18px', color: '#fef08a' }}>لوحة التحكم والإدارة</h1>
+      {/* نافذة تسجيل الدخول */}
+      {showLoginModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(6,95,70,0.55)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000, backdropFilter: 'blur(4px)' }}>
+          <form onSubmit={handleLogin} style={{ background: '#ffffff', padding: '35px', borderRadius: '20px', width: '340px', position: 'relative', borderTop: '6px solid #f59e0b', boxShadow: '0 25px 50px rgba(0,0,0,0.15)' }}>
+            <button type="button" onClick={() => setShowLoginModal(false)} style={{ position: 'absolute', top: '18px', left: '18px', border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}>❌</button>
+            <h3 style={{ textAlign: 'center', color: '#047857', margin: '0 0 6px 0', fontSize: '22px', fontWeight: '900' }}>تسجيل دخول الإدارة</h3>
+            <p style={{ textAlign: 'center', color: '#475569', fontSize: '13px', margin: '0 0 25px 0', fontWeight: 'bold' }}>الوصول الآمن لبوابة إدارة نظام مدرسة الشروق</p>
+            
+            <div style={{ marginBottom: '18px', textAlign: 'right' }}>
+              <input type="text" placeholder="اسم الدخول المخصص" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box', textAlign: 'right', fontWeight: 'bold', color: '#064e3b' }} required />
+            </div>
+
+            <div style={{ marginBottom: '25px', textAlign: 'right' }}>
+              <input type="password" placeholder="كلمة المرور" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box', textAlign: 'right', fontWeight: 'bold', color: '#064e3b' }} required />
+            </div>
+
+            <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', boxShadow: '0 6px 15px rgba(4,120,87,0.25)' }}>
+              {loading ? "جاري فتح البوابة السحابية..." : "دخول النظام 🔓"}
+            </button>
+          </form>
         </div>
+      )}
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-          <NavPill active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon="⚙️" label="الرئيسية" />
-          <NavPill active={activeTab === 'students'} onClick={() => setActiveTab('students')} icon="📚" label="الطلاب" />
-          <NavPill active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} icon="🏛️" label="الفصول" />
-          <NavPill active={activeTab === 'teachers'} onClick={() => setActiveTab('teachers')} icon="👨‍🏫" label="المعلمين" />
-          <NavPill active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} icon="📖" label="المواد" />
-          <NavPill active={activeTab === 'accounts'} onClick={() => setActiveTab('accounts')} icon="💰" label="الحسابات" />
-          <NavPill active={activeTab === 'results'} onClick={() => setActiveTab('results')} icon="📋" label="النتيجة" />
-          <NavPill active={activeTab === 'transport'} onClick={() => setActiveTab('transport')} icon="🚌" label="التراحيل" />
-          <NavPill active={activeTab === 'supervisors'} onClick={() => setActiveTab('supervisors')} icon="👩‍💼" label="المشرفات" />
-
-          <button onClick={handleLogout} style={logoutBtnStyle}>
-            🚪 خروج
-          </button>
-        </div>
-      </header>
-
-      <main style={{ padding: '25px 4%', maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ background: 'rgba(255, 255, 255, 0.96)', color: '#0f172a', padding: '30px', borderRadius: '24px', minHeight: '450px', boxShadow: '0 15px 35px rgba(0,0,0,0.2)' }}>
-          <h2 style={{ color: '#047857', borderBottom: '2px solid #e2e8f0', paddingBottom: '12px', marginTop: 0 }}>
-            قسم: {getTabTitle(activeTab)}
-          </h2>
-          <p style={{ color: '#475569', fontSize: '16px' }}>
-            أهلاً بك يا <strong>{currentUser?.name}</strong>. جميع صلاحيات قسم ({getTabTitle(activeTab)}) متاحة للعمل والتعديل.
-          </p>
-        </div>
-      </main>
-
-      <footer style={{ textAlign: 'center', padding: '20px', color: '#6ee7b7', fontSize: '14px' }}>
-        ✨ تنفيذ وإشراف: <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>الأستاذ عثمان صديق (أبو حلا)</span>
+      {/* التذييل */}
+      <footer style={{ textAlign: 'center', padding: '25px', backgroundColor: '#ffffff', borderTop: '2px solid #e2e8f0', color: '#064e3b', fontSize: '16px', fontWeight: '900', width: '100%', boxSizing: 'border-box' }}>
+        ✨ من تصميم : <span style={{ color: '#f59e0b', fontSize: '18px', textDecoration: 'underline' }}>الأستاذ عثمان صديق ( أبو حلا )</span> | 📱  <span style={{ color: '#047857' }}>01149169346</span>
       </footer>
+
     </div>
   );
 }
 
-function getTabTitle(tab) {
-  const titles = {
-    dashboard: 'لوحة الإدارة العامة',
-    students: 'إدارة الطلاب والشؤون',
-    classes: 'إدارة الفصول والأقسام',
-    teachers: 'الكادر التعليمي والمعلمين',
-    subjects: 'المقررات والمواد الدراسية',
-    accounts: 'الحسابات والرسوم الدراسية',
-    results: 'النتائج والشهادات',
-    transport: 'منظومة التراحيل والمواصلات',
-    supervisors: 'مشرفات الحافلات والأدوار'
-  };
-  return titles[tab] || tab;
-}
+// ----------------------------------------------------
+// 🎨 الأنماط الزجاجية العصرية (Glassmorphism Styles)
+// ----------------------------------------------------
 
-function NavPill({ active, onClick, icon, label }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        background: active ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'rgba(255, 255, 255, 0.08)',
-        color: active ? '#ffffff' : '#e2e8f0',
-        border: active ? '1px solid #fbbf24' : '1px solid rgba(255, 255, 255, 0.15)',
-        padding: '7px 15px',
-        borderRadius: '30px',
-        cursor: 'pointer',
-        fontWeight: '700',
-        fontSize: '13px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px'
-      }}
-    >
-      <span>{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-const loginBtnStyle = { background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: '#ffffff', border: 'none', padding: '10px 24px', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer' };
-const logoutBtnStyle = { background: 'rgba(239, 68, 68, 0.25)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.4)', padding: '7px 16px', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer' };
-const categoryBtnStyle = (active) => ({
-  background: active ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)',
-  color: '#ffffff',
-  border: active ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
-  padding: '8px 18px',
+const glassCardStyle = {
+  background: 'rgba(255, 255, 255, 0.08)',
+  backdropFilter: 'blur(12px)',
   borderRadius: '20px',
-  cursor: 'pointer',
-  fontSize: '13px',
-  fontWeight: '600'
+  padding: '22px 15px',
+  textAlign: 'center',
+  border: '1px solid rgba(255, 255, 255, 0.18)',
+  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.15)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center'
+};
+
+const imageContainerStyle = {
+  position: 'relative',
+  marginBottom: '15px',
+  display: 'inline-block'
+};
+
+const avatarStyle = (borderColor) => ({
+  width: '110px',
+  height: '110px',
+  borderRadius: '50%',
+  objectFit: 'cover',
+  border: `3px solid ${borderColor}`,
+  padding: '4px',
+  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  boxShadow: `0 0 20px ${borderColor}40`
 });
-const modalInputStyle = { width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.2)', background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff', marginBottom: '14px', boxSizing: 'border-box', textAlign: 'right' };
-const loginBtnSubmitStyle = { width: '100%', padding: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' };
+
+const badgeIconStyle = (color) => ({
+  position: 'absolute',
+  bottom: '2px',
+  right: '2px',
+  backgroundColor: color,
+  color: '#ffffff',
+  width: '30px',
+  height: '30px',
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '14px',
+  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+  border: '2px solid #ffffff'
+});
+
+const roleBadgeStyle = (textColor, bgColor, borderColor) => ({
+  backgroundColor: bgColor,
+  color: textColor,
+  padding: '5px 14px',
+  borderRadius: '20px',
+  fontSize: '12px',
+  fontWeight: 'bold',
+  marginBottom: '10px',
+  border: `1px solid ${borderColor}`
+});
+
+const nameTitleStyle = {
+  margin: '0',
+  color: '#ffffff',
+  fontWeight: '900',
+  fontSize: '15px',
+  lineHeight: '1.4',
+  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+};
