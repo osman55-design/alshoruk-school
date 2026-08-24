@@ -10,6 +10,9 @@ import TeachersSection from './components/TeachersSection';
 import AccountsSection from './components/AccountsSection';
 import DashboardSection from './components/DashboardSection';
 import ResultsSection from './components/ResultsSection';
+// 🟢 1. استدعاء المكونات الجديدة
+import TransportSection from './components/TransportSection';
+import SupervisorsSection from './components/SupervisorsSection';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -33,12 +36,15 @@ export default function App() {
         .single();
 
       if (user && user.password_code === password.trim()) {
+        // 🟢 2. إضافة صلاحيات التراحيل والمشرفات
         const permissions = {
           students: user.can_manage_students,
           classes: user.can_manage_classes,
           teachers: user.can_manage_teachers,
           finance: user.can_manage_finance,
           results: user.can_manage_results ?? user.can_see_results,
+          transport: user.can_manage_transport,   // صلاحية التراحيل
+          supervisors: user.can_manage_supervisors, // صلاحية المشرفات
           admin: user.can_manage_admin
         };
 
@@ -52,6 +58,7 @@ export default function App() {
         setIsLoggedIn(true);
         setShowLoginModal(false);
 
+        // التوجيه التلقائي
         if (permissions.admin) {
           setActiveTab('dashboard');
         } else if (permissions.students) {
@@ -64,6 +71,10 @@ export default function App() {
           setActiveTab('accounts');
         } else if (permissions.results) {
           setActiveTab('results');
+        } else if (permissions.transport) {
+          setActiveTab('transport');
+        } else if (permissions.supervisors) {
+          setActiveTab('supervisors');
         } else {
           setActiveTab('landing');
         }
@@ -106,6 +117,9 @@ export default function App() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
             <span style={{ color: '#fef08a', fontWeight: 'bold', marginLeft: '12px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 14px', borderRadius: '20px' }}>👤 مرحباً: {currentUser?.name}</span>
             
+            {/* زر العودة للصفحة الرئيسية دائماً عند تسجيل الدخول */}
+            <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'landing' ? '#f59e0b' : '#ffffff', color: activeTab === 'landing' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('landing')}>الرئيسية 🏠</button>
+
             {currentUser?.permissions?.admin && (
               <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'dashboard' ? '#f59e0b' : '#ffffff', color: activeTab === 'dashboard' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('dashboard')}>لوحة الإدارة ⚙️</button>
             )}
@@ -129,6 +143,15 @@ export default function App() {
             {(currentUser?.permissions?.results || currentUser?.permissions?.admin) && (
               <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'results' ? '#f59e0b' : '#ffffff', color: activeTab === 'results' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('results')}>النتيجة 📋</button>
             )}
+
+            {/* 🟢 3. أزرار التراحيل والمشرفات في الشريط العلوي */}
+            {(currentUser?.permissions?.transport || currentUser?.permissions?.admin) && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'transport' ? '#f59e0b' : '#ffffff', color: activeTab === 'transport' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('transport')}>التراحيل 🚌</button>
+            )}
+
+            {(currentUser?.permissions?.supervisors || currentUser?.permissions?.admin) && (
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: activeTab === 'supervisors' ? '#f59e0b' : '#ffffff', color: activeTab === 'supervisors' ? '#ffffff' : '#047857', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} onClick={() => setActiveTab('supervisors')}>المشرفات 👩‍💼</button>
+            )}
             
             <button onClick={handleLogout} style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>خروج 🚪</button>
           </div>
@@ -151,7 +174,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 🌟 قسم مجلس الإدارة العصرى والأنيق (بدون المربع الأبيض) 🌟 */}
+              {/* 🌟 قسم مجلس الإدارة العصرى والأنيق 🌟 */}
               <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(20px)', padding: '35px 20px', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }}>
                 
                 <div style={{ textAlign: 'center', marginBottom: '35px' }}>
@@ -230,14 +253,16 @@ export default function App() {
           </div>
         )}
 
-        {/* عرض نوافذ الأقسام التفاعلية */}
-        {isLoggedIn && (
+        {/* 🟢 4. عرض نوافذ الأقسام التفاعلية بالكامل */}
+        {isLoggedIn && activeTab !== 'landing' && (
           <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
             {activeTab === 'students' && <StudentsSection />}
             {activeTab === 'classes' && <ClassesSection />}
             {activeTab === 'teachers' && <TeachersSection />}
             {activeTab === 'accounts' && <AccountsSection />}
             {activeTab === 'results' && <ResultsSection />}
+            {activeTab === 'transport' && <TransportSection />}
+            {activeTab === 'supervisors' && <SupervisorsSection />}
             {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('dashboard')} />}
           </div>
         )}
@@ -320,7 +345,7 @@ const badgeIconStyle = (color) => ({
   borderRadius: '50%',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center',
+  justify: 'center',
   fontSize: '14px',
   boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
   border: '2px solid #ffffff'
