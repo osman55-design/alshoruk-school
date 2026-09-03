@@ -13,6 +13,9 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
   const [newNewsTitle, setNewNewsTitle] = useState('');
   const [newNewsContent, setNewNewsContent] = useState('');
 
+  // ---------------- بيانات مجلس الإدارة ----------------
+  const [boardList, setBoardList] = useState([]);
+
   // ---------------- بيانات المتفوقين ----------------
   const [primaryTopStudents, setPrimaryTopStudents] = useState([]);
   const [middleTopStudents, setMiddleTopStudents] = useState([]);
@@ -29,6 +32,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
 
   useEffect(() => {
     fetchNews();
+    fetchBoardMembers();
     fetchTopStudents();
     fetchTeachers();
   }, []);
@@ -42,6 +46,24 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
         setNewsList([
           { id: 1, title: 'بدء التسجيل للعام الدراسي الجديد', date: '2026-08-01', content: 'نُعلم جميع أولياء الأمور الكرام بفتح باب التسجيل لجميع المراحل الدراسية.' },
           { id: 2, title: 'تكريم الطلاب المتفوقين', date: '2026-08-15', content: 'تم إقامة حفل تكريم متميز للطلاب الأوائل في امتحانات الفترة.' }
+        ]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchBoardMembers = async () => {
+    try {
+      const { data } = await supabase.from('board_members').select('*').order('id', { ascending: true });
+      if (data && data.length > 0) {
+        setBoardList(data);
+      } else {
+        setBoardList([
+          { id: 1, name: 'الأستاذ كمال الدين مجذوب', role: 'رئيس مجلس الإدارة', image: 'manager1.png', color: '#f59e0b', bg: '#fef3c7', border: '#fde68a' },
+          { id: 2, name: 'ماما هند عبد الرازق', role: 'الأم التربوية', image: 'mother.png', color: '#be185d', bg: '#fce7f3', border: '#fbcfe8' },
+          { id: 3, name: 'الأستاذ محمد كمال الدين', role: 'المدير العام', image: 'admin_manager.png', color: '#047857', bg: '#d1fae5', border: '#a7f3d0' },
+          { id: 4, name: 'الأستاذة لينا كمال الدين', role: 'مديرة إدارية', image: 'admin_manager2.png', color: '#6d28d9', bg: '#ede9fe', border: '#ddd6fe' }
         ]);
       }
     } catch (err) {
@@ -154,14 +176,57 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
     setEditType(type);
     setEditingItem(item || { id: `new_${index}`, isNew: true, index });
     setEditName(item?.name || '');
-    setEditExtra(type === 'teacher' ? (item?.subject || '') : (item?.score || ''));
+    setEditExtra(
+      type === 'teacher' 
+        ? (item?.subject || '') 
+        : type === 'board' 
+        ? (item?.role || '') 
+        : (item?.score || '')
+    );
     setEditImage(item?.image || item?.image_url || '');
+  };
+
+  const handleDeleteBoardMember = async (id) => {
+    if (!window.confirm('هل أنت تأكد من رغبتك في حذف هذا العضو؟')) return;
+    try {
+      await supabase.from('board_members').delete().eq('id', id);
+    } catch (err) {
+      console.error(err);
+    }
+    setBoardList(boardList.filter(b => b.id !== id));
   };
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
-    if (editType === 'primary_top' || editType === 'middle_top') {
+    if (editType === 'board') {
+      const updatedMember = {
+        name: editName,
+        role: editExtra,
+        image: editImage || 'manager1.png',
+        color: '#047857',
+        bg: '#d1fae5',
+        border: '#a7f3d0'
+      };
+
+      try {
+        if (editingItem.id && !editingItem.isNew) {
+          await supabase.from('board_members').update(updatedMember).eq('id', editingItem.id);
+        } else {
+          const { data } = await supabase.from('board_members').insert([updatedMember]).select();
+          if (data && data[0]) updatedMember.id = data[0].id;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      const list = [...boardList];
+      const idx = list.findIndex(b => b.id === editingItem.id);
+      if (idx >= 0) list[idx] = { ...list[idx], ...updatedMember };
+      else list.push(updatedMember);
+      setBoardList(list);
+
+    } else if (editType === 'primary_top' || editType === 'middle_top') {
       const stage = editType === 'primary_top' ? 'primary' : 'middle';
       const updatedStudent = { name: editName, score: editExtra, image: editImage, stage };
 
@@ -225,7 +290,8 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
     textAlign: 'center',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center'
+    alignItems: 'center',
+    position: 'relative'
   });
 
   const cleanAvatarStyle = (borderColor) => ({
@@ -272,7 +338,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
+    justify: 'center',
     zIndex: 1000
   };
 
@@ -336,48 +402,60 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
       <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
+        /* حركة شريط الأخبار من اليمين إلى اليسار */
+        @keyframes marqueeRTL {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
+        
         .ticker-wrap {
           display: flex;
           align-items: center;
-          background: linear-gradient(90deg, #047857 0%, #065f46 100%);
-          border-radius: 12px;
+          background: linear-gradient(135deg, #065f46 0%, #047857 50%, #10b981 100%);
+          border-radius: 16px;
           overflow: hidden;
-          box-shadow: 0 4px 12px rgba(4, 120, 87, 0.15);
-          border: 1px solid #059669;
+          box-shadow: 0 8px 20px rgba(4, 120, 87, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           margin-bottom: 16px;
+          position: relative;
+          padding: 4px;
         }
+
         .ticker-title {
-          background: #f59e0b;
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
           color: #ffffff;
-          padding: 10px 18px;
+          padding: 8px 18px;
+          border-radius: 12px;
           font-weight: 900;
           font-size: 13px;
           white-space: nowrap;
           z-index: 2;
-          box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+          box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
           display: flex;
           align-items: center;
           gap: 6px;
         }
+
         .ticker-content-container {
           overflow: hidden;
           white-space: nowrap;
           width: 100%;
           position: relative;
+          display: flex;
+          align-items: center;
         }
+
         .ticker-move {
           display: inline-block;
           white-space: nowrap;
-          animation: marquee 30s linear infinite;
-          padding-left: 100%;
+          animation: marqueeRTL 28s linear infinite;
+          padding-right: 100%;
         }
+
         .ticker-move:hover {
           animation-play-state: paused;
         }
+
         .ticker-item {
           display: inline-flex;
           align-items: center;
@@ -385,13 +463,18 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
           color: #ffffff;
           font-size: 13px;
           font-weight: 700;
-          margin-left: 30px;
+          margin-right: 35px;
+          background: rgba(255, 255, 255, 0.12);
+          padding: 5px 14px;
+          border-radius: 20px;
+          backdrop-filter: blur(4px);
         }
+
         .ticker-logo {
-          width: 22px;
-          height: 22px;
+          width: 20px;
+          height: 20px;
           border-radius: 50%;
-          border: 1px solid #f59e0b;
+          border: 1.5px solid #f59e0b;
           object-fit: cover;
         }
 
@@ -429,7 +512,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
       <main style={{ padding: '15px 3%', flex: '1', backgroundColor: '#f8fafc', boxSizing: 'border-box' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* شريط الإعلانات */}
+          {/* شريط الإعلانات العصرى - يتحرك من اليمين لليسار */}
           <div className="ticker-wrap">
             <div className="ticker-title">
               <span>إعلان</span> 📢
@@ -441,13 +524,12 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
                     <img src="logo.png" alt="logo" className="ticker-logo" onError={(e) => { e.target.src = "https://placehold.co/50"; }} />
                     <span style={{ color: '#fef08a' }}>[{news.title}]:</span>
                     <span>{news.content}</span>
-                    <img src="logo.png" alt="logo" className="ticker-logo" onError={(e) => { e.target.src = "https://placehold.co/50"; }} />
                   </span>
                 ))}
               </div>
             </div>
             {currentUser && (
-              <button onClick={() => setShowAddNewsModal(true)} style={{ backgroundColor: '#f59e0b', color: '#fff', border: 'none', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px', whiteSpace: 'nowrap', marginLeft: '8px', borderRadius: '6px' }}>+ خبر</button>
+              <button onClick={() => setShowAddNewsModal(true)} style={{ backgroundColor: '#f59e0b', color: '#fff', border: 'none', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px', whiteSpace: 'nowrap', marginLeft: '8px', borderRadius: '10px' }}>+ خبر</button>
             )}
           </div>
 
@@ -475,35 +557,32 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
               </div>
             </div>
 
+            {/* قسم مجلس إدارة المدرسة الديناميكي */}
             <div style={{ backgroundColor: '#f8fafc', padding: '20px 15px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
-              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: '800' }}>🏛️ مجلس إدارة المدرسة</span>
+                {currentUser && (
+                  <button onClick={() => openEditModal('board', null, boardList.length)} style={{ padding: '5px 12px', background: '#047857', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>
+                    + عضو إدارة
+                  </button>
+                )}
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', width: '100%' }}>
-                <div style={cleanCardStyle('#f59e0b')}>
-                  <img src="manager1.png" alt="رئيس مجلس الإدارة" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#f59e0b')} />
-                  <span style={cleanBadgeStyle('#b45309', '#fef3c7', '#fde68a')}>رئيس مجلس الإدارة</span>
-                  <h5 style={cleanNameStyle}>الأستاذ كمال الدين مجذوب</h5>
-                </div>
+                {boardList.map((member, index) => (
+                  <div key={member.id || index} style={cleanCardStyle(member.color || '#047857')}>
+                    <img src={member.image || member.image_url || 'https://placehold.co/150'} alt={member.name} onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle(member.color || '#047857')} />
+                    <span style={cleanBadgeStyle(member.color || '#047857', member.bg || '#d1fae5', member.border || '#a7f3d0')}>{member.role}</span>
+                    <h5 style={cleanNameStyle}>{member.name}</h5>
 
-                <div style={cleanCardStyle('#ec4899')}>
-                  <img src="mother.png" alt="الأم التربوية" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#ec4899')} />
-                  <span style={cleanBadgeStyle('#be185d', '#fce7f3', '#fbcfe8')}>الأم التربوية</span>
-                  <h5 style={cleanNameStyle}>ماما هند عبد الرازق</h5>
-                </div>
-
-                <div style={cleanCardStyle('#10b981')}>
-                  <img src="admin_manager.png" alt="المدير العام" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#10b981')} />
-                  <span style={cleanBadgeStyle('#047857', '#d1fae5', '#a7f3d0')}>المدير العام</span>
-                  <h5 style={cleanNameStyle}>الأستاذ محمد كمال الدين</h5>
-                </div>
-
-                <div style={cleanCardStyle('#8b5cf6')}>
-                  <img src="admin_manager2.png" alt="مديرة إدارية" onError={(e) => { e.target.src = "https://placehold.co/150"; }} style={cleanAvatarStyle('#8b5cf6')} />
-                  <span style={cleanBadgeStyle('#6d28d9', '#ede9fe', '#ddd6fe')}>مديرة إدارية</span>
-                  <h5 style={cleanNameStyle}>الأستاذة لينا كمال الدين</h5>
-                </div>
+                    {currentUser && (
+                      <div style={{ display: 'flex', gap: '4px', width: '100%', marginTop: '8px' }}>
+                        <button onClick={() => openEditModal('board', member, index)} style={{ flex: 1, padding: '3px', background: '#047857', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>✏️ تعديل</button>
+                        <button onClick={() => handleDeleteBoardMember(member.id)} style={{ padding: '3px 8px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>🗑️</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -560,13 +639,20 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
       {editingItem && (
         <div style={modalOverlayStyle}>
           <form onSubmit={handleSaveEdit} style={modalBoxStyle}>
-            <h4 style={{ margin: 0, color: '#047857', fontSize: '15px' }}>{editType === 'teacher' ? 'تعديل بيانات المعلم' : 'تعديل بيانات المتفوق'}</h4>
+            <h4 style={{ margin: 0, color: '#047857', fontSize: '15px' }}>
+              {editType === 'teacher' ? 'تعديل بيانات المعلم' : editType === 'board' ? 'تعديل عضو مجلس الإدارة' : 'تعديل بيانات المتفوق'}
+            </h4>
             <label style={{ fontSize: '11px', fontWeight: 'bold' }}>الاسم:</label>
             <input type="text" value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} required />
-            <label style={{ fontSize: '11px', fontWeight: 'bold' }}>{editType === 'teacher' ? 'المادة الدراسية:' : 'الدرجة المحرزة:'}</label>
+            
+            <label style={{ fontSize: '11px', fontWeight: 'bold' }}>
+              {editType === 'teacher' ? 'المادة الدراسية:' : editType === 'board' ? 'المسمى الوظيفي / الصفة:' : 'الدرجة المحرزة:'}
+            </label>
             <input type="text" value={editExtra} onChange={e => setEditExtra(e.target.value)} style={inputStyle} required />
-            <label style={{ fontSize: '11px', fontWeight: 'bold' }}>رابط الصورة:</label>
-            <input type="text" value={editImage} onChange={e => setEditImage(e.target.value)} style={inputStyle} placeholder="https://..." />
+            
+            <label style={{ fontSize: '11px', fontWeight: 'bold' }}>اسم أو رابط الصورة:</label>
+            <input type="text" value={editImage} onChange={e => setEditImage(e.target.value)} style={inputStyle} placeholder="manager1.png أو https://..." />
+            
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button type="submit" style={{ flex: 1, padding: '8px', background: '#047857', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>حفظ التعديل</button>
               <button type="button" onClick={() => setEditingItem(null)} style={{ flex: 1, padding: '8px', background: '#e2e8f0', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>إلغاء</button>
