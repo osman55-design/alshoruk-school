@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import LandingPage from './components/LandingPage';
+import LandingPage from './LandingPage';
 import DashboardSection from './components/DashboardSection';
 import AdminSystem from './AdminSystem';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('landing'); // 'landing', 'dashboard', 'admin'
+  const [currentView, setCurrentView] = useState('landing');
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
