@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import StudentsSection from './components/StudentsSection';
-import ClassesSection from './components/ClassesSection';
-import TeachersSection from './components/TeachersSection';
-import AccountsSection from './components/AccountsSection';
-import DashboardSection from './components/DashboardSection';
-import ResultsSection from './components/ResultsSection';
-import TransportSection from './components/TransportsSection';
-import SupervisorsSection from './components/ClassSupervisorsSection';
+import StudentsSection from './StudentsSection';
+import ClassesSection from './ClassesSection';
+import TeachersSection from './TeachersSection';
+import AccountsSection from './AccountsSection';
+import DashboardSection from './DashboardSection';
+import ResultsSection from './ResultsSection';
+import TransportSection from './TransportsSection';
+import SupervisorsSection from './ClassSupervisorsSection';
 
 export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
   const [activeTab, setActiveTab] = useState('students');
