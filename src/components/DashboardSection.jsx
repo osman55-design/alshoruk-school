@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import { supabase } from './supabaseClient';
 
 export default function DashboardSection({ onBack }) {
   const [users, setUsers] = useState([]);
@@ -11,7 +11,7 @@ export default function DashboardSection({ onBack }) {
   const [passwordCode, setPasswordCode] = useState('');
   const [role, setRole] = useState('معلم');
 
-  // صلاحيات الأقسام الثلاثة الرئيسية
+  // صلاحيات الأقسام الرئيسية
   const [canSeeLanding, setCanSeeLanding] = useState(true);
   const [canManageStudents, setCanManageStudents] = useState(false);
   const [canManageClasses, setCanManageClasses] = useState(false);
@@ -57,7 +57,6 @@ export default function DashboardSection({ onBack }) {
       return;
     }
 
-    // ✨ تحسين: تضمين جميع الصلاحيات والمراحل بدقة في الكائن الجديد
     const newUser = {
       full_name: fullName.trim(),
       username: username.trim(),
@@ -265,6 +264,7 @@ export default function DashboardSection({ onBack }) {
   );
 }
 
+// الأنماط المعرفة لضمان السلاسة وعدم وجود أخطاء
 const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' };
 const inputStyle = { width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '12px' };
 const checkLabelStyle = { fontSize: '11px', fontWeight: 'bold', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' };
