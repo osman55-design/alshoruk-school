@@ -4,11 +4,11 @@ import AdminSystem from './components/AdminSystem';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentView, setCurrentView] = useState('landing'); // 'landing' أو 'admin'
+  const [currentView, setCurrentView] = useState('landing');
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
-    setCurrentView('admin'); // الانتقال التلقائي لنظام الإدارة بعد الدخول
+    setCurrentView('admin');
   };
 
   const handleLogout = () => {
@@ -16,7 +16,6 @@ export default function App() {
     setCurrentView('landing');
   };
 
-  // إذا كنا في صفحة الواجهة الرئيسية
   if (currentView === 'landing') {
     return (
       <LandingPage 
@@ -28,7 +27,6 @@ export default function App() {
     );
   }
 
-  // إذا انتقلنا لنظام الإدارة وكان المستخدم مسجلاً
   if (currentView === 'admin' && currentUser) {
     return (
       <AdminSystem 
