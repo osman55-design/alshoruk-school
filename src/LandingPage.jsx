@@ -85,7 +85,8 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
 
   const fetchTeachers = async () => {
     try {
-      const { data } = await supabase.from('teachers').select('*');
+      // تم التعديل إلى teachers_list لتتوافق مع اسم الجدول في Supabase
+      const { data } = await supabase.from('teachers_list').select('*');
       if (data && data.length > 0) {
         setTeachersList(data);
       }
@@ -175,7 +176,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
   const openEditModal = (type, item, index) => {
     setEditType(type);
     setEditingItem(item || { id: `new_${index}`, isNew: true, index });
-    setEditName(item?.name || '');
+    setEditName(item?.name || item?.teacher_name || '');
     setEditExtra(
       type === 'teacher' 
         ? (item?.subject || '') 
@@ -256,13 +257,13 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
       }
 
     } else if (editType === 'teacher') {
-      const updatedTeacher = { name: editName, subject: editExtra, image: editImage };
+      const updatedTeacher = { teacher_name: editName, name: editName, subject: editExtra, image: editImage };
 
       try {
         if (editingItem.id && !editingItem.isNew) {
-          await supabase.from('teachers').update(updatedTeacher).eq('id', editingItem.id);
+          await supabase.from('teachers_list').update(updatedTeacher).eq('id', editingItem.id);
         } else {
-          const { data } = await supabase.from('teachers').insert([updatedTeacher]).select();
+          const { data } = await supabase.from('teachers_list').insert([updatedTeacher]).select();
           if (data && data[0]) updatedTeacher.id = data[0].id;
         }
       } catch (err) {
@@ -338,7 +339,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     display: 'flex',
     alignItems: 'center',
-    justify: 'center',
+    justifyContent: 'center',
     zIndex: 1000
   };
 
@@ -372,10 +373,10 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
           <div key={index} style={{ background: cardBg, border: `1.5px solid ${borderColor}`, borderRadius: '12px', padding: '12px 8px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             {item ? (
               <>
-                <img src={item.image || item.image_url || 'https://placehold.co/150'} alt={item.name} style={{ width: '60px', height: '60px', borderRadius: '50%', border: `2px solid ${badgeBg}`, marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
-                <h5 style={{ margin: '0 0 4px 0', color: '#064e3b', fontWeight: '900', fontSize: '11.5px' }}>{item.name}</h5>
+                <img src={item.image || item.image_url || 'https://placehold.co/150'} alt={item.name || item.teacher_name} style={{ width: '60px', height: '60px', borderRadius: '50%', border: `2px solid ${badgeBg}`, marginBottom: '6px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://placehold.co/150"; }} />
+                <h5 style={{ margin: '0 0 4px 0', color: '#064e3b', fontWeight: '900', fontSize: '11.5px' }}>{item.name || item.teacher_name}</h5>
                 {editTypeTag === 'teacher' ? (
-                  <span style={{ color: '#047857', fontSize: '10px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>📖 {item.subject}</span>
+                  <span style={{ color: '#047857', fontSize: '10px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>📖 {item.subject || 'معلم'}</span>
                 ) : (
                   <span style={{ backgroundColor: badgeBg, color: '#fff', padding: '2px 8px', borderRadius: '8px', fontSize: '10.5px', fontWeight: 'bold', display: 'inline-block' }}>{item.score}</span>
                 )}
@@ -512,7 +513,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
       <main style={{ padding: '15px 3%', flex: '1', backgroundColor: '#f8fafc', boxSizing: 'border-box' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* شريط الإعلانات العصرى - يتحرك من اليمين لليسار */}
+          {/* شريط الإعلانات العصري - يتحرك من اليمين لليسار */}
           <div className="ticker-wrap">
             <div className="ticker-title">
               <span>إعلان</span> 📢
@@ -694,16 +695,12 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
         </div>
       )}
 
-      {/* التذييل الزجاجي */}
-      <footer className="glass-footer" style={{ textAlign: 'center', padding: '16px 12px', marginTop: 'auto', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.6)', padding: '8px 20px', borderRadius: '30px', border: '1px solid rgba(4, 120, 87, 0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
-          <span style={{ color: '#047857', fontSize: '13px', fontWeight: '700' }}>✨ تصميم وتطوير:</span>
-          <span style={{ color: '#d97706', fontSize: '13.5px', fontWeight: '900', letterSpacing: '0.3px' }}>الأستاذ عثمان صديق ( أبو حلا )</span>
-          <span style={{ color: '#cbd5e1' }}>|</span>
-          <a href="tel:01149169346" style={{ color: '#047857', textDecoration: 'none', fontWeight: 'bold', fontSize: '13px' }}>📱 01149169346</a>
-        </div>
+      {/* التذييل الزجاجي المكتمل */}
+      <footer className="glass-footer" style={{ textAlign: 'center', padding: '16px 12px', marginTop: '20px' }}>
+        <p style={{ margin: 0, color: '#047857', fontWeight: 'bold', fontSize: '13px' }}>
+          جميع الحقوق محفوظة © {new Date().getFullYear()} - مدرسة الشروق السودانية
+        </p>
       </footer>
-
     </div>
   );
 }
