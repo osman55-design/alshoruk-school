@@ -46,7 +46,7 @@ export default function ClassesSection() {
   // 🌟 حالات الفلترة والتعديل
   const [genderFilter, setGenderFilter] = useState('all');
   const [editingStudentId, setEditingStudentId] = useState(null);
-  const [editFormData, setEditFormData] = useState({ name: '', parent_phone: '', payment_status: 'غير مكتمل', notes: '' });
+  const [editFormData, setEditFormData] = useState({ student_name: '', parent_phone: '', tuition_status: 'غير مسدد' });
 
   // 🌟 هيكلية الفصول والتخصصات لكل مرحلة
   const stagesStructure = {
@@ -99,24 +99,26 @@ export default function ClassesSection() {
     }
   }, [selectedClass]);
 
-  // 🌟 جلب الطلاب ببحث مرن يشمل جميع مسميات أعمدة الفصول
+  // 🌟 جلب الطلاب بالبحث في العمود المطابق للهيكل exact column name matching
   const fetchClassStudents = async (className) => {
     setLoading(true);
     try {
-      // الاستعلام يشمل الحقول المحتملة لتطابق اسم الفصل
+      // البحث عبر class_name أو academic_level لتغطية كافة سيناريوهات الحفظ
       const { data, error } = await supabase
         .from('students')
         .select('*')
-        .or(`class_name.eq."${className}",student_class.eq."${className}",academic_level.eq."${className}"`);
+        .or(`class_name.eq."${className}",academic_level.eq."${className}"`);
 
       if (!error && data) {
         setStudents(data);
       } else {
-        // محاولة جلب احتياطية إذا لم يعثر الاستعلام المركب على نتائج
-        const { data: fallbackData } = await supabase.from('students').select('*');
-        if (fallbackData) {
-          const filtered = fallbackData.filter(s => 
-            s.class_name === className || s.student_class === className || s.academic_level === className
+        // خطة جلب احتياطية لتفادي أخطاء الاختلاف البسيط في المسافات
+        const { data: allData } = await supabase.from('students').select('*');
+        if (allData) {
+          const filtered = allData.filter(s => 
+            (s.class_name && s.class_name.trim() === className.trim()) ||
+            (s.academic_level && s.academic_level.trim() === className.trim()) ||
+            (s.grade && className.includes(s.grade))
           );
           setStudents(filtered);
         } else {
@@ -133,9 +135,8 @@ export default function ClassesSection() {
 
   // 🌟 فلترة الطلاب حسب الجنس
   const filteredStudents = students.filter(student => {
-    const studentGender = student.gender || student.sex;
-    if (genderFilter === 'male') return studentGender === 'ذكر' || studentGender === 'ولد';
-    if (genderFilter === 'female') return studentGender === 'أنثى' || studentGender === 'بنت';
+    if (genderFilter === 'male') return student.gender === 'ذكر';
+    if (genderFilter === 'female') return student.gender === 'أنثى';
     return true;
   });
 
@@ -143,10 +144,9 @@ export default function ClassesSection() {
   const handleStartEdit = (student) => {
     setEditingStudentId(student.id);
     setEditFormData({
-      name: student.student_name || student.name || student.full_name || '',
+      student_name: student.student_name || student.full_name || '',
       parent_phone: student.parent_phone || student.phone || '',
-      payment_status: student.payment_status || 'غير مكتمل',
-      notes: student.notes || ''
+      tuition_status: student.tuition_status || 'غير مسدد'
     });
   };
 
@@ -156,17 +156,15 @@ export default function ClassesSection() {
       const { error } = await supabase
         .from('students')
         .update({
-          student_name: editFormData.name,
-          name: editFormData.name,
+          student_name: editFormData.student_name,
           parent_phone: editFormData.parent_phone,
-          payment_status: editFormData.payment_status,
-          notes: editFormData.notes
+          tuition_status: editFormData.tuition_status
         })
         .eq('id', id);
 
       if (error) throw error;
 
-      setStudents(students.map(s => (s.id === id ? { ...s, ...editFormData, student_name: editFormData.name } : s)));
+      setStudents(students.map(s => (s.id === id ? { ...s, ...editFormData } : s)));
       setEditingStudentId(null);
       alert('تم حفظ التعديلات بنجاح ✨');
     } catch (err) {
@@ -175,12 +173,12 @@ export default function ClassesSection() {
     }
   };
 
-  // 🌟 طباعة القائمة / PDF
+  // 🌟 طباعة القائمة
   const handlePrintPDF = () => {
     window.print();
   };
 
-  // 🌟 تصدير ملف Excel (CSV)
+  // 🌟 تصدير ملف Excel
   const handleExportExcel = () => {
     if (filteredStudents.length === 0) {
       alert('لا توجد بيانات للتصدير!');
@@ -188,19 +186,18 @@ export default function ClassesSection() {
     }
 
     let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
-    csvContent += 'الاسم,رقم ولي الأمر,الجنس,حالة السداد,ملاحظات\n';
+    csvContent += 'اسم الطالب,رقم ولي الأمر,الجنس,حالة السداد,العنوان\n';
 
     filteredStudents.forEach(s => {
-      const name = s.student_name || s.name || s.full_name || '';
+      const name = s.student_name || s.full_name || '';
       const phone = s.parent_phone || s.phone || '';
-      const gender = s.gender || s.sex || '';
-      csvContent += `"${name}","${phone}","${gender}","${s.payment_status || ''}","${s.notes || ''}"\n`;
+      csvContent += `"${name}","${phone}","${s.gender || ''}","${s.tuition_status || ''}","${s.address || ''}"\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `قائمة_طلاب_${selectedClass.name}.csv`);
+    link.setAttribute('download', `طلاب_${selectedClass.name}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -209,7 +206,7 @@ export default function ClassesSection() {
   return (
     <div style={{ padding: '10px', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
-      {/* 🌟 أزرار التنقل بين المراحل 🌟 */}
+      {/* 🌟 أزرار المراحل 🌟 */}
       <div className="no-print" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
         <button onClick={() => { setActiveStage('kindergarten'); setSelectedClass(null); }} style={stageBtnStyle(activeStage === 'kindergarten', '#be123c', '#ffe4e6')}>
           🧸 مرحلة الروضة
@@ -225,7 +222,7 @@ export default function ClassesSection() {
         </button>
       </div>
 
-      {/* 🌟 شبكة عرض الفصول 🌟 */}
+      {/* 🌟 قائمة الفصول 🌟 */}
       <div className="no-print" style={{ background: '#ffffff', borderRadius: '12px', padding: '18px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', marginBottom: '20px' }}>
         <h4 style={{ margin: '0 0 14px 0', color: '#0f172a', fontSize: '16px', fontWeight: '800' }}>
           {stagesStructure[activeStage].name} - اختر الفصل لعرض الطلاب:
@@ -259,24 +256,21 @@ export default function ClassesSection() {
         </div>
       </div>
 
-      {/* 🌟 عرض الفصل المختار والخيارات والجدول 🌟 */}
+      {/* 🌟 جدول البيانات 🌟 */}
       {selectedClass ? (
         <div style={{ background: '#ffffff', borderRadius: '12px', padding: '18px', border: '1px solid #e2e8f0' }}>
           
-          {/* شريط الأدوات والفلترة والطباعة */}
           <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <h4 style={{ margin: 0, color: '#047857', fontSize: '16px', fontWeight: '900' }}>
               📋 قوائم طلاب: <span style={{ color: '#d97706' }}>{selectedClass.name}</span>
             </h4>
 
-            {/* أزرار اختيار الجنس */}
             <div style={{ display: 'flex', gap: '6px', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
               <button onClick={() => setGenderFilter('all')} style={filterBtnStyle(genderFilter === 'all')}>👥 الجميع</button>
               <button onClick={() => setGenderFilter('male')} style={filterBtnStyle(genderFilter === 'male')}>👦 أولاد</button>
               <button onClick={() => setGenderFilter('female')} style={filterBtnStyle(genderFilter === 'female')}>👧 بنات</button>
             </div>
 
-            {/* أزرار الطباعة والتصدير */}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={handlePrintPDF} style={{ padding: '7px 14px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>
                 🖨️ طباعة / PDF
@@ -287,7 +281,6 @@ export default function ClassesSection() {
             </div>
           </div>
 
-          {/* الجدول */}
           {loading ? (
             <p style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>جاري تحميل البيانات...</p>
           ) : filteredStudents.length > 0 ? (
@@ -299,26 +292,24 @@ export default function ClassesSection() {
                     <th style={thStyle}>اسم الطالب</th>
                     <th style={thStyle}>رقم ولي الأمر</th>
                     <th style={thStyle}>حالة السداد</th>
-                    <th style={thStyle}>ملاحظات</th>
+                    <th style={thStyle}>العنوان</th>
                     <th className="no-print" style={thStyle}>إجراءات</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredStudents.map((student, idx) => {
                     const isEditing = editingStudentId === student.id;
-                    const displayName = student.student_name || student.name || student.full_name || 'غير محدد';
-                    const displayPhone = student.parent_phone || student.phone || 'غير مسجل';
 
                     return (
-                      <tr key={student.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={tdStyle}>{idx + 1}</td>
                         
-                        {/* الاسم */}
+                        {/* اسم الطالب */}
                         <td style={tdStyle}>
                           {isEditing ? (
-                            <input type="text" value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} style={inputInlineStyle} />
+                            <input type="text" value={editFormData.student_name} onChange={e => setEditFormData({ ...editFormData, student_name: e.target.value })} style={inputInlineStyle} />
                           ) : (
-                            <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{displayName}</span>
+                            <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{student.student_name || student.full_name}</span>
                           )}
                         </td>
 
@@ -327,39 +318,33 @@ export default function ClassesSection() {
                           {isEditing ? (
                             <input type="text" value={editFormData.parent_phone} onChange={e => setEditFormData({ ...editFormData, parent_phone: e.target.value })} style={inputInlineStyle} />
                           ) : (
-                            displayPhone
+                            student.parent_phone || student.phone || 'غير مسجل'
                           )}
                         </td>
 
                         {/* حالة السداد */}
                         <td style={tdStyle}>
                           {isEditing ? (
-                            <select value={editFormData.payment_status} onChange={e => setEditFormData({ ...editFormData, payment_status: e.target.value })} style={inputInlineStyle}>
-                              <option value="مكتمل">مكتمل</option>
-                              <option value="غير مكتمل">غير مكتمل</option>
+                            <select value={editFormData.tuition_status} onChange={e => setEditFormData({ ...editFormData, tuition_status: e.target.value })} style={inputInlineStyle}>
+                              <option value="مسدد">مسدد</option>
+                              <option value="غير مسدد">غير مسدد</option>
                               <option value="مُعفى">مُعفى</option>
                             </select>
                           ) : (
                             <span style={{
                               padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
-                              backgroundColor: student.payment_status === 'مكتمل' ? '#d1fae5' : '#fee2e2',
-                              color: student.payment_status === 'مكتمل' ? '#047857' : '#dc2626'
+                              backgroundColor: student.tuition_status === 'مسدد' ? '#d1fae5' : '#fee2e2',
+                              color: student.tuition_status === 'مسدد' ? '#047857' : '#dc2626'
                             }}>
-                              {student.payment_status || 'غير محدد'}
+                              {student.tuition_status || 'غير مسدد'}
                             </span>
                           )}
                         </td>
 
-                        {/* ملاحظات */}
-                        <td style={tdStyle}>
-                          {isEditing ? (
-                            <input type="text" value={editFormData.notes} onChange={e => setEditFormData({ ...editFormData, notes: e.target.value })} style={inputInlineStyle} />
-                          ) : (
-                            student.notes || '-'
-                          )}
-                        </td>
+                        {/* العنوان */}
+                        <td style={tdStyle}>{student.address || '-'}</td>
 
-                        {/* أزرار التعديل والحفظ */}
+                        {/* إجراءات */}
                         <td className="no-print" style={tdStyle}>
                           {isEditing ? (
                             <div style={{ display: 'flex', gap: '4px' }}>
@@ -377,14 +362,13 @@ export default function ClassesSection() {
               </table>
             </div>
           ) : (
-            <p style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>لا يوجد طلاب مطابقين للخيارات المختارة.</p>
+            <p style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>لا يوجد طلاب مسجلون في هذا الفصل حتى الآن.</p>
           )}
         </div>
       ) : (
         <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>💡 اختر فضلاً لعرض الطلاب والبدء بالإدارة.</p>
       )}
 
-      {/* 🎨 تنسيق إخفاء الأزرار عند الطباعة */}
       <style>{`
         @media print {
           .no-print { display: none !important; }
