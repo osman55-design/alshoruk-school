@@ -54,7 +54,7 @@ export default function LandingPage({ onOpenLogin }) {
           </div>
         </div>
 
-        {/* شريط الإعلان المشرق باللون الأصفر المريح للعين */}
+        {/* شريط الإعلان المشرق */}
         <div style={{
           flex: 1,
           backgroundColor: '#fffbeb',
@@ -72,14 +72,15 @@ export default function LandingPage({ onOpenLogin }) {
           <div style={{ width: '100%', overflow: 'hidden', whiteSpace: 'nowrap' }}>
             <style>{`
               @keyframes marquee { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-              .ticker-text { display: inline-block; animation: marquee 16s linear infinite; color: '#78350f'; font-weight: 700; font-size: 12.5px; }
+              .ticker-text { display: inline-block; animation: marquee 16s linear infinite; color: #78350f; font-weight: 700; font-size: 12.5px; }
             `}</style>
-            <div className="ticker-text" style={{ color: '#78350f' }}>
+            <div className="ticker-text">
               🎉 أهلاً بكم في العام الدراسي الجديد • إعلان نتائج امتحانات الفترة الأولى قريباً • فتح باب التسجيل لجميع المراحل التعليمية
             </div>
           </div>
         </div>
 
+        {/* زر الفتح المباشر كما في السابق */}
         <button 
           onClick={onOpenLogin}
           style={{
@@ -99,7 +100,7 @@ export default function LandingPage({ onOpenLogin }) {
         </button>
       </header>
 
-      {/* 2. قسم ترحيبي مضغوط وبدون أي مسافات فارغة */}
+      {/* 2. القسم الترحيبي */}
       <section style={{
         background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)',
         color: '#fff',
@@ -122,7 +123,7 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </section>
 
-      {/* 3. المحتوى الرئيسي يبدأ فوراً دون فجوات */}
+      {/* 3. المحتوى الرئيسي */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
         {/* كلمة المدير العام + من نحن */}
