@@ -8,6 +8,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
   const [loginError, setLoginError] = useState('');
   const [loadingLogin, setLoadingLogin] = useState(false);
 
+  // حالة لتخزين بيانات الصفحة القادمة من قاعدة البيانات
   const [siteContent, setSiteContent] = useState({
     about_us: '',
     our_goals: '',
@@ -115,7 +116,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
             🏫 من نحن
           </h3>
           <p style={{ margin: 0, color: '#334155', lineHeight: '1.8', fontSize: '15px', whiteSpace: 'pre-line' }}>
-            {siteContent.about_us || 'أهلاً بكم في مدارس الشروق السودانية بأسوان.'}
+            {siteContent.about_us || 'أهلاً بكم في مدارس الشروق السودانية بأسباب.'}
           </p>
         </div>
 
