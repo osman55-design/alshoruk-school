@@ -8,7 +8,6 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
   const [loginError, setLoginError] = useState('');
   const [loadingLogin, setLoadingLogin] = useState(false);
 
-  // حالة لتخزين بيانات الصفحة القادمة من قاعدة البيانات
   const [siteContent, setSiteContent] = useState({
     about_us: '',
     our_goals: '',
@@ -65,7 +64,6 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'system-ui, sans-serif', direction: 'rtl' }}>
       
-      {/* الهيدر العلوي */}
       <header style={{ backgroundColor: '#0f172a', color: '#fff', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
         <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#38bdf8' }}>
           🏫 مدارس الشروق السودانية - أسوان
@@ -99,7 +97,6 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
         </div>
       </header>
 
-      {/* شريط الأخبار العاجلة */}
       {siteContent.latest_news && (
         <div style={{ backgroundColor: '#fef3c7', color: '#92400e', borderBottom: '1px solid #fde68a', padding: '10px 30px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span>📢 أخبار عاجلة:</span>
@@ -107,20 +104,17 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
         </div>
       )}
 
-      {/* المحتوى الرئيسي */}
       <main style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '25px' }}>
         
-        {/* قسم من نحن */}
         <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '25px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
           <h3 style={{ margin: '0 0 12px 0', color: '#047857', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             🏫 من نحن
           </h3>
           <p style={{ margin: 0, color: '#334155', lineHeight: '1.8', fontSize: '15px', whiteSpace: 'pre-line' }}>
-            {siteContent.about_us || 'أهلاً بكم في مدارس الشروق السودانية بأسباب.'}
+            {siteContent.about_us || 'أهلاً بكم في مدارس الشروق السودانية بأسوان.'}
           </p>
         </div>
 
-        {/* قسم الأهداف */}
         <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '25px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
           <h3 style={{ margin: '0 0 12px 0', color: '#0284c7', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             🎯 رؤيتنا وأهدافنا
@@ -132,7 +126,6 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
 
       </main>
 
-      {/* نافذة تسجيل الدخول (Modal) */}
       {showLoginModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '100%', maxWidth: '380px', padding: '25px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
