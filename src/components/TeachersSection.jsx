@@ -44,14 +44,15 @@ export default function TeachersSection({ onBack }) {
 
     setLoading(true);
     try {
+      // ✅ تم تعديل المسميات لتطابق جدول teachers_list في Supabase
       const { error } = await supabase
         .from('teachers_list')
         .insert([
           {
-            teacher_name: teacherName,
-            specialization: specialization,
-            phone: phone,
-            classes: assignedClasses
+            teacher_name: teacherName.trim(),
+            subject_name: specialization,
+            phone_number: phone.trim(),
+            academic_level: assignedClasses.trim() || 'غير محدد'
           }
         ]);
 
@@ -136,7 +137,7 @@ export default function TeachersSection({ onBack }) {
             </div>
 
             <div>
-              <label style={labelStyle}>الفصول المسندة له</label>
+              <label style={labelStyle}>المرحلة/الفصول المسندة له</label>
               <input type="text" value={assignedClasses} onChange={e => setAssignedClasses(e.target.value)} placeholder="مثال: أول أ، ثاني ب" style={inputStyle} />
             </div>
 
@@ -164,10 +165,10 @@ export default function TeachersSection({ onBack }) {
                 teachers.map((tc, index) => (
                   <tr key={tc.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={tdStyle}>{index + 1}</td>
-                    <td style={{ ...tdStyle, fontWeight: '700', color: '#0f172a' }}>{tc.teacher_name || tc.name}</td>
-                    <td style={tdStyle}><span style={badgeStyle}>{tc.specialization || 'غير حدد'}</span></td>
-                    <td style={tdStyle}>{tc.phone || '—'}</td>
-                    <td style={{ ...tdStyle, color: '#0284c7', fontWeight: '600' }}>{tc.classes || '—'}</td>
+                    <td style={{ ...tdStyle, fontWeight: '700', color: '#0f172a' }}>{tc.teacher_name}</td>
+                    <td style={tdStyle}><span style={badgeStyle}>{tc.subject_name || 'غير محدد'}</span></td>
+                    <td style={tdStyle}>{tc.phone_number || '—'}</td>
+                    <td style={{ ...tdStyle, color: '#0284c7', fontWeight: '600' }}>{tc.academic_level || '—'}</td>
                     <td style={tdStyle}>
                       <button onClick={() => handleDeleteTeacher(tc.id)} style={{ padding: '6px 12px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '700', fontSize: '12px' }}>
                         🗑️ حذف
@@ -178,7 +179,7 @@ export default function TeachersSection({ onBack }) {
               ) : (
                 <tr>
                   <td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: '#94a3b8' }}>
-                    {loading ? 'جاري تحكم البيانات...' : '📋 لا يوجد معلمون مسجلون حالياً.'}
+                    {loading ? 'جاري تحميل البيانات...' : '📋 لا يوجد معلمون مسجلون حالياً.'}
                   </td>
                 </tr>
               )}
