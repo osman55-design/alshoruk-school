@@ -7,7 +7,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState('landing'); // 'landing', 'dashboard', 'admin'
   const [currentUser, setCurrentUser] = useState(null);
 
-  // استرجاع جلسة الدخول عند فتح التطبيق
+  // استرجاع جلسة الدخول المسجلة
   useEffect(() => {
     const savedUser = localStorage.getItem('app_user');
     if (savedUser) {
@@ -19,18 +19,14 @@ export default function App() {
     }
   }, []);
 
+  // عند نجاح تسجيل الدخول
   const handleLogin = (userData) => {
     setCurrentUser(userData);
     localStorage.setItem('app_user', JSON.stringify(userData));
-    
-    // إذا كان المودير عثمان أو أدمن يتم توجيهه تلقائياً للوحة التحكم أو الإدارة
-    if (userData.username === 'osman' || userData.role === 'أدمن' || userData.can_manage_admin) {
-      setCurrentView('dashboard');
-    } else {
-      setCurrentView('dashboard');
-    }
+    setCurrentView('dashboard');
   };
 
+  // عند تسجيل الخروج
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem('app_user');
@@ -40,7 +36,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'system-ui, sans-serif', direction: 'rtl' }}>
       
-      {/* 1. الصفحة الرئيسية: متاحة للكل */}
+      {/* 1. الصفحة الرئيسية (تظهر للجميع وبها إمكانية التعديل والربط) */}
       {currentView === 'landing' && (
         <LandingPage 
           currentUser={currentUser}
@@ -50,23 +46,23 @@ export default function App() {
         />
       )}
 
-      {/* 2. لوحة التحكم العامة للموظفين بحسب صلاحياتهم */}
+      {/* 2. لوحة التحكم العامة للنظام */}
       {currentView === 'dashboard' && (
         <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: '#fff', padding: '15px 20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
             <div>
               <h3 style={{ margin: 0, color: '#0f172a' }}>مرحباً بك، {currentUser?.full_name || 'المستخدم'}</h3>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>الرتبة: {currentUser?.role}</span>
+              <span style={{ fontSize: '12px', color: '#64748b' }}>الرتبة: {currentUser?.role || 'زائر'}</span>
             </div>
             
             <div style={{ display: 'flex', gap: '10px' }}>
-              {/* زر الإدارة والأعدادات: يظهر فقط لـ عثمان أو من يملك صلاحية الإدارة */}
+              {/* زر إعدادات الإدارة: يظهر لعثمان أو من يملك صلاحية الأدمن */}
               {(currentUser?.username === 'osman' || currentUser?.role === 'أدمن' || currentUser?.can_manage_admin) && (
                 <button 
                   onClick={() => setCurrentView('admin')} 
                   style={{ background: '#047857', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
-                  ⚙️ إعدادات التحكم والصلاحيات
+                  ⚙️ لوحة التحكم والصلاحيات
                 </button>
               )}
 
@@ -90,7 +86,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 3. صفحة إعدادات التحكم والصلاحيات (خاصة بـ عثمان / الأدمن فقط) */}
+      {/* 3. صفحة التحكم الخاصة بالإدارة (عثمان) */}
       {currentView === 'admin' && (
         <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
           {(currentUser?.username === 'osman' || currentUser?.role === 'أدمن' || currentUser?.can_manage_admin) ? (
