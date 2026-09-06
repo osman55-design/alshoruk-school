@@ -1,67 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import LandingPage from './LandingPage';
+import DashboardSection from './DashboardSection';
 import AdminSystem from './AdminSystem';
 
 export default function App() {
+  const [currentView, setCurrentView] = useState('landing'); // 'landing', 'dashboard', 'admin'
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentView, setCurrentView] = useState('landing'); // 'landing' أو 'admin'
 
-  // استرجاع حالة تسجيل الدخول من التخزين المحلي عند فتح التطبيق
   useEffect(() => {
-    const savedUser = localStorage.getItem('shurooq_user');
+    const savedUser = localStorage.getItem('app_user');
     if (savedUser) {
       try {
-        const parsedUser = JSON.parse(savedUser);
-        setCurrentUser(parsedUser);
+        setCurrentUser(JSON.parse(savedUser));
       } catch (e) {
-        console.error("خطأ في قراءة بيانات الجلسة المخزنة", e);
-        localStorage.removeItem('shurooq_user');
+        console.error("Error parsing user session:", e);
       }
     }
   }, []);
 
-  const handleLoginSuccess = (user) => {
-    setCurrentUser(user);
-    localStorage.setItem('shurooq_user', JSON.stringify(user));
-    setCurrentView('admin'); // الانتقال التلقائي لنظام الإدارة بعد الدخول
+  const handleLogin = (userData) => {
+    setCurrentUser(userData);
+    localStorage.setItem('app_user', JSON.stringify(userData));
+    setCurrentView('dashboard');
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('shurooq_user');
+    localStorage.removeItem('app_user');
     setCurrentView('landing');
   };
 
-  // إذا كنا في صفحة الواجهة الرئيسية
-  if (currentView === 'landing') {
-    return (
-      <LandingPage 
-        currentUser={currentUser} 
-        onLoginSuccess={handleLoginSuccess}
-        onOpenAdmin={() => setCurrentView('admin')}
-        onLogout={handleLogout}
-      />
-    );
-  }
-
-  // إذا انتقلنا لنظام الإدارة وكان المستخدم مسجلاً
-  if (currentView === 'admin' && currentUser) {
-    return (
-      <AdminSystem 
-        currentUser={currentUser} 
-        onLogout={handleLogout}
-        goToLanding={() => setCurrentView('landing')}
-      />
-    );
-  }
-
-  // في حال حاول الانتقال للإدارة وهو غير مسجّل، نرجعه للرئيسية
   return (
-    <LandingPage 
-      currentUser={currentUser} 
-      onLoginSuccess={handleLoginSuccess}
-      onOpenAdmin={() => setCurrentView('admin')}
-      onLogout={handleLogout}
-    />
+    <div style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+      {currentView === 'landing' && (
+        <LandingPage 
+          onLoginSuccess={handleLogin} 
+          onOpenAdmin={() => setCurrentView('admin')} 
+        />
+      )}
+
+      {currentView === 'dashboard' && (
+        <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: '#fff', padding: '15px 20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ margin: 0, color: '#0f172a', fontSize: '20px' }}>مرحباً بك، {currentUser?.full_name || 'المستخدم'}</h2>
+            <button onClick={handleLogout} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+              تسجيل الخروج
+            </button>
+          </header>
+          
+          <DashboardSection onBack={() => setCurrentView('landing')} currentUser={currentUser} />
+        </div>
+      )}
+
+      {currentView === 'admin' && (
+        <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+          <AdminSystem onBack={() => setCurrentView('landing')} />
+        </div>
+      )}
+    </div>
   );
 }
