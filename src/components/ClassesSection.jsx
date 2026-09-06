@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
-// 🎨 أنماط التصميم (مُعرفة في البداية لضمان الوضوح وإعادة الاستخدام)
+// 🎨 أنماط التصميم
 const stageBtnStyle = (isActive, activeColor, activeBg) => ({
   padding: '10px 18px',
   borderRadius: '25px',
@@ -99,19 +99,29 @@ export default function ClassesSection() {
     }
   }, [selectedClass]);
 
+  // 🌟 جلب الطلاب ببحث مرن يشمل جميع مسميات أعمدة الفصول
   const fetchClassStudents = async (className) => {
     setLoading(true);
     try {
+      // الاستعلام يشمل الحقول المحتملة لتطابق اسم الفصل
       const { data, error } = await supabase
         .from('students')
         .select('*')
-        .eq('student_class', className)
-        .order('name', { ascending: true });
+        .or(`class_name.eq."${className}",student_class.eq."${className}",academic_level.eq."${className}"`);
 
       if (!error && data) {
         setStudents(data);
       } else {
-        setStudents([]);
+        // محاولة جلب احتياطية إذا لم يعثر الاستعلام المركب على نتائج
+        const { data: fallbackData } = await supabase.from('students').select('*');
+        if (fallbackData) {
+          const filtered = fallbackData.filter(s => 
+            s.class_name === className || s.student_class === className || s.academic_level === className
+          );
+          setStudents(filtered);
+        } else {
+          setStudents([]);
+        }
       }
     } catch (err) {
       console.error('Error fetching students:', err);
@@ -123,8 +133,9 @@ export default function ClassesSection() {
 
   // 🌟 فلترة الطلاب حسب الجنس
   const filteredStudents = students.filter(student => {
-    if (genderFilter === 'male') return student.gender === 'ذكر' || student.gender === 'ولد';
-    if (genderFilter === 'female') return student.gender === 'أنثى' || student.gender === 'بنت';
+    const studentGender = student.gender || student.sex;
+    if (genderFilter === 'male') return studentGender === 'ذكر' || studentGender === 'ولد';
+    if (genderFilter === 'female') return studentGender === 'أنثى' || studentGender === 'بنت';
     return true;
   });
 
@@ -132,8 +143,8 @@ export default function ClassesSection() {
   const handleStartEdit = (student) => {
     setEditingStudentId(student.id);
     setEditFormData({
-      name: student.name || '',
-      parent_phone: student.parent_phone || '',
+      name: student.student_name || student.name || student.full_name || '',
+      parent_phone: student.parent_phone || student.phone || '',
       payment_status: student.payment_status || 'غير مكتمل',
       notes: student.notes || ''
     });
@@ -145,6 +156,7 @@ export default function ClassesSection() {
       const { error } = await supabase
         .from('students')
         .update({
+          student_name: editFormData.name,
           name: editFormData.name,
           parent_phone: editFormData.parent_phone,
           payment_status: editFormData.payment_status,
@@ -154,7 +166,7 @@ export default function ClassesSection() {
 
       if (error) throw error;
 
-      setStudents(students.map(s => (s.id === id ? { ...s, ...editFormData } : s)));
+      setStudents(students.map(s => (s.id === id ? { ...s, ...editFormData, student_name: editFormData.name } : s)));
       setEditingStudentId(null);
       alert('تم حفظ التعديلات بنجاح ✨');
     } catch (err) {
@@ -179,7 +191,10 @@ export default function ClassesSection() {
     csvContent += 'الاسم,رقم ولي الأمر,الجنس,حالة السداد,ملاحظات\n';
 
     filteredStudents.forEach(s => {
-      csvContent += `"${s.name || ''}","${s.parent_phone || ''}","${s.gender || ''}","${s.payment_status || ''}","${s.notes || ''}"\n`;
+      const name = s.student_name || s.name || s.full_name || '';
+      const phone = s.parent_phone || s.phone || '';
+      const gender = s.gender || s.sex || '';
+      csvContent += `"${name}","${phone}","${gender}","${s.payment_status || ''}","${s.notes || ''}"\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
@@ -231,7 +246,7 @@ export default function ClassesSection() {
                   backgroundColor: isSelected ? '#ecfdf5' : '#f8fafc',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyInContent: 'space-between'
+                  justifyContent: 'space-between'
                 }}
               >
                 <span style={{ fontWeight: '800', fontSize: '13px', color: isSelected ? '#047857' : '#334155' }}>
@@ -291,6 +306,9 @@ export default function ClassesSection() {
                 <tbody>
                   {filteredStudents.map((student, idx) => {
                     const isEditing = editingStudentId === student.id;
+                    const displayName = student.student_name || student.name || student.full_name || 'غير محدد';
+                    const displayPhone = student.parent_phone || student.phone || 'غير مسجل';
+
                     return (
                       <tr key={student.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={tdStyle}>{idx + 1}</td>
@@ -300,7 +318,7 @@ export default function ClassesSection() {
                           {isEditing ? (
                             <input type="text" value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} style={inputInlineStyle} />
                           ) : (
-                            <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{student.name}</span>
+                            <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{displayName}</span>
                           )}
                         </td>
 
@@ -309,7 +327,7 @@ export default function ClassesSection() {
                           {isEditing ? (
                             <input type="text" value={editFormData.parent_phone} onChange={e => setEditFormData({ ...editFormData, parent_phone: e.target.value })} style={inputInlineStyle} />
                           ) : (
-                            student.parent_phone || 'غير مسجل'
+                            displayPhone
                           )}
                         </td>
 
