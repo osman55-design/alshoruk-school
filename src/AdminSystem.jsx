@@ -12,7 +12,7 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
   // التحديد التلقائي لشرط التبويب الأولي حسب صلاحيات المستخدم
   const getInitialTab = () => {
     const p = currentUser?.permissions;
-    if (p?.admin) return 'dashboard';
+    if (p?.admin || currentUser?.role === 'admin') return 'dashboard';
     if (p?.students) return 'students';
     if (p?.classes) return 'classes';
     if (p?.teachers) return 'teachers';
@@ -61,6 +61,8 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
     overflowX: 'auto'
   };
 
+  const isAdmin = currentUser?.permissions?.admin || currentUser?.role === 'admin';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f1f5f9', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
@@ -72,7 +74,7 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
             <img src="logo.png" alt="logo" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={{ width: '44px', height: '44px', borderRadius: '50%', border: '2px solid #f59e0b', objectFit: 'cover' }} />
             <div>
               <h3 style={{ color: '#ffffff', margin: 0, fontSize: '17px', fontWeight: '900', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>لوحة التحكم والإدارة المركزية</h3>
-              <span style={{ color: '#fef08a', fontSize: '11.5px', fontWeight: 'bold' }}>👤 المستخدم: {currentUser?.name || 'زائر'} ({currentUser?.role || 'غير محدد'})</span>
+              <span style={{ color: '#fef08a', fontSize: '11.5px', fontWeight: 'bold' }}>👤 المستخدم: {currentUser?.name || currentUser?.username || 'زائر'} ({currentUser?.role || 'غير محدد'})</span>
             </div>
           </div>
 
@@ -85,28 +87,28 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
 
         {/* أزرار التنقل السريع */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', overflowX: 'auto', paddingBottom: '4px' }}>
-          {currentUser?.permissions?.admin && (
+          {isAdmin && (
             <button style={navBtnStyle(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>⚙️ إدارة المستخدمين والصلاحيات</button>
           )}
-          {(currentUser?.permissions?.students || currentUser?.permissions?.admin) && (
+          {(currentUser?.permissions?.students || isAdmin) && (
             <button style={navBtnStyle(activeTab === 'students')} onClick={() => setActiveTab('students')}>📚 شؤون الطلاب</button>
           )}
-          {(currentUser?.permissions?.classes || currentUser?.permissions?.admin) && (
+          {(currentUser?.permissions?.classes || isAdmin) && (
             <button style={navBtnStyle(activeTab === 'classes')} onClick={() => setActiveTab('classes')}>🏛️ الفصول الدراسية</button>
           )}
-          {(currentUser?.permissions?.teachers || currentUser?.permissions?.admin) && (
+          {(currentUser?.permissions?.teachers || isAdmin) && (
             <button style={navBtnStyle(activeTab === 'teachers')} onClick={() => setActiveTab('teachers')}>👨‍🏫 هيئة التدريس</button>
           )}
-          {(currentUser?.permissions?.finance || currentUser?.permissions?.admin) && (
+          {(currentUser?.permissions?.finance || isAdmin) && (
             <button style={navBtnStyle(activeTab === 'accounts')} onClick={() => setActiveTab('accounts')}>💰 الحسابات والمالية</button>
           )}
-          {(currentUser?.permissions?.results || currentUser?.permissions?.admin) && (
+          {(currentUser?.permissions?.results || isAdmin) && (
             <button style={navBtnStyle(activeTab === 'results')} onClick={() => setActiveTab('results')}>📋 النتائج والشهادات</button>
           )}
-          {(currentUser?.permissions?.transport || currentUser?.permissions?.admin) && (
+          {(currentUser?.permissions?.transport || isAdmin) && (
             <button style={navBtnStyle(activeTab === 'transport')} onClick={() => setActiveTab('transport')}>🚌 خدمة التراحيل</button>
           )}
-          {(currentUser?.permissions?.supervisors || currentUser?.permissions?.admin) && (
+          {(currentUser?.permissions?.supervisors || isAdmin) && (
             <button style={navBtnStyle(activeTab === 'supervisors')} onClick={() => setActiveTab('supervisors')}>👩‍💼 مشرفات الفصول</button>
           )}
         </div>
@@ -117,12 +119,12 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
         <div style={glassMainContainer}>
           {activeTab === 'students' && <StudentsSection currentUser={currentUser} />}
           {activeTab === 'classes' && <ClassesSection currentUser={currentUser} />}
-          {activeTab === 'teachers' && <TeachersSection />}
-          {activeTab === 'accounts' && <AccountsSection />}
-          {activeTab === 'results' && <ResultsSection />}
-          {activeTab === 'transport' && <TransportSection />}
-          {activeTab === 'supervisors' && <SupervisorsSection />}
-          {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('students')} />}
+          {activeTab === 'teachers' && <TeachersSection currentUser={currentUser} />}
+          {activeTab === 'accounts' && <AccountsSection currentUser={currentUser} />}
+          {activeTab === 'results' && <ResultsSection currentUser={currentUser} />}
+          {activeTab === 'transport' && <TransportSection currentUser={currentUser} />}
+          {activeTab === 'supervisors' && <SupervisorsSection currentUser={currentUser} />}
+          {activeTab === 'dashboard' && <DashboardSection currentUser={currentUser} onBack={() => setActiveTab('students')} />}
         </div>
       </main>
 
