@@ -45,13 +45,18 @@ export default function StudentsSection({ onBack, currentUser }) {
 
     setSaving(true);
     try {
+      // ✅ تم تعديل المسميات هنا لتنطبق مع شروط قاعدة البيانات Supabase
       const newStudent = {
-        full_name: fullName,
+        student_name: fullName.trim(),
+        academic_level: stage,
+        class_name: `${stage} - ${grade}`,
+        full_name: fullName.trim(),
         stage: stage,
         grade: grade,
-        gender: gender,
-        phone: phone,
-        address: address,
+        gender: gender === 'طالب' ? 'ذكر' : 'أنثى',
+        parent_phone: phone.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
         fees: parseFloat(fees) || 0
       };
 
@@ -88,7 +93,7 @@ export default function StudentsSection({ onBack, currentUser }) {
         )}
       </div>
 
-      {/* نموذج التسجيل فقط (بدون أي جدول عرض أو استعلام) */}
+      {/* نموذج التسجيل */}
       <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
         <h4 style={{ margin: '0 0 18px 0', color: '#047857', fontSize: '16px', fontWeight: 'bold' }}>✍️ إضافة طالب جديد وإسناده للفصل</h4>
         
