@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import LandingPage from './components/LandingPage';
-import AdminSystem from './components/AdminSystem';
+import LandingPage from './LandingPage';
+import AdminSystem from './AdminSystem';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentView, setCurrentView] = useState('landing');
+  const [currentView, setCurrentView] = useState('landing'); // 'landing' أو 'admin'
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
-    setCurrentView('admin');
+    setCurrentView('admin'); // الانتقال التلقائي لنظام الإدارة بعد الدخول
   };
 
   const handleLogout = () => {
@@ -16,6 +16,7 @@ export default function App() {
     setCurrentView('landing');
   };
 
+  // إذا كنا في صفحة الواجهة الرئيسية
   if (currentView === 'landing') {
     return (
       <LandingPage 
@@ -27,6 +28,7 @@ export default function App() {
     );
   }
 
+  // إذا انتقلنا لنظام الإدارة وكان المستخدم مسجلاً
   if (currentView === 'admin' && currentUser) {
     return (
       <AdminSystem 
