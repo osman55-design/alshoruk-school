@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import LandingPage from './LandingPage';
+import LandingPage from './components/LandingPage';
 import DashboardSection from './components/DashboardSection';
-import AdminSystem from './AdminSystem';
+import AdminSystem from './components/AdminSystem';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing');
