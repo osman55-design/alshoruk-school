@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
+// تعريف الأنماط في البداية لتفادي أخطاء النطاق عند البناء
+const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' };
+const inputStyle = { width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '12px' };
+const checkLabelStyle = { fontSize: '11px', fontWeight: 'bold', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' };
+
 export default function DashboardSection({ onBack }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -263,8 +268,3 @@ export default function DashboardSection({ onBack }) {
     </div>
   );
 }
-
-// الأنماط المعرفة لضمان السلاسة وعدم وجود أخطاء
-const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' };
-const inputStyle = { width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '12px' };
-const checkLabelStyle = { fontSize: '11px', fontWeight: 'bold', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' };
