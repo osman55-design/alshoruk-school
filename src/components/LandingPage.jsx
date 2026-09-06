@@ -338,7 +338,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     display: 'flex',
     alignItems: 'center',
-    justify: 'center',
+    justifyContent: 'center', // تم تصحيح الخطأ هنا
     zIndex: 1000
   };
 
