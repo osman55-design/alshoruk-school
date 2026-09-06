@@ -1,94 +1,76 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
-export default function LandingPage({ onLoginSuccess, onOpenAdmin }) {
+export default function LandingPage({ onLoginSuccess, onOpenAdmin, currentUser }) {
+  const [content, setContent] = useState({ about_us: '', our_goals: '', latest_news: '' });
+  const [showLogin, setShowLogin] = useState(false);
   const [username, setUsername] = useState('');
-  const [passwordCode, setPasswordCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    const { data } = await supabase.from('site_content').select('*').single();
+    if (data) setContent(data);
+  };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setErrorMsg('');
-
-    try {
-      const { data, error } = await supabase
-        .from('users_list')
-        .select('*')
-        .eq('username', username.trim())
-        .eq('password_code', passwordCode.trim())
-        .single();
-
-      if (error || !data) {
-        setErrorMsg('اسم المستخدم أو رمز الدخول غير صحيح');
-      } else {
-        onLoginSuccess(data);
-      }
-    } catch (err) {
-      setErrorMsg('حدث خطأ أثناء الاتصال بالخادم');
-    } finally {
-      setLoading(false);
+    const { data, error } = await supabase.from('users_list').select('*').eq('username', username.trim()).eq('password_code', password.trim()).single();
+    if (data && !error) {
+      onLoginSuccess(data);
+    } else {
+      alert('خطأ في اسم المستخدم أو رمز الدخول!');
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', direction: 'rtl', padding: '20px' }}>
-      <div style={{ background: '#ffffff', color: '#1e293b', width: '100%', maxWidth: '400px', padding: '30px', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#047857', margin: '0 0 8px 0' }}>مدرسة الشروق الخاصة</h2>
-          <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>نظام الإدارة والخدمات الإلكترونية</p>
+    <div>
+      {/* هيدر الصفحة الرئيسية */}
+      <header style={{ background: '#0f172a', color: '#fff', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ margin: 0, color: '#38bdf8' }}>مدارس الشروق السودانية - أسوان</h2>
+        <div>
+          {currentUser ? (
+            <button onClick={onOpenAdmin} style={{ background: '#047857', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>⚙️ لوحة الإدارة</button>
+          ) : (
+            <button onClick={() => setShowLogin(!showLogin)} style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>🔑 دخول البوابة</button>
+          )}
         </div>
+      </header>
 
-        {errorMsg && (
-          <div style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', textAlign: 'center' }}>
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>اسم المستخدم:</label>
-            <input 
-              type="text" 
-              required 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
-              placeholder="أدخل اسم الدخول"
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>رمز المرور:</label>
-            <input 
-              type="password" 
-              required 
-              value={passwordCode} 
-              onChange={(e) => setPasswordCode(e.target.value)} 
-              placeholder="****"
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={loading}
-            style={{ width: '100%', padding: '12px', background: '#047857', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}
-          >
-            {loading ? 'جاري التحقق...' : 'تسجيل الدخول'}
-          </button>
-        </form>
-
-        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-          <button 
-            onClick={onOpenAdmin} 
-            style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            ⚙️ الدخول إلى لوحة التحكم والإدارة العامة
-          </button>
+      {/* شريط الأخبار المباشر */}
+      {content.latest_news && (
+        <div style={{ background: '#fef3c7', color: '#92400e', padding: '10px 20px', fontWeight: 'bold', borderBottom: '1px solid #fde68a' }}>
+          📢 أخبار عاجلة: {content.latest_news}
         </div>
-      </div>
+      )}
+
+      {/* نافذة تسجيل الدخول */}
+      {showLogin && !currentUser && (
+        <div style={{ background: '#fff', maxWidth: '350px', margin: '20px auto', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+          <h4 style={{ marginTop: 0 }}>تسجيل الدخول للنظام</h4>
+          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input type="text" placeholder="اسم الدخول" value={username} onChange={e => setUsername(e.target.value)} required style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            <input type="password" placeholder="كلمة المرور / الرمز" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            <button type="submit" style={{ background: '#047857', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>دخول</button>
+          </form>
+        </div>
+      )}
+
+      {/* أقسام المحتوى المتغير */}
+      <main style={{ maxWidth: '1000px', margin: '30px auto', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <section style={{ background: '#fff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+          <h3 style={{ color: '#047857' }}>🏫 من نحن</h3>
+          <p style={{ lineHeight: '1.7', color: '#334155' }}>{content.about_us || 'جاري تحميل التفاصيل...'}</p>
+        </section>
+
+        <section style={{ background: '#fff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+          <h3 style={{ color: '#0284c7' }}>🎯 رؤيتنا وأهدافنا</h3>
+          <p style={{ lineHeight: '1.7', color: '#334155' }}>{content.our_goals || 'جاري تحميل الأهداف...'}</p>
+        </section>
+      </main>
     </div>
   );
 }
