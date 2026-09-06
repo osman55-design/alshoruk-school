@@ -126,7 +126,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
 
         const userData = {
           id: user.id,
-          name: user.full_name || 'حنين عثمان',
+          name: user.full_name || 'عثمان صديق',
           role: user.role,
           permissions: permissions,
           stages: stages
@@ -457,7 +457,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
         ) : (
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <span style={{ color: '#fef08a', fontWeight: 'bold', fontSize: '13px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)' }}>
-              👤 {currentUser?.name || 'حنين عثمان'}
+              👤 {currentUser?.name || 'عثمان صديق'}
             </span>
             <button onClick={onOpenAdmin} style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', backgroundColor: '#0f766e', color: '#ffffff' }}>⚙️ لوحة الإدارة</button>
             <button onClick={onLogout} style={{ background: '#ef4444', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>خروج 🚪</button>
@@ -622,7 +622,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
         </div>
       )}
 
-      {/* التذييل الخفي والتوقيع المدمج للمصممين */}
+      {/* التذييل والتوقيع */}
       <footer style={{
         backgroundColor: '#0f172a',
         color: '#94a3b8',
@@ -635,7 +635,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
           <div>جميع الحقوق محفوظة © {new Date().getFullYear()} مدرسة الشروق السودانية المتكاملة</div>
           
-          {/* توقيع واسم المصممين ورقم التواصل */}
+          {/* توقيع واسم المصمم ورقم التواصل */}
           <div style={{ 
             marginTop: '6px', 
             fontSize: '12px', 
@@ -652,8 +652,7 @@ export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, 
             border: '1px solid rgba(245, 158, 11, 0.2)'
           }}>
             <span>💻 من تصميم وتطوير:</span>
-            <span style={{ color: '#ffffff' }}>أستاذ عثمان صديق (أبو حلا) - 01149169346</span>
-            <span>|</span> ✨
+            <span style={{ color: '#ffffff' }}>أستاذ عثمان صديق (أبو حلا) - 01149169346</span> ✨
           </div>
         </div>
       </footer>
