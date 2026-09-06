@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import LandingPage from './LandingPage';
-import DashboardSection from './DashboardSection';
+import LandingPage from './components/LandingPage';
+import DashboardSection from './components/DashboardSection';
 import AdminSystem from './AdminSystem';
 
 export default function App() {
