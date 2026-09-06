@@ -48,40 +48,40 @@ export default function ClassesSection() {
   const [editingStudentId, setEditingStudentId] = useState(null);
   const [editFormData, setEditFormData] = useState({ student_name: '', parent_phone: '', tuition_status: 'غير مسدد' });
 
-  // 🌟 هيكلية الفصول والتخصصات لكل مرحلة
+  // 🌟 هيكلية الفصول والتخصصات المحدثة لتطابق القيم المسجلة في Supabase بالضبط
   const stagesStructure = {
     kindergarten: {
       name: 'مرحلة الروضة 🧸',
       classes: [
-        { id: 'kg_listener', name: 'روضة - فصل مستمع' },
-        { id: 'kg_1', name: 'روضة - الصف الأول' },
-        { id: 'kg_2', name: 'روضة - الصف الثاني' }
+        { id: 'kg_listener', name: 'الروضة - فصل مستمع' },
+        { id: 'kg_1', name: 'الروضة - روضة أولى' },
+        { id: 'kg_2', name: 'الروضة - روضة ثانية' }
       ]
     },
     primary: {
       name: 'المرحلة الابتدائية 🏫',
       classes: [
-        { id: 'p1', name: 'الابتدائي - الصف الأول' },
-        { id: 'p2', name: 'الابتدائي - الصف الثاني' },
-        { id: 'p3', name: 'الابتدائي - الصف الثالث' },
-        { id: 'p4', name: 'الابتدائي - الصف الرابع' },
-        { id: 'p5', name: 'الابتدائي - الصف الخامس' },
-        { id: 'p6', name: 'الابتدائي - الصف السادس' }
+        { id: 'p1', name: 'المرحلة الابتدائية - الصف الأول' },
+        { id: 'p2', name: 'المرحلة الابتدائية - الصف الثاني' },
+        { id: 'p3', name: 'المرحلة الابتدائية - الصف الثالث' },
+        { id: 'p4', name: 'المرحلة الابتدائية - الصف الرابع' },
+        { id: 'p5', name: 'المرحلة الابتدائية - الصف الخامس' },
+        { id: 'p6', name: 'المرحلة الابتدائية - الصف السادس' }
       ]
     },
     middle: {
       name: 'المرحلة المتوسطة 🎒',
       classes: [
-        { id: 'm1', name: 'المتوسط - الصف الأول' },
-        { id: 'm2', name: 'المتوسط - الصف الثاني' },
-        { id: 'm3', name: 'المتوسط - الصف الثالث' }
+        { id: 'm1', name: 'المرحلة المتوسطة - الصف الأول' },
+        { id: 'm2', name: 'المرحلة المتوسطة - الصف الثاني' },
+        { id: 'm3', name: 'المرحلة المتوسطة - الصف الثالث' }
       ]
     },
     secondary: {
       name: 'المرحلة الثانوية 🎓',
       classes: [
-        { id: 's1', name: 'الثانوي - الصف الأول' },
-        { id: 's2', name: 'الثانوي - الصف الثاني' },
+        { id: 's1', name: 'المرحلة الثانوية - الصف الأول' },
+        { id: 's2', name: 'المرحلة الثانوية - الصف الثاني' },
         { id: 's3_sci_bio', name: 'ثالث ثانوي - علمي (أحياء)' },
         { id: 's3_sci_cs', name: 'ثالث ثانوي - علمي (حاسوب)' },
         { id: 's3_sci_eng', name: 'ثالث ثانوي - علمي (هندسية)' },
@@ -99,31 +99,22 @@ export default function ClassesSection() {
     }
   }, [selectedClass]);
 
-  // 🌟 جلب الطلاب بالبحث في العمود المطابق للهيكل exact column name matching
+  // 🌟 جلب الطلاب مع مرونة في مطابقة النصوص
   const fetchClassStudents = async (className) => {
     setLoading(true);
     try {
-      // البحث عبر class_name أو academic_level لتغطية كافة سيناريوهات الحفظ
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .or(`class_name.eq."${className}",academic_level.eq."${className}"`);
+      // 1. جلب شامل لجدول الطلاب للتحقق من أي اختلاف بسيط في المسافات
+      const { data, error } = await supabase.from('students').select('*');
 
       if (!error && data) {
-        setStudents(data);
+        const filtered = data.filter(s => {
+          const storedClass = (s.class_name || s.academic_level || '').trim();
+          const targetClass = className.trim();
+          return storedClass === targetClass || storedClass.includes(targetClass) || targetClass.includes(storedClass);
+        });
+        setStudents(filtered);
       } else {
-        // خطة جلب احتياطية لتفادي أخطاء الاختلاف البسيط في المسافات
-        const { data: allData } = await supabase.from('students').select('*');
-        if (allData) {
-          const filtered = allData.filter(s => 
-            (s.class_name && s.class_name.trim() === className.trim()) ||
-            (s.academic_level && s.academic_level.trim() === className.trim()) ||
-            (s.grade && className.includes(s.grade))
-          );
-          setStudents(filtered);
-        } else {
-          setStudents([]);
-        }
+        setStudents([]);
       }
     } catch (err) {
       console.error('Error fetching students:', err);
