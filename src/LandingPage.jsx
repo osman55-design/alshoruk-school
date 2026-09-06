@@ -1,24 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export default function LandingPage({ onOpenLogin }) {
-  const boardMembers = [
+export default function LandingPage({ currentUser, onLoginSuccess, onOpenAdmin, onLogout }) {
+  // التحقق من الصلاحيات
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.permissions?.admin;
+  const canEditLanding = isAdmin || currentUser?.permissions?.editLanding || currentUser?.role === 'editor';
+
+  // حالة التحكم بالتعديل المباشر
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // بيانات ديناميكية مع إمكانية التعديل
+  const [tickerText, setTickerText] = useState("🎉 أهلاً بكم في العام الدراسي الجديد • إعلان نتائج امتحانات الفترة الأولى قريباً • فتح باب التسجيل لجميع المراحل التعليمية");
+
+  const [boardMembers, setBoardMembers] = useState([
     { name: 'الأستاذ كمال الدين مجذوب', role: 'رئيس مجلس الإدارة', img: 'https://placehold.co/120' },
     { name: 'ماما هند عبد الرازق', role: 'الأم التربوية', img: 'https://placehold.co/120' },
     { name: 'الأستاذ محمد كمال الدين', role: 'المدير العام', img: 'https://placehold.co/120' },
     { name: 'الأستاذة لينا كمال الدين', role: 'مديرة إدارية', img: 'https://placehold.co/120' },
-  ];
+  ]);
 
-  const topStudents = [
+  const [topStudents, setTopStudents] = useState([
     { name: 'أحمد محمد علي', grade: 'الصف الثالث ثانوي', score: '98.5%', img: 'https://placehold.co/100' },
     { name: 'حلا عثمان أحمد', grade: 'الصف الثامن أساس', score: '97.8%', img: 'https://placehold.co/100' },
     { name: 'عالم عثمان', grade: 'الصف السادس', score: '96.5%', img: 'https://placehold.co/100' },
-  ];
+  ]);
 
-  const featuredTeachers = [
+  const [featuredTeachers, setFeaturedTeachers] = useState([
     { name: 'أ. عبد الله المصطفى', subject: 'الرياضيات المتقدمة', img: 'https://placehold.co/100' },
     { name: 'أ. فاطمة عمر', subject: 'العلوم والفيزياء', img: 'https://placehold.co/100' },
     { name: 'أ. خالد إبراهيم', subject: 'اللغة العربية والآداب', img: 'https://placehold.co/100' },
-  ];
+  ]);
 
   const cardStyle = {
     backgroundColor: '#ffffff',
@@ -32,6 +42,84 @@ export default function LandingPage({ onOpenLogin }) {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', fontFamily: "'Segoe UI', Roboto, sans-serif", direction: 'rtl', color: '#0f172a' }}>
       
+      {/* 0. شريط تحكم الأدمن / المحرر (يظهر فوق الهيدر عند تسجل الدخول) */}
+      {currentUser && (
+        <div style={{
+          backgroundColor: '#0f172a',
+          color: '#ffffff',
+          padding: '8px 3%',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '13px',
+          borderBottom: '2px solid #f59e0b'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>👤 مرحباً، <strong>{currentUser.name || currentUser.username || 'المستخدم'}</strong></span>
+            <span style={{ backgroundColor: '#047857', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>
+              {isAdmin ? 'مدير النظام (Admin)' : 'محرر محتوى'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            {/* زر التعديل المباشر يظهر للأدمن ولمن يملك صلاحية تعديل الواجهة */}
+            {canEditLanding && (
+              <button 
+                onClick={() => setIsEditMode(!isEditMode)}
+                style={{
+                  backgroundColor: isEditMode ? '#dc2626' : '#f59e0b',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '5px 14px',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                {isEditMode ? '✖️ إنهاء وضع التعديل' : '✏️ تعديل محتوى الواجهة'}
+              </button>
+            )}
+
+            {/* زر دخول لوحة التحكم يظهر فقط للأدمن */}
+            {isAdmin && (
+              <button 
+                onClick={onOpenAdmin}
+                style={{
+                  backgroundColor: '#047857',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '5px 14px',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                ⚙️ لوحة التحكم والإعدادات
+              </button>
+            )}
+
+            {/* زر خروج */}
+            <button 
+              onClick={onLogout}
+              style={{
+                backgroundColor: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                padding: '5px 12px',
+                borderRadius: '6px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              🚪 خروج
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 1. الهيدر المدمج العصري */}
       <header style={{
         background: '#047857',
@@ -75,30 +163,46 @@ export default function LandingPage({ onOpenLogin }) {
               .ticker-text { display: inline-block; animation: marquee 16s linear infinite; color: #78350f; font-weight: 700; font-size: 12.5px; }
             `}</style>
             <div className="ticker-text">
-              🎉 أهلاً بكم في العام الدراسي الجديد • إعلان نتائج امتحانات الفترة الأولى قريباً • فتح باب التسجيل لجميع المراحل التعليمية
+              {tickerText}
             </div>
           </div>
         </div>
 
-        {/* زر الفتح المباشر كما في السابق */}
-        <button 
-          onClick={onOpenLogin}
-          style={{
-            backgroundColor: '#f59e0b',
-            color: '#ffffff',
-            border: 'none',
-            padding: '8px 18px',
-            borderRadius: '10px',
-            fontWeight: 'bold',
-            fontSize: '12.5px',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          🔐 بوابة النظام
-        </button>
+        {/* زر الفتح المباشر - يظهر فقط في حال عدم وجود تسجيل دخول */}
+        {!currentUser && (
+          <button 
+            onClick={() => {
+              // عند تنفيذ الدخول بنجاح يمكن إرسال بيانات المستخدم هكذا:
+              // onLoginSuccess({ name: 'حنين عثمان', role: 'admin' })
+              if (onLoginSuccess) {
+                // محاكاة تسجيل دخول كـ Admin لاختبار النظام
+                onLoginSuccess({ name: 'حنين عثمان', role: 'admin', permissions: { admin: true, editLanding: true } });
+              }
+            }}
+            style={{
+              backgroundColor: '#f59e0b',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 18px',
+              borderRadius: '10px',
+              fontWeight: 'bold',
+              fontSize: '12.5px',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            🔐 بوابة النظام
+          </button>
+        )}
       </header>
+
+      {/* شريط توضيحي مفعل عند نمط التعديل */}
+      {isEditMode && (
+        <div style={{ backgroundColor: '#fef3c7', padding: '10px', textAlign: 'center', borderBottom: '1px solid #f59e0b', color: '#92400e', fontWeight: 'bold', fontSize: '13px' }}>
+          ✏️ وضع التعديل مفعل: يمكنك الآن تعديل كادر الإدارة، المعلمين، والطلاب المتفوقين مباشرةً.
+        </div>
+      )}
 
       {/* 2. القسم الترحيبي */}
       <section style={{
@@ -154,12 +258,34 @@ export default function LandingPage({ onOpenLogin }) {
 
         {/* مجلس الإدارة */}
         <section style={cardStyle}>
-          <div style={{ textAlignment: 'right', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
             <h3 style={{ fontSize: '17px', color: '#0f172a', fontWeight: '800', margin: 0 }}>🏛️ مجلس إدارة المدرسة</h3>
+            {isEditMode && (
+              <button 
+                onClick={() => {
+                  const name = prompt("اسم العضو الجديد:");
+                  const role = prompt("الصفة / المنصب:");
+                  if (name && role) {
+                    setBoardMembers([...boardMembers, { name, role, img: 'https://placehold.co/120' }]);
+                  }
+                }}
+                style={{ backgroundColor: '#047857', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
+              >
+                ➕ إضافة عضو
+              </button>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
             {boardMembers.map((member, i) => (
-              <div key={i} style={{ backgroundColor: '#f8fafc', padding: '15px 10px', borderRadius: '12px', textAlign: 'center', border: '1px solid #e2e8f0', borderTop: '3px solid #f59e0b' }}>
+              <div key={i} style={{ backgroundColor: '#f8fafc', padding: '15px 10px', borderRadius: '12px', textAlign: 'center', border: '1px solid #e2e8f0', borderTop: '3px solid #f59e0b', position: 'relative' }}>
+                {isEditMode && (
+                  <button 
+                    onClick={() => setBoardMembers(boardMembers.filter((_, idx) => idx !== i))}
+                    style={{ position: 'absolute', top: '5px', left: '5px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px', cursor: 'pointer' }}
+                  >
+                    ✕
+                  </button>
+                )}
                 <img src={member.img} alt={member.name} style={{ width: '65px', height: '65px', borderRadius: '50%', border: '2px solid #047857', marginBottom: '8px' }} />
                 <br />
                 <span style={{ backgroundColor: '#ecfdf5', color: '#047857', fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '10px', display: 'inline-block', marginBottom: '4px' }}>{member.role}</span>
@@ -171,12 +297,35 @@ export default function LandingPage({ onOpenLogin }) {
 
         {/* الطلاب المتفوقون الأوائل */}
         <section style={cardStyle}>
-          <div style={{ textAlignment: 'right', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
             <h3 style={{ fontSize: '17px', color: '#0f172a', fontWeight: '800', margin: 0 }}>🏆 الطلاب المتفوقون الأوائل</h3>
+            {isEditMode && (
+              <button 
+                onClick={() => {
+                  const name = prompt("اسم الطالب:");
+                  const grade = prompt("الصف الدراسي:");
+                  const score = prompt("النسبة / النتيجة:");
+                  if (name && grade) {
+                    setTopStudents([...topStudents, { name, grade, score: score || '100%', img: 'https://placehold.co/100' }]);
+                  }
+                }}
+                style={{ backgroundColor: '#047857', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
+              >
+                ➕ إضافة طالب متفوق
+              </button>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
             {topStudents.map((std, i) => (
               <div key={i} style={{ backgroundColor: '#fffbeb', border: '1px solid #fef3c7', padding: '15px', borderRadius: '12px', textAlign: 'center', position: 'relative' }}>
+                {isEditMode && (
+                  <button 
+                    onClick={() => setTopStudents(topStudents.filter((_, idx) => idx !== i))}
+                    style={{ position: 'absolute', top: '5px', right: '5px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px', cursor: 'pointer' }}
+                  >
+                    ✕
+                  </button>
+                )}
                 <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#f59e0b', color: '#fff', fontSize: '10px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '8px' }}>🌟 {std.score}</span>
                 <img src={std.img} alt={std.name} style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid #f59e0b', marginBottom: '6px' }} />
                 <h4 style={{ margin: '0 0 2px 0', fontSize: '13.5px', color: '#1e293b' }}>{std.name}</h4>
@@ -188,12 +337,34 @@ export default function LandingPage({ onOpenLogin }) {
 
         {/* هيئة التدريس */}
         <section style={cardStyle}>
-          <div style={{ textAlignment: 'right', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
             <h3 style={{ fontSize: '17px', color: '#0f172a', fontWeight: '800', margin: 0 }}>👨‍🏫 هيئة التدريس المتميزة</h3>
+            {isEditMode && (
+              <button 
+                onClick={() => {
+                  const name = prompt("اسم المعلم:");
+                  const subject = prompt("المادة / التخصص:");
+                  if (name && subject) {
+                    setFeaturedTeachers([...featuredTeachers, { name, subject, img: 'https://placehold.co/100' }]);
+                  }
+                }}
+                style={{ backgroundColor: '#047857', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
+              >
+                ➕ إضافة معلم
+              </button>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
             {featuredTeachers.map((teacher, i) => (
-              <div key={i} style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '12px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+              <div key={i} style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '12px', textAlign: 'center', border: '1px solid #e2e8f0', position: 'relative' }}>
+                {isEditMode && (
+                  <button 
+                    onClick={() => setFeaturedTeachers(featuredTeachers.filter((_, idx) => idx !== i))}
+                    style={{ position: 'absolute', top: '5px', left: '5px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px', cursor: 'pointer' }}
+                  >
+                    ✕
+                  </button>
+                )}
                 <img src={teacher.img} alt={teacher.name} style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid #047857', marginBottom: '6px' }} />
                 <h4 style={{ margin: '0 0 2px 0', fontSize: '13.5px', color: '#1e293b' }}>{teacher.name}</h4>
                 <p style={{ margin: 0, fontSize: '11.5px', color: '#047857', fontWeight: 'bold' }}>{teacher.subject}</p>
