@@ -3,23 +3,25 @@ import LandingPage from './LandingPage';
 import AdminSystem from './AdminSystem';
 import { supabase } from './supabaseClient';
 
-export default function App() {
+function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [currentView, setCurrentView] = useState('landing');
 
+  // حالات نموذج الدخول
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // دالة تسجيل الدخول
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
 
     try {
-      // الاستعلام الصحيح والمطابق لجدولك في Supabase (users_list)
+      // الاستعلام المباشر من جدول users_list الصحيح
       const { data, error } = await supabase
         .from('users_list')
         .select('*')
@@ -41,6 +43,7 @@ export default function App() {
 
       const userData = data[0];
 
+      // معالجة الصلاحيات بشكل آمن
       let userPermissions = { admin: true };
       if (userData.permissions) {
         if (typeof userData.permissions === 'string') {
@@ -82,6 +85,7 @@ export default function App() {
 
   return (
     <div>
+      {/* عرض لوحة التحكم أو الصفحة الرئيسية */}
       {currentView === 'admin' && currentUser ? (
         <AdminSystem 
           currentUser={currentUser} 
@@ -97,6 +101,7 @@ export default function App() {
         />
       )}
 
+      {/* نافذة تسجيل الدخول المدمجة */}
       {showLoginModal && (
         <div style={{
           position: 'fixed',
@@ -186,3 +191,6 @@ export default function App() {
     </div>
   );
 }
+
+// التصدير الافتراضي الصريح ليتمكن main.jsx من استيراده بنجاح
+export default App;
