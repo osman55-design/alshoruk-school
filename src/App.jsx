@@ -8,7 +8,13 @@ export default function App() {
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
-    setCurrentView('admin'); // الانتقال التلقائي لنظام الإدارة بعد الدخول
+    // إذا كان للمستخدم صلاحية دخول نظام الإدارة يتم توجيهه تلقائياً
+    if (user?.permissions?.admin || user?.role === 'admin') {
+      setCurrentView('admin');
+    } else {
+      // إذا كان مستخدماً للواجهة فقط (مثل محرر المحتوى) يبدأ في الواجهة الرئيسية
+      setCurrentView('landing');
+    }
   };
 
   const handleLogout = () => {
@@ -16,20 +22,11 @@ export default function App() {
     setCurrentView('landing');
   };
 
-  // إذا كنا في صفحة الواجهة الرئيسية
-  if (currentView === 'landing') {
-    return (
-      <LandingPage 
-        currentUser={currentUser} 
-        onLoginSuccess={handleLoginSuccess}
-        onOpenAdmin={() => setCurrentView('admin')}
-        onLogout={handleLogout}
-      />
-    );
-  }
+  // التحقق هل يحق للمستخدم فتح نظام الإدارة والتحكم
+  const canAccessAdminSystem = currentUser && (currentUser?.permissions?.admin || currentUser?.role === 'admin');
 
-  // إذا انتقلنا لنظام الإدارة وكان المستخدم مسجلاً
-  if (currentView === 'admin' && currentUser) {
+  // إذا كنا في نظام الإدارة والمستخدم يملك الصلاحية
+  if (currentView === 'admin' && canAccessAdminSystem) {
     return (
       <AdminSystem 
         currentUser={currentUser} 
@@ -39,6 +36,7 @@ export default function App() {
     );
   }
 
+  // في جميع الحالات الأخرى نعرض الواجهة الرئيسية مع تمرير الصلاحيات والمستخدم
   return (
     <LandingPage 
       currentUser={currentUser} 
