@@ -8,7 +8,7 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // معالجة تسجيل الدخول والتحقق من قاعدة البيانات Supabase
+  // معالجة تسجيل الدخول والتحقق من قاعدة البيانات
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -18,23 +18,27 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
       const cleanUsername = username.trim();
       const cleanPassword = password.trim();
 
-      // 1. الاستعلام من جدول profiles في Supabase للتأكد من وجود المستخدم وكلمة المرور
+      // البحث عن المستخدم باستخدام اسم المستخدم
       const { data: userProfile, error } = await supabase
         .from('profiles')
         .select('*')
-        .or(`username.eq.${cleanUsername},full_name.eq.${cleanUsername}`)
-        .eq('password', cleanPassword)
+        .eq('username', cleanUsername)
         .maybeSingle();
 
       if (error) {
-        throw new Error('حدث خطأ أثناء الاتصال بقاعدة البيانات.');
+        throw new Error(`خطأ اتطابق مع Supabase: ${error.message}`);
       }
 
       if (!userProfile) {
-        throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة، أو الحساب غير مسجل.');
+        throw new Error('اسم المستخدم غير مسجل في النظام.');
       }
 
-      // 2. عند المطابقة بنجاح، يتم تمرير بيانات المستخدم والتوجيه
+      // مطابقة كلمة المرور مع الحقل المسجل في الجدول
+      if (userProfile.password !== cleanPassword) {
+        throw new Error('كلمة المرور غير صحيحة.');
+      }
+
+      // تسجيل الدخول بنجاح والتوجيه
       if (onLoginSuccess) {
         onLoginSuccess(userProfile);
       }
@@ -54,7 +58,7 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#1e293b', margin: 0, padding: 0 }}>
       
       {/* الهيدر العلوي */}
-      <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', sticky: 'top', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ backgroundColor: '#059669', color: '#fff', fontSize: '24px', padding: '8px 12px', borderRadius: '12px' }}>🏫</div>
           <div>
@@ -65,17 +69,15 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
 
         <button 
           onClick={() => setShowModal(true)} 
-          style={{ backgroundColor: '#059669', color: '#ffffff', border: 'none', padding: '10px 22px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: 'all 0.2s' }}
+          style={{ backgroundColor: '#059669', color: '#ffffff', border: 'none', padding: '10px 22px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
         >
           🔑 بوابة النظام
         </button>
       </header>
 
-      {/* محتوى الصفحة الرئيسية */}
+      {/* المحتوى الرئيسي */}
       <main style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 20px' }}>
-        
-        {/* قسم الترحيب */}
-        <div style={{ backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+        <div style={{ backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px' }}>
           <h2 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '15px' }}>مرحباً بكم في صرح الشروق التعليمي 🎓</h2>
           <p style={{ color: '#475569', fontSize: '16px', lineHeight: '1.6', margin: '0 auto', maxWidth: '700px' }}>
             بوابتكم التعليمية الذكية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز بالمنهج السوداني المطور.
@@ -86,7 +88,6 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
           </div>
         </div>
 
-        {/* الكروت التعريفية */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
           <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
             <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#0f172a' }}>📖 مَن نحن؟</h3>
@@ -110,10 +111,9 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
             </p>
           </div>
         </div>
-
       </main>
 
-      {/* نافذة تسجيل الدخول (اسم المستخدم + كلمة المرور) */}
+      {/* نافذة تسجيل الدخول */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '16px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
@@ -169,7 +169,7 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
                 disabled={loading}
                 style={{ width: '100%', backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', opacity: loading ? 0.7 : 1 }}
               >
-                {loading ? 'جاري التحقق من الحساب...' : 'دخول للنظام'}
+                {loading ? 'جاري التحقق...' : 'دخول للنظام'}
               </button>
             </form>
           </div>
