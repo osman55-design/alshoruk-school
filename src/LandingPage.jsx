@@ -18,7 +18,7 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
       const cleanUsername = username.trim();
       const cleanPassword = password.trim();
 
-      // البحث عن المستخدم في جدول users بدلاً من profiles
+      // البحث عن المستخدم في جدول users
       const { data: userProfile, error } = await supabase
         .from('users')
         .select('*')
@@ -33,8 +33,8 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
         throw new Error('اسم المستخدم غير مسجل في النظام.');
       }
 
-      // مطابقة كلمة المرور مع الحقل المسجل في الجدول
-      if (userProfile.password !== cleanPassword) {
+      // مطابقة كلمة المرور مع الحقل password_code في الجدول
+      if (userProfile.password_code !== cleanPassword) {
         throw new Error('كلمة المرور غير صحيحة.');
       }
 
