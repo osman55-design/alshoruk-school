@@ -8,12 +8,10 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
   const [primaryTopStudents, setPrimaryTopStudents] = useState([]);
   const [middleTopStudents, setMiddleTopStudents] = useState([]);
   
-  // حالة نافذة تسجيل الدخول ببيانات Supabase
+  // حالة نافذة تسجيل الدخول (خانات فارغة لإدخال المستخدم)
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [usersList, setUsersList] = useState([]);
-  const [selectedUsername, setSelectedUsername] = useState('');
-  const [passwordCode, setPasswordCode] = useState('');
-  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usernameInput, setUsernameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -42,64 +40,43 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
     }
   };
 
-  // جلب المستخدمين المسجلين من جدول users في Supabase
-  const handleLoginClick = async () => {
+  const handleLoginClick = () => {
     if (onOpenLogin) onOpenLogin();
-    setShowLoginModal(true);
-    setLoadingUsers(true);
+    // تفريغ الخانات عند فتح النافذة
+    setUsernameInput('');
+    setPasswordInput('');
     setLoginError('');
-
-    try {
-      const { data: usersData, error } = await supabase.from('users').select('*');
-      
-      if (error) throw error;
-
-      if (usersData && usersData.length > 0) {
-        setUsersList(usersData);
-        setSelectedUsername(usersData[0].username || usersData[0].name || '');
-      } else {
-        setLoginError('لم يتم العثور على مستخدمين في قاعدة البيانات.');
-      }
-    } catch (err) {
-      setLoginError('خطأ في جلب بيانات المستخدمين من Supabase: ' + err.message);
-    } finally {
-      setLoadingUsers(false);
-    }
+    setShowLoginModal(true);
   };
 
-  // التحقق من تسجيل الدخول للمستخدم المحدد
-  const handleUserLoginSubmit = async (e) => {
+  // التحقق من اسم المستخدم وكلمة المرور المدخلة من جدول users في Supabase
+  const handleDirectLoginSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedUsername) {
-      setLoginError('الرجاء اختيار مستخدم من القائمة.');
-      return;
-    }
-
     setLoading(true);
     setLoginError('');
 
     try {
-      // البحث عن المستخدم والتحقق من كود المرور في Supabase
+      // الاستعلام من جدول users عن طريق username المدخل
       const { data: matchedUser, error } = await supabase
         .from('users')
         .select('*')
-        .eq('username', selectedUsername)
+        .eq('username', usernameInput.trim())
         .single();
 
       if (error || !matchedUser) {
-        setLoginError('اسم المستخدم غير موجود.');
+        setLoginError('اسم المستخدم غير صحيح أو غير موجود.');
         setLoading(false);
         return;
       }
 
-      // مطابقة رمز الدخول إذا كان مطلوباً
-      if (matchedUser.password_code && passwordCode !== matchedUser.password_code) {
-        setLoginError('كود المرور غير صحيح.');
+      // التحقق من كلمة المرور / password_code
+      if (matchedUser.password_code && passwordInput !== String(matchedUser.password_code)) {
+        setLoginError('كلمة المرور غير صحيحة.');
         setLoading(false);
         return;
       }
 
-      // حفظ جلسة الدخول والانتقال للوحة التحكم
+      // نجاح الدخول - حفظ البيانات والتوجيه
       localStorage.setItem('current_user', JSON.stringify(matchedUser));
       setShowLoginModal(false);
 
@@ -109,7 +86,7 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
         window.location.reload();
       }
     } catch (err) {
-      setLoginError('حدث خطأ أثناء تسجيل الدخول: ' + err.message);
+      setLoginError('حدث خطأ أثناء الاتصال بالخادم: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -143,7 +120,7 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
       color: '#065f46'
     }}>
 
-      {/* 1. الهيدر الأبيض الزجاجي */}
+      {/* الهيدر الأبيض الزجاجي */}
       <header style={{
         background: 'rgba(255, 255, 255, 0.85)',
         backdropFilter: 'blur(16px)',
@@ -215,7 +192,7 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
         </div>
       </header>
 
-      {/* 2. شريط الأخبار المتحرك */}
+      {/* شريط الأخبار المتحرك */}
       <section style={{
         background: 'rgba(255, 255, 255, 0.9)',
         borderBottom: '1px solid rgba(6, 95, 70, 0.15)',
@@ -255,7 +232,7 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
         </div>
       </section>
 
-      {/* 3. المحتوى الرئيسي */}
+      {/* المحتوى الرئيسي */}
       <main style={{ maxWidth: '1150px', margin: '35px auto', padding: '0 20px' }}>
         
         {/* من نحن */}
@@ -400,7 +377,7 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
         </div>
       </footer>
 
-      {/* نافذة اختيار المستخدم المباشر والتأكيد مع Supabase */}
+      {/* نافذة تسجيل الدخول بخانات فارغة يدخلها المستخدم بنفسه */}
       {showLoginModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -409,68 +386,68 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
         }}>
           <div style={{
             background: '#ffffff', padding: '30px', borderRadius: '16px',
-            width: '90%', maxWidth: '420px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+            width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
             border: '1px solid #e2e8f0', color: '#0f172a'
           }}>
             <h2 style={{ margin: '0 0 10px 0', fontSize: '20px', color: '#065f46', textAlign: 'center', fontWeight: '800' }}>
-              🔐 تسجيل الدخول للأنظمة
+              🔐 تسجيل الدخول للنظام
             </h2>
             <p style={{ textAlign: 'center', color: '#64748b', fontSize: '13px', marginTop: 0, marginBottom: '20px' }}>
-              اختر اسم المستخدم المباشر من قاعدة بيانات Supabase
+              أدخل اسم المستخدم وكلمة المرور المسجلة
             </p>
 
-            {loginError && <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px' }}>{loginError}</div>}
-
-            {loadingUsers ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', color: '#065f46', fontWeight: 'bold' }}>
-                ⏳ جاري تحميل المستخدمين من Supabase...
+            {loginError && (
+              <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px', textAlign: 'center' }}>
+                {loginError}
               </div>
-            ) : (
-              <form onSubmit={handleUserLoginSubmit}>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#334155' }}>
-                    اسم المستخدم (Username):
-                  </label>
-                  <select 
-                    value={selectedUsername} 
-                    onChange={(e) => setSelectedUsername(e.target.value)}
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '2px solid #065f46', fontSize: '14px', backgroundColor: '#fff', cursor: 'pointer', outline: 'none' }}
-                  >
-                    {usersList.length > 0 ? (
-                      usersList.map((user, idx) => (
-                        <option key={idx} value={user.username || user.name}>
-                          {user.name || user.username} {user.role ? `(${user.role})` : ''}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="">لا يوجد مستخدمون مسجلين بالجدول</option>
-                    )}
-                  </select>
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#334155' }}>
-                    كود المرور (Password Code):
-                  </label>
-                  <input 
-                    type="password" 
-                    placeholder="أدخل كود المرور الخاص بالحساب"
-                    value={passwordCode} 
-                    onChange={(e) => setPasswordCode(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button type="submit" disabled={loading || usersList.length === 0} style={{ flex: 1, backgroundColor: '#065f46', color: '#fff', border: 'none', padding: '11px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
-                    {loading ? 'جاري الدخول...' : 'دخول النظام 🚀'}
-                  </button>
-                  <button type="button" onClick={() => setShowLoginModal(false)} style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '11px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
-                    إلغاء
-                  </button>
-                </div>
-              </form>
             )}
+
+            <form onSubmit={handleDirectLoginSubmit}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#334155' }}>
+                  اسم المستخدم
+                </label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="أدخل اسم المستخدم"
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#334155' }}>
+                  كلمة المرور
+                </label>
+                <input 
+                  type="password"
+                  required
+                  placeholder="أدخل كلمة المرور"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  type="submit" 
+                  disabled={loading} 
+                  style={{ flex: 1, backgroundColor: '#065f46', color: '#fff', border: 'none', padding: '11px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                >
+                  {loading ? 'جاري التحقق...' : 'تسجيل الدخول 🚀'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setShowLoginModal(false)} 
+                  style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '11px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
