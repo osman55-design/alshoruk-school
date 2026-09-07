@@ -1,196 +1,72 @@
-import React, { useState } from 'react';
-import LandingPage from './components/LandingPage';
+import React, { useState, useEffect } from 'react';
+import LandingPage from './LandingPage';
 import AdminSystem from './AdminSystem';
 import { supabase } from './supabaseClient';
 
-function App() {
+export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [currentView, setCurrentView] = useState('landing');
+  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'admin'
 
-  // حالات نموذج الدخول
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  // التحقق من الجلسة عند تحميل التطبيق
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // جلب بيانات المستخدم وإذن الصلاحيات من جدول الملفات الشخصية
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-  // دالة تسجيل الدخول
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg('');
-
-    try {
-      // الاستعلام المباشر من جدول users_list الصحيح
-      const { data, error } = await supabase
-        .from('users_list')
-        .select('*')
-        .eq('username', username.trim())
-        .eq('password', password.trim());
-
-      if (error) {
-        console.error('Supabase Error:', error);
-        setErrorMsg(`خطأ من قاعدة البيانات: ${error.message}`);
-        setLoading(false);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        setErrorMsg('اسم المستخدم أو كلمة المرور غير صحيحة!');
-        setLoading(false);
-        return;
-      }
-
-      const userData = data[0];
-
-      // معالجة الصلاحيات بشكل آمن
-      let userPermissions = { admin: true };
-      if (userData.permissions) {
-        if (typeof userData.permissions === 'string') {
-          try {
-            userPermissions = JSON.parse(userData.permissions);
-          } catch (pErr) {
-            userPermissions = { admin: true };
-          }
-        } else if (typeof userData.permissions === 'object') {
-          userPermissions = userData.permissions;
+        if (profile) {
+          setCurrentUser(profile);
         }
       }
+    };
 
-      const userObj = {
-        id: userData.id,
-        name: userData.name || userData.username,
-        username: userData.username,
-        role: userData.role || 'admin',
-        permissions: userPermissions
-      };
+    checkUser();
 
-      setCurrentUser(userObj);
-      setShowLoginModal(false);
-      setCurrentView('admin');
-      setUsername('');
-      setPassword('');
-    } catch (err) {
-      console.error('Login Error:', err);
-      setErrorMsg(`حدث خطأ أثناء معالجة البيانات: ${err.message || err}`);
-    } finally {
-      setLoading(false);
-    }
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        setCurrentView('landing');
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // تسجيل الدخول
+  const handleLogin = (userData) => {
+    setCurrentUser(userData);
+    setCurrentView('admin');
   };
 
-  const handleLogout = () => {
+  // تسجيل الخروج
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setCurrentUser(null);
     setCurrentView('landing');
   };
 
   return (
-    <div>
-      {/* عرض لوحة التحكم أو الصفحة الرئيسية */}
-      {currentView === 'admin' && currentUser ? (
+    <div className="app-container">
+      {currentView === 'landing' ? (
+        <LandingPage 
+          onLoginSuccess={handleLogin} 
+          goToAdmin={() => setCurrentView('admin')}
+          currentUser={currentUser}
+        />
+      ) : (
         <AdminSystem 
           currentUser={currentUser} 
           onLogout={handleLogout} 
           goToLanding={() => setCurrentView('landing')} 
         />
-      ) : (
-        <LandingPage 
-          currentUser={currentUser} 
-          onOpenLogin={() => setShowLoginModal(true)} 
-          onOpenAdmin={() => setCurrentView('admin')}
-          onLogout={handleLogout} 
-        />
-      )}
-
-      {/* نافذة تسجيل الدخول المدمجة */}
-      {showLoginModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 9999,
-          direction: 'rtl',
-          fontFamily: "'Segoe UI', Roboto, sans-serif"
-        }}>
-          <div style={{
-            backgroundColor: '#ffffff',
-            padding: '25px',
-            borderRadius: '16px',
-            width: '90%',
-            maxWidth: '380px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-              <h3 style={{ margin: 0, color: '#047857', fontSize: '17px', fontWeight: 'bold' }}>🔐 تسجيل الدخول للنظام</h3>
-              <button 
-                onClick={() => setShowLoginModal(false)} 
-                style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#64748b' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {errorMsg && (
-              <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', marginBottom: '12px', border: '1px solid #fee2e2' }}>
-                ⚠️ {errorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#334155' }}>اسم المستخدم:</label>
-                <input 
-                  type="text" 
-                  required
-                  value={username} 
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="أدخل اسم المستخدم"
-                  style={{ width: '100%', padding: '9px', borderRadius: '8px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#334155' }}>كلمة المرور:</label>
-                <input 
-                  type="password" 
-                  required
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="أدخل كلمة المرور"
-                  style={{ width: '100%', padding: '9px', borderRadius: '8px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={loading}
-                style={{
-                  backgroundColor: '#047857',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  marginTop: '8px',
-                  fontSize: '13px'
-                }}
-              >
-                {loading ? 'جاري التحقق...' : 'دخول للنظام 🚀'}
-              </button>
-            </form>
-          </div>
-        </div>
       )}
     </div>
   );
 }
-
-// التصدير الافتراضي الصريح ليتمكن main.jsx من استيراده بنجاح
-export default App;
