@@ -8,13 +8,13 @@ export default function DashboardSection({ onBack }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // دالة لجلب كل المستخدمين والصلاحيات من Supabase
+  // دالة لجلب كل المستخدمين والصلاحيات من جدول users
   const fetchUsers = async () => {
     setLoading(true);
     setErrorMessage('');
     try {
       const { data, error } = await supabase
-        .from('users_list')
+        .from('users')
         .select('*');
 
       if (error) {
@@ -34,12 +34,12 @@ export default function DashboardSection({ onBack }) {
     fetchUsers();
   }, []);
 
-  // دالة لحذف مستخدم
+  // دالة لحذف مستخدم من جدول users
   const handleDeleteUser = async (id) => {
     if (!window.confirm('هل أنتِ متأكدة من حذف هذا المستخدم؟')) return;
     try {
       const { error } = await supabase
-        .from('users_list')
+        .from('users')
         .delete()
         .eq('id', id);
 
@@ -65,10 +65,10 @@ export default function DashboardSection({ onBack }) {
         </button>
       </div>
 
-      {/* رسالة الخطأ في حال وجود خطأ من Supabase */}
+      {/* رسالة تنبيه عند حدوث خطأ */}
       {errorMessage && (
         <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #fee2e2', fontSize: '13px' }}>
-          <strong>تنبيه:</strong> لم نتمكن من جلب البيانات ({errorMessage}). أرجو التأكد من اسم الجدول في Supabase.
+          <strong>تنبيه:</strong> لم نتمكن من جلب البيانات ({errorMessage}).
         </div>
       )}
 
