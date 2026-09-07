@@ -5,21 +5,26 @@ import AddUserForm from './AddUserForm';
 export default function DashboardSection({ onBack }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
   // دالة لجلب كل المستخدمين والصلاحيات من Supabase
   const fetchUsers = async () => {
     setLoading(true);
+    setErrorMessage('');
     try {
       const { data, error } = await supabase
         .from('users_list')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
+
       setUsers(data || []);
     } catch (err) {
       console.error('خطأ في جلب المستخدمين:', err.message);
+      setErrorMessage(err.message);
     } finally {
       setLoading(false);
     }
@@ -39,7 +44,7 @@ export default function DashboardSection({ onBack }) {
         .eq('id', id);
 
       if (error) throw error;
-      fetchUsers(); // إعادة تحديث القائمة
+      fetchUsers();
     } catch (err) {
       alert('حدث خطأ أثناء الحذف: ' + err.message);
     }
@@ -60,9 +65,16 @@ export default function DashboardSection({ onBack }) {
         </button>
       </div>
 
-      {/* جدول عرض المستخدمين الجايبين من الداتابيز */}
+      {/* رسالة الخطأ في حال وجود خطأ من Supabase */}
+      {errorMessage && (
+        <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #fee2e2', fontSize: '13px' }}>
+          <strong>تنبيه:</strong> لم نتمكن من جلب البيانات ({errorMessage}). أرجو التأكد من اسم الجدول في Supabase.
+        </div>
+      )}
+
+      {/* جدول عرض المستخدمين */}
       {loading ? (
-        <p style={{ textAlign: 'center', color: '#64748b' }}>جاري تحميل قائمة المستخدمين...</p>
+        <p style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>جاري تحميل قائمة المستخدمين...</p>
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '14px' }}>
@@ -76,37 +88,45 @@ export default function DashboardSection({ onBack }) {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
-                <tr key={u.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '12px', fontWeight: 'bold' }}>{u.full_name || u.name || '---'}</td>
-                  <td style={{ padding: '12px' }}>{u.username || '---'}</td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{ backgroundColor: u.role === 'مدير' || u.role === 'admin' ? '#dcfce7' : '#e0f2fe', color: u.role === 'مدير' || u.role === 'admin' ? '#15803d' : '#0369a1', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
-                      {u.role || 'إداري'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                      {u.can_manage_students && <span style={badgeStyle}>الطلاب</span>}
-                      {u.can_manage_classes && <span style={badgeStyle}>الفصول</span>}
-                      {u.can_manage_teachers && <span style={badgeStyle}>المعلمين</span>}
-                      {u.can_manage_finance && <span style={badgeStyle}>المالية</span>}
-                      {u.can_manage_results && <span style={badgeStyle}>النتائج</span>}
-                      {u.can_manage_transport && <span style={badgeStyle}>التراحيل</span>}
-                      {u.can_manage_supervisors && <span style={badgeStyle}>المشرفات</span>}
-                      {u.can_manage_admin && <span style={{ ...badgeStyle, backgroundColor: '#fef3c7', color: '#b45309' }}>كل الصلاحيات</span>}
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <button 
-                      onClick={() => handleDeleteUser(u.id)}
-                      style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
-                    >
-                      حذف 🗑️
-                    </button>
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                    لا يوجد مستخدمون لعرضهم حالياً. اضغطي على "إضافة موظف جديد" لإضافة أول مستخدم.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                users.map((u) => (
+                  <tr key={u.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{u.full_name || u.name || '---'}</td>
+                    <td style={{ padding: '12px' }}>{u.username || '---'}</td>
+                    <td style={{ padding: '12px' }}>
+                      <span style={{ backgroundColor: u.role === 'مدير' || u.role === 'admin' ? '#dcfce7' : '#e0f2fe', color: u.role === 'مدير' || u.role === 'admin' ? '#15803d' : '#0369a1', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
+                        {u.role || 'إداري'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {u.can_manage_students && <span style={badgeStyle}>الطلاب</span>}
+                        {u.can_manage_classes && <span style={badgeStyle}>الفصول</span>}
+                        {u.can_manage_teachers && <span style={badgeStyle}>المعلمين</span>}
+                        {u.can_manage_finance && <span style={badgeStyle}>المالية</span>}
+                        {u.can_manage_results && <span style={badgeStyle}>النتائج</span>}
+                        {u.can_manage_transport && <span style={badgeStyle}>التراحيل</span>}
+                        {u.can_manage_supervisors && <span style={badgeStyle}>المشرفات</span>}
+                        {u.can_manage_admin && <span style={{ ...badgeStyle, backgroundColor: '#fef3c7', color: '#b45309' }}>كل الصلاحيات</span>}
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                      <button 
+                        onClick={() => handleDeleteUser(u.id)}
+                        style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
+                      >
+                        حذف 🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -120,7 +140,7 @@ export default function DashboardSection({ onBack }) {
               onClose={() => setShowAddModal(false)} 
               onUserAdded={() => {
                 setShowAddModal(false);
-                fetchUsers(); // إعادة التحديث بعد الإضافة مباشرة
+                fetchUsers();
               }} 
             />
           </div>
