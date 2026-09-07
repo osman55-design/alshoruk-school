@@ -1,14 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
 
-export default function LandingPage({ onOpenLogin, schoolLogo }) {
+export default function LandingPage({ onOpenLogin, onBackToDashboard, schoolLogo }) {
+  const [logoUrl, setLogoUrl] = useState(schoolLogo || null);
+  const [news, setNews] = useState([]);
+  const [boardMembers, setBoardMembers] = useState([]);
+  const [primaryTopStudents, setPrimaryTopStudents] = useState([]);
+  const [middleTopStudents, setMiddleTopStudents] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
 
-  // أخبار تجريبية للشريط
-  const newsList = [
-    "مرحباً بكم في مدرسة الشروق السودانية بأسوان - بداية العام الدراسي الجديد",
-    "تنبيه: فتح باب التسجيل لاختبارات الشهادتين الابتدائية والمتوسطة",
-    "تهنئة خاصة لطلابنا المتفوقين في الأنشطة الثقافية والرياضية"
-  ];
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      // 1. الشعار
+      const { data: logoData } = await supabase.from('school_settings').select('logo_url').single();
+      if (logoData?.logo_url) setLogoUrl(logoData.logo_url);
+
+      // 2. الأخبار
+      const { data: newsData } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+      if (newsData) setNews(newsData);
+
+      // 3. أعضاء مجلس الإدارة
+      const { data: boardData } = await supabase.from('board_members').select('*');
+      if (boardData) setBoardMembers(boardData);
+
+      // 4. المتفوقين
+      const { data: primData } = await supabase.from('top_students').select('*').eq('stage', 'primary');
+      if (primData) setPrimaryTopStudents(primData);
+
+      const { data: midData } = await supabase.from('top_students').select('*').eq('stage', 'middle');
+      if (midData) setMiddleTopStudents(midData);
+    } catch (err) {
+      console.log('Notice:', err.message);
+    }
+  };
 
   return (
     <div style={{ fontFamily: 'Cairo, sans-serif', direction: 'rtl', textAlign: 'right', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#1e293b' }}>
@@ -18,9 +46,8 @@ export default function LandingPage({ onOpenLogin, schoolLogo }) {
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            {/* الشعار من داخل البرنامج أو شعار افتراضي محمل */}
-            {schoolLogo ? (
-              <img src={schoolLogo} alt="شعار المدرسة" style={{ width: '65px', height: '65px', objectFit: 'contain', borderRadius: '50%', background: '#fff', padding: '3px' }} />
+            {logoUrl ? (
+              <img src={logoUrl} alt="شعار المدرسة" style={{ width: '65px', height: '65px', objectFit: 'contain', borderRadius: '50%', background: '#fff', padding: '3px' }} />
             ) : (
               <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 'bold' }}>
                 ☀️
@@ -32,32 +59,28 @@ export default function LandingPage({ onOpenLogin, schoolLogo }) {
             </div>
           </div>
 
-          {/* زر بوابة الدخول لتشغيل النظام القديم الشغال بدون تعديل */}
-          <button 
-            onClick={onOpenLogin}
-            style={{
-              background: '#d97706',
-              color: '#fff',
-              border: 'none',
-              padding: '10px 22px',
-              borderRadius: '8px',
-              fontSize: '15px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            🔐 بوابة الدخول
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {onBackToDashboard && (
+              <button onClick={onBackToDashboard} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid #fff', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>
+                لوحة التحكم
+              </button>
+            )}
+            {/* استدعاء دالة الدخول الأصلية الخاصة بك كما هي */}
+            <button 
+              onClick={onOpenLogin}
+              style={{ background: '#d97706', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              🔐 بوابة الدخول
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* 2. شريط متحرك بآخر الأخبار (يتحرك ويتوقف عند مرور الماوس) */}
+      {/* 2. شريط الأخبار المتحرك (يتوقف عند الوقوف بالماوس) */}
       <div style={{ background: '#1e293b', color: '#fbbf24', padding: '10px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '3px solid #d97706' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center' }}>
           <span style={{ background: '#d97706', color: '#fff', padding: '3px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', marginLeft: '15px', zIndex: 2 }}>
-            📢آخر الأخبار:
+            📢 شريط الأخبار:
           </span>
           <div 
             onMouseEnter={() => setIsPaused(true)}
@@ -70,14 +93,18 @@ export default function LandingPage({ onOpenLogin, schoolLogo }) {
               fontSize: '14px'
             }}
           >
-            {newsList.map((item, idx) => (
-              <span key={idx} style={{ marginLeft: '40px' }}>🔹 {item}</span>
-            ))}
+            {news.length > 0 ? (
+              news.map((item, idx) => (
+                <span key={idx} style={{ marginLeft: '50px' }}>🔹 {item.title || item.content}</span>
+              ))
+            ) : (
+              <span>🔹 مرحباً بكم في مدرسة الشروق السودانية بأسوان - بداية العام الدراسي الجديد.</span>
+            )}
           </div>
         </div>
       </div>
 
-      {/* 3. الأقسام الرئيسية (من نحن ومجلس الإدارة) */}
+      {/* 3. أقسام المحتوى */}
       <main style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 20px' }}>
         
         {/* قسم من نحن */}
@@ -91,36 +118,55 @@ export default function LandingPage({ onOpenLogin, schoolLogo }) {
         </section>
 
         {/* قسم أعضاء مجلس الإدارة */}
-        <section style={{ background: '#fff', borderRadius: '12px', padding: '30px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderRight: '5px solid #d97706' }}>
+        <section style={{ background: '#fff', borderRadius: '12px', padding: '30px', marginBottom: '30px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderRight: '5px solid #d97706' }}>
           <h2 style={{ color: '#065f46', marginTop: 0, fontSize: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
             👥 أعضاء مجلس الإدارة
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '20px' }}>
-            
-            <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '30px', marginBottom: '8px' }}>👨‍💼</div>
-              <h4 style={{ margin: '5px 0', color: '#1e293b' }}>إدارة المدرسة</h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>رئاسة مجلس الإدارة والتربية</p>
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '20px' }}>
+            {boardMembers.length > 0 ? (
+              boardMembers.map((member, idx) => (
+                <div key={idx} style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+                  {member.photo_url && <img src={member.photo_url} alt={member.name} style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', marginBottom: '8px' }} />}
+                  <h4 style={{ margin: '5px 0', color: '#1e293b' }}>{member.name}</h4>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>{member.role || member.title}</p>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: '#64748b', fontSize: '14px' }}>سيتم عرض أعضاء مجلس الإدارة قريباً.</p>
+            )}
+          </div>
+        </section>
 
-            <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '30px', marginBottom: '8px' }}>👨‍🏫</div>
-              <h4 style={{ margin: '5px 0', color: '#1e293b' }}>الشؤون الأكاديمية</h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>الإشراف والتحصيل العلمي</p>
+        {/* قسم الأوائل */}
+        <section style={{ background: '#fff', borderRadius: '12px', padding: '30px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderRight: '5px solid #065f46' }}>
+          <h2 style={{ color: '#065f46', marginTop: 0, fontSize: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+            🏆 الطلاب المتفوقون
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
+            <div>
+              <h3 style={{ color: '#d97706', fontSize: '16px' }}>الشهادة الابتدائية</h3>
+              {primaryTopStudents.length > 0 ? (
+                primaryTopStudents.map((st, i) => <div key={i}>🥇 {st.name} ({st.score}%)</div>)
+              ) : <p style={{ fontSize: '13px', color: '#94a3b8' }}>لا يوجد بيانات حالياً</p>}
             </div>
-
-            <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '30px', marginBottom: '8px' }}>📋</div>
-              <h4 style={{ margin: '5px 0', color: '#1e293b' }}>الشؤون الإدارية</h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>التنظيم والخدمات الطلابية</p>
+            <div>
+              <h3 style={{ color: '#d97706', fontSize: '16px' }}>الشهادة المتوسطة</h3>
+              {middleTopStudents.length > 0 ? (
+                middleTopStudents.map((st, i) => <div key={i}>🥇 {st.name} ({st.score}%)</div>)
+              ) : <p style={{ fontSize: '13px', color: '#94a3b8' }}>لا يوجد بيانات حالياً</p>}
             </div>
-
           </div>
         </section>
 
       </main>
 
-      {/* تنسيقات حركة شريط الأخبار */}
+      {/* 4. الفوتر */}
+      <footer style={{ background: '#064e3b', color: '#fff', padding: '25px', textAlign: 'center', marginTop: '40px', borderTop: '3px solid #d97706' }}>
+        <p style={{ margin: '5px 0' }}>📞 للتواصل: 01149169346 | 📍 أسوان، جمهورية مصر العربية</p>
+        <p style={{ margin: '5px 0', fontSize: '12px', opacity: 0.8 }}>حقوق الطبع والتطوير محفوظة - أستاذ عثمان صديق (01149169346)</p>
+      </footer>
+
+      {/* الحركة الخاصة بالشريط */}
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(-100%); }
