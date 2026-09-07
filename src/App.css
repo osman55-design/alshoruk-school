@@ -1,54 +1,12 @@
-/* تنسيقات عامة لدعم المظهر العصري لمدرسة الشروق */
-body {
-  margin: 0;
-  padding: 0;
-  background-color: #f8fafc;
-  font-family: 'Arial', sans-serif;
+@import "tailwindcss";
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
 }
 
-/* تأثير تحريك سلس عند الانتقال بين الأقسام (Fade In) */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.content-fade-in {
-  animation: fadeIn 0.4s ease-in-out forwards;
-}
-
-/* تنسيق أزرار التنقل الفرعية داخل الأقسام */
-.nav-tab-btn {
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background-color: #ffffff;
-  color: #1e3a8a;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-
-.nav-tab-btn:hover {
-  background-color: #cc9933;
-  color: #ffffff;
-  box-sizing: border-box;
-}
-
-.active-tab {
-  background-color: #cc9933 !important;
-  color: #ffffff !important;
-}
-
-/* إلغاء الفوتر أو العناصر غير المرغوب في طباعتها عند استخراج التقارير */
-@media print {
-  .no-print, footer, .elegant-nav-container {
-    display: none !important;
-  }
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 25s linear infinite;
 }
