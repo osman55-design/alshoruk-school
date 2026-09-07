@@ -5,48 +5,50 @@ import TeachersSection from './components/TeachersSection';
 import AccountsSection from './components/AccountsSection';
 import DashboardSection from './components/DashboardSection';
 import ResultsSection from './components/ResultsSection';
-import TransportSection from './components/TransportsSection';
+import TransportSection from './components/TransportSection';
 import SupervisorsSection from './components/ClassSupervisorsSection';
 
 export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
   const [activeTab, setActiveTab] = useState('students');
 
   const navBtnStyle = (isActive) => ({
-    padding: '7px 14px',
-    borderRadius: '12px',
+    padding: '8px 16px',
+    borderRadius: '10px',
     border: 'none',
     cursor: 'pointer',
     fontWeight: 'bold',
-    fontSize: '12px',
-    backgroundColor: isActive ? '#ffffff' : 'rgba(255,255,255,0.15)',
+    fontSize: '13px',
+    backgroundColor: isActive ? '#ffffff' : 'rgba(255,255,255,0.18)',
     color: isActive ? '#047857' : '#ffffff',
-    transition: 'all 0.2s'
+    transition: 'all 0.2s ease',
+    boxShadow: isActive ? '0 2px 6px rgba(0,0,0,0.1)' : 'none'
   });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
-      {/* هيدر النظام الداخلي */}
-      <header style={{ padding: '12px 4%', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', boxShadow: '0 4px 15px rgba(4,120,87,0.15)', borderBottom: '3px solid #f59e0b' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="logo.png" alt="logo" onError={(e) => { e.target.src = "https://placehold.co/100"; }} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid #f59e0b' }} />
+      
+      {/* هيدر شريط الإدارة العلوي */}
+      <header style={{ padding: '14px 4%', background: 'linear-gradient(90deg, #047857 0%, #10b981 100%)', boxShadow: '0 4px 15px rgba(4,120,87,0.15)', borderBottom: '3px solid #f59e0b' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src="/logo.png" alt="logo" onError={(e) => { e.target.src = "https://placehold.co/100?text=Logo"; }} style={{ width: '42px', height: '42px', borderRadius: '50%', border: '2px solid #f59e0b', backgroundColor: '#fff' }} />
             <div>
-              <h3 style={{ color: '#fff', margin: 0, fontSize: '16px', fontWeight: '900' }}>لوحة التحكم والإدارة الإدارية</h3>
-              <span style={{ color: '#fef08a', fontSize: '11px', fontWeight: 'bold' }}>المستخدم: {currentUser?.name} ({currentUser?.role})</span>
+              <h3 style={{ color: '#fff', margin: 0, fontSize: '17px', fontWeight: '900' }}>لوحة التحكم والإدارة</h3>
+              <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold' }}>المستخدم: {currentUser?.name || 'مستخدم'} ({currentUser?.role || 'إداري'})</span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={goToLanding} style={{ backgroundColor: '#f59e0b', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>🏠 الواجهة الرئيسية</button>
-            <button onClick={onLogout} style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '6px 12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>خروج 🚪</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={goToLanding} style={{ backgroundColor: '#f59e0b', color: '#fff', border: 'none', padding: '7px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>🏠 الواجهة الرئيسية</button>
+            <button onClick={onLogout} style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '7px 14px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>خروج 🚪</button>
           </div>
         </div>
 
-        {/* أزرار التنقل السريع */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-          {currentUser?.permissions?.admin && (
+        {/* أزرار التنقل بين الأقسام */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          {(currentUser?.permissions?.admin || currentUser?.role === 'admin') && (
             <button style={navBtnStyle(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>إدارة المستخدمين والصلاحيات ⚙️</button>
           )}
-          {(currentUser?.permissions?.students || currentUser?.permissions?.admin) && (
+          {(currentUser?.permissions?.students || currentUser?.permissions?.admin || !currentUser?.permissions) && (
             <button style={navBtnStyle(activeTab === 'students')} onClick={() => setActiveTab('students')}>شؤون الطلاب 📚</button>
           )}
           {(currentUser?.permissions?.classes || currentUser?.permissions?.admin) && (
@@ -70,9 +72,9 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
         </div>
       </header>
 
-      {/* عرض القسم المختار */}
+      {/* محتوى القسم النشط */}
       <main style={{ padding: '20px 4%', flex: '1', boxSizing: 'border-box' }}>
-        <div style={{ background: '#ffffff', padding: '18px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', width: '100%', overflowX: 'auto' }}>
+        <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', width: '100%', overflowX: 'auto' }}>
           {activeTab === 'students' && <StudentsSection currentUser={currentUser} />}
           {activeTab === 'classes' && <ClassesSection currentUser={currentUser} />}
           {activeTab === 'teachers' && <TeachersSection />}
@@ -83,6 +85,7 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
           {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('students')} />}
         </div>
       </main>
+
     </div>
   );
 }
