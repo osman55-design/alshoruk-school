@@ -3,40 +3,39 @@ import { supabase } from './supabaseClient';
 
 export default function LandingPage({ onLoginSuccess, goToAdmin }) {
   const [showModal, setShowModal] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // تسجيل الدخول باسم المستخدم
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
+      const cleanUsername = username.trim();
 
-      if (error) {
-        throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      // البحث عن المستخدم باسم المستخدم في جدول profiles أو users
+      const { data: userProfile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`username.eq.${cleanUsername},full_name.eq.${cleanUsername}`)
+        .maybeSingle();
+
+      if (error || !userProfile) {
+        throw new Error('اسم المستخدم غير مسجل في النظام. الرجاء التأكد والتحقق مرة أخرى.');
       }
 
-      if (data?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (onLoginSuccess) {
-          onLoginSuccess(profile || data.user);
-        }
-        if (goToAdmin) {
-          goToAdmin();
-        }
+      // إرسال بيانات المستخدم والتوجيه للوحة النظام
+      if (onLoginSuccess) {
+        onLoginSuccess(userProfile);
       }
+      if (goToAdmin) {
+        goToAdmin();
+      }
+
+      setShowModal(false);
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -45,19 +44,14 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
   };
 
   const handleOpenLogin = () => {
-    // إذا كانت هناك دالة توجيه مباشرة سننفذها، وإلا نفتح نافذة الدخول
-    if (goToAdmin && !onLoginSuccess) {
-      goToAdmin();
-    } else {
-      setShowModal(true);
-    }
+    setShowModal(true);
   };
 
   return (
     <div style={{ fontFamily: 'sans-serif', direction: 'rtl', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#1e293b', margin: 0, padding: 0 }}>
       
       {/* الهيدر */}
-      <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', itemsCenter: 'center', sticky: 'top' }}>
+      <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', sticky: 'top' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ backgroundColor: '#059669', color: '#fff', fontSize: '24px', padding: '8px 12px', borderRadius: '10px' }}>🏫</div>
           <div>
@@ -74,7 +68,7 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
         </button>
       </header>
 
-      {/* محتوى الصفحة */}
+      {/* محتوى الصفحة الرئيسية */}
       <main style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 20px' }}>
         
         {/* الترحيب */}
@@ -116,7 +110,7 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
 
       </main>
 
-      {/* نافذة تسجيل الدخول المنبثقة */}
+      {/* نافذة دخول المستخدمين باسم المستخدم */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '15px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
@@ -128,7 +122,7 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
               ✕
             </button>
 
-            <h3 style={{ textAlign: 'center', marginTop: 0, color: '#0f172a' }}>🔒 تسجيل دخول المستخدمين</h3>
+            <h3 style={{ textAlign: 'center', marginTop: 0, color: '#0f172a' }}>👤 تسجيل دخول المستخدمين</h3>
             
             {errorMsg && (
               <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px', textAlign: 'center' }}>
@@ -137,34 +131,24 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
             )}
 
             <form onSubmit={handleLogin}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>البريد الإلكتروني</label>
-                <input 
-                  type="email" 
-                  required 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
-                />
-              </div>
-
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>كلمة المرور</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>اسم المستخدم</label>
                 <input 
-                  type="password" 
+                  type="text" 
                   required 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+                  value={username} 
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="أدخل اسم المستخدم المسجل..."
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '14px' }}
                 />
               </div>
 
               <button 
                 type="submit" 
                 disabled={loading}
-                style={{ width: '100%', backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                style={{ width: '100%', backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
               >
-                {loading ? 'جاري الدخول...' : 'تسجيل الدخول'}
+                {loading ? 'جاري التحقق...' : 'دخول للنظام'}
               </button>
             </form>
           </div>
