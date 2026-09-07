@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+
 export default function LandingPage() {
   const [logoUrl, setLogoUrl] = useState(null);
   const [news, setNews] = useState([]);
@@ -12,41 +13,33 @@ export default function LandingPage() {
   }, []);
 
   const fetchData = async () => {
-    // جلب الشعار
-    const { data: logoData } = await supabase.from('school_settings').select('logo_url').single();
-    if (logoData?.logo_url) setLogoUrl(logoData.logo_url);
+    try {
+      const { data: logoData } = await supabase.from('school_settings').select('logo_url').single();
+      if (logoData?.logo_url) setLogoUrl(logoData.logo_url);
 
-    // جلب الأخبار
-    const { data: newsData } = await supabase.from('news').select('*').order('created_at', { ascending: false });
-    if (newsData) setNews(newsData);
+      const { data: newsData } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+      if (newsData) setNews(newsData);
 
-    // جلب أعضاء مجلس الإدارة (بشرط وجود الاسم والصورة)
-    const { data: boardData } = await supabase.from('board_members').select('*').limit(10);
-    if (boardData) {
-      setBoardMembers(boardData.filter(m => m.name && m.photo_url && m.name.trim() !== ''));
-    }
+      const { data: boardData } = await supabase.from('board_members').select('*').limit(10);
+      if (boardData) setBoardMembers(boardData.filter(m => m.name && m.photo_url && m.name.trim() !== ''));
 
-    // جلب المتفوقين في الابتدائي (بشرط وجود الاسم والصورة)
-    const { data: primData } = await supabase.from('top_students').select('*').eq('stage', 'primary').limit(5);
-    if (primData) {
-      setPrimaryTopStudents(primData.filter(s => s.name && s.photo_url && s.name.trim() !== ''));
-    }
+      const { data: primData } = await supabase.from('top_students').select('*').eq('stage', 'primary').limit(5);
+      if (primData) setPrimaryTopStudents(primData.filter(s => s.name && s.photo_url && s.name.trim() !== ''));
 
-    // جلب المتفوقين في المتوسط (بشرط وجود الاسم والصورة)
-    const { data: midData } = await supabase.from('top_students').select('*').eq('stage', 'middle').limit(5);
-    if (midData) {
-      setMiddleTopStudents(midData.filter(s => s.name && s.photo_url && s.name.trim() !== ''));
+      const { data: midData } = await supabase.from('top_students').select('*').eq('stage', 'middle').limit(5);
+      if (midData) setMiddleTopStudents(midData.filter(s => s.name && s.photo_url && s.name.trim() !== ''));
+    } catch (err) {
+      console.log('ملاحظة في جلب البيانات:', err.message);
     }
   };
 
-  // رفع الشعار وتحديثه
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const fileExt = file.name.split('.').pop();
     const fileName = `logo_${Date.now()}.${fileExt}`;
-    const { data, error } = await supabase.storage.from('school-assets').upload(fileName, file);
+    const { error } = await supabase.storage.from('school-assets').upload(fileName, file);
 
     if (!error) {
       const { data: urlData } = supabase.storage.from('school-assets').getPublicUrl(fileName);
@@ -57,55 +50,51 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans dir-rtl text-right">
+    <div style={{ backgroundColor: '#f8fafc', color: '#1e293b', fontFamily: "'Segoe UI', Roboto, sans-serif", direction: 'rtl', minHeight: '100vh', margin: 0 }}>
       
       {/* 1. الهيدر الرئيسي والشعار */}
-      <header className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white py-8 px-4 shadow-xl relative">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      <header style={{ background: 'linear-gradient(135deg, #065f46 0%, #134e4a 100%)', color: '#fff', padding: '30px 20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
           
-          {/* قسم رفع وعرض الشعار */}
-          <div className="relative group cursor-pointer">
+          <div style={{ textAlign: 'right' }}>
+            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#ecfdf5' }}>
+              مدرسة الشروق السودانية
+            </h1>
+            <p style={{ margin: '8px 0 0 0', fontSize: '18px', color: '#a7f3d0' }}>
+              فرع أسوان - مصر 🇪🇬 🇸🇩
+            </p>
+          </div>
+
+          <div style={{ position: 'relative', cursor: 'pointer' }}>
             {logoUrl ? (
-              <img src={logoUrl} alt="شعار المدرسة" className="h-24 w-24 object-contain rounded-full border-4 border-emerald-400 bg-white p-1 shadow-lg" />
+              <img src={logoUrl} alt="شعار المدرسة" style={{ width: '90px', height: '90px', objectFit: 'contain', borderRadius: '50%', border: '3px solid #34d399', backgroundColor: '#fff', padding: '4px' }} />
             ) : (
-              <div className="h-24 w-24 rounded-full border-2 border-dashed border-emerald-300 flex items-center justify-center bg-emerald-700/50 text-xs text-emerald-100 text-center p-2">
-                اضغط لرفع الشعار 📤
+              <div style={{ width: '90px', height: '90px', borderRadius: '50%', border: '2px dashed #a7f3d0', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', fontSize: '12px', color: '#ecfdf5', textAlign: 'center', padding: '5px' }}>
+                رفع الشعار 📤
               </div>
             )}
             <input 
               type="file" 
               accept="image/*" 
               onChange={handleLogoUpload} 
-              className="absolute inset-0 opacity-0 cursor-pointer" 
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
               title="تغيير الشعار"
             />
           </div>
 
-          {/* اسم المدرسة والفرع */}
-          <div className="text-center md:text-right flex-1">
-            <h1 className="text-3xl md:text-5xl font-black tracking-wide text-emerald-100 drop-shadow">
-              مدرسة الشروق السودانية
-            </h1>
-            <p className="text-lg md:text-xl text-teal-200 mt-2 font-medium">
-              فرع أسوان - مصر 🇪🇬 🇸🇩
-            </p>
-          </div>
         </div>
       </header>
 
-      {/* 2. شريط الأخبار المتحرك (يتوقف عند مرور الماوس) */}
-      <section className="bg-amber-500 text-slate-900 py-3 overflow-hidden shadow-inner flex items-center border-y border-amber-600">
-        <div className="bg-amber-700 text-white font-bold px-4 py-1 z-10 shrink-0 text-sm md:text-base shadow-md">
+      {/* 2. شريط الأخبار المتحرك */}
+      <section style={{ backgroundColor: '#f59e0b', color: '#0f172a', display: 'flex', alignItems: 'center', overflow: 'hidden', borderBottom: '2px solid #d97706' }}>
+        <div style={{ backgroundColor: '#b45309', color: '#fff', fontWeight: 'bold', padding: '10px 20px', zIndex: 2, fontSize: '14px', shrink: 0 }}>
           آخر الأخبار 📣
         </div>
-        
-        <div className="overflow-hidden whitespace-nowrap w-full relative group">
-          <div className="inline-block animate-marquee group-hover:[animation-play-state:paused] space-x-12 space-x-reverse text-sm md:text-base font-semibold">
+        <div className="marquee-container" style={{ width: '100%', overflow: 'hidden', whitespace: 'nowrap', position: 'relative' }}>
+          <div className="marquee-content" style={{ display: 'inline-block', paddingLeft: '100%', animation: 'marquee 22s linear infinite', fontSize: '15px', fontWeight: 'bold' }}>
             {news.length > 0 ? (
               news.map((item, idx) => (
-                <span key={idx} className="inline-flex items-center gap-2">
-                  <span>🔸 {item.title || item.content}</span>
-                </span>
+                <span key={idx} style={{ marginLeft: '40px' }}>🔸 {item.title || item.content}</span>
               ))
             ) : (
               <span>مرحباً بكم في مدرسة الشروق السودانية بأسوان - يسعدنا استقبال استفساراتكم وتسجيل الطلاب للعام الدراسي الجديد.</span>
@@ -115,35 +104,29 @@ export default function LandingPage() {
       </section>
 
       {/* 3. من نحن */}
-      <section className="py-16 px-4 max-w-5xl mx-auto">
-        <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-slate-200/80">
-          <div className="inline-block bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mb-4">
+      <section style={{ padding: '50px 20px', maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '35px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+          <span style={{ backgroundColor: '#d1fae5', color: '#065f46', fontSize: '12px', fontWeight: 'bold', padding: '6px 14px', borderRadius: '20px', display: 'inline-block', marginBottom: '12px' }}>
             عن المدرسة
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">من نحن</h2>
-          <p className="text-slate-600 leading-relaxed text-base md:text-lg">
+          </span>
+          <h2 style={{ margin: '0 0 15px 0', fontSize: '24px', color: '#0f172a' }}>من نحن</h2>
+          <p style={{ color: '#475569', lineHeight: '1.8', fontSize: '16px', margin: 0 }}>
             مدرسة الشروق السودانية بأسوان هي صرح تعليمي وتربوي يهدف إلى تقديم أفضل المناهج التعليمية السودانية لأبنائنا الطلاب في جمهورية مصر العربية. نسعى لبناء جيل متميز أكاديمياً وأخلاقياً، وتوفير بيئة تعليمية محفزة تدعم الإبداع والتفوق تحت إشراف نخبة من أفضل الكوادر التعليمية.
           </p>
         </div>
       </section>
 
-      {/* 4. أعضاء مجلس الإدارة (مخفي إن لم توجد بيانات مع صورة واسم) */}
+      {/* 4. أعضاء مجلس الإدارة */}
       {boardMembers.length > 0 && (
-        <section className="py-12 bg-slate-100 px-4">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-10">
-              مجلس الإدارة
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <section style={{ padding: '40px 20px', backgroundColor: '#f1f5f9' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            <h2 style={{ textAlign: 'center', color: '#0f172a', marginBottom: '30px' }}>مجلس الإدارة</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
               {boardMembers.slice(0, 10).map((member, index) => (
-                <div key={index} className="bg-white rounded-xl p-4 text-center shadow-sm border border-slate-200 hover:shadow-md transition">
-                  <img 
-                    src={member.photo_url} 
-                    alt={member.name} 
-                    className="w-24 h-24 mx-auto rounded-full object-cover border-2 border-emerald-500 mb-3"
-                  />
-                  <h3 className="font-bold text-slate-800 text-sm md:text-base">{member.name}</h3>
-                  <p className="text-xs text-emerald-600 mt-1 font-medium">{member.role || member.title}</p>
+                <div key={index} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '15px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+                  <img src={member.photo_url} alt={member.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #059669', margin: '0 auto 10px auto' }} />
+                  <h3 style={{ margin: '5px 0', fontSize: '15px', color: '#1e293b' }}>{member.name}</h3>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: 'bold' }}>{member.role || member.title}</p>
                 </div>
               ))}
             </div>
@@ -151,45 +134,33 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* 5. الطلاب المتفوقون في الشهادة الابتدائية */}
+      {/* 5. المتفوقون في الابتدائي */}
       {primaryTopStudents.length > 0 && (
-        <section className="py-12 px-4 max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-emerald-800 mb-8">
-            🏆 أوايل الشهادة الابتدائية
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <section style={{ padding: '40px 20px', maxWidth: '1100px', margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', color: '#065f46', marginBottom: '30px' }}>🏆 أوايل الشهادة الابتدائية</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
             {primaryTopStudents.slice(0, 5).map((student, index) => (
-              <div key={index} className="bg-white rounded-xl p-4 text-center shadow-sm border border-emerald-100 hover:border-emerald-300 transition">
-                <img 
-                  src={student.photo_url} 
-                  alt={student.name} 
-                  className="w-24 h-24 mx-auto rounded-full object-cover border-2 border-amber-400 mb-3"
-                />
-                <h3 className="font-bold text-slate-800 text-sm md:text-base">{student.name}</h3>
-                <p className="text-xs text-slate-500 mt-1">النسبة: {student.score}%</p>
+              <div key={index} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '15px', textAlign: 'center', border: '1px solid #a7f3d0' }}>
+                <img src={student.photo_url} alt={student.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #f59e0b', margin: '0 auto 10px auto' }} />
+                <h3 style={{ margin: '5px 0', fontSize: '15px', color: '#1e293b' }}>{student.name}</h3>
+                <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>النسبة: {student.score}%</p>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* 6. الطلاب المتفوقون في الشهادة المتوسطة */}
+      {/* 6. المتفوقون في المتوسط */}
       {middleTopStudents.length > 0 && (
-        <section className="py-12 bg-slate-100 px-4">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-teal-800 mb-8">
-              🎓 أوائل الشهادة المتوسطة
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <section style={{ padding: '40px 20px', backgroundColor: '#f1f5f9' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            <h2 style={{ textAlign: 'center', color: '#0f766e', marginBottom: '30px' }}>🎓 أوائل الشهادة المتوسطة</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
               {middleTopStudents.slice(0, 5).map((student, index) => (
-                <div key={index} className="bg-white rounded-xl p-4 text-center shadow-sm border border-teal-100 hover:border-teal-300 transition">
-                  <img 
-                    src={student.photo_url} 
-                    alt={student.name} 
-                    className="w-24 h-24 mx-auto rounded-full object-cover border-2 border-teal-500 mb-3"
-                  />
-                  <h3 className="font-bold text-slate-800 text-sm md:text-base">{student.name}</h3>
-                  <p className="text-xs text-slate-500 mt-1">النسبة: {student.score}%</p>
+                <div key={index} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '15px', textAlign: 'center', border: '1px solid #99f6e4' }}>
+                  <img src={student.photo_url} alt={student.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #0d9488', margin: '0 auto 10px auto' }} />
+                  <h3 style={{ margin: '5px 0', fontSize: '15px', color: '#1e293b' }}>{student.name}</h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>النسبة: {student.score}%</p>
                 </div>
               ))}
             </div>
@@ -198,37 +169,32 @@ export default function LandingPage() {
       )}
 
       {/* 7. الموقع وأرقام التواصل */}
-      <section className="py-12 px-4 bg-emerald-950 text-emerald-100">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 text-center md:text-right">
+      <section style={{ padding: '40px 20px', backgroundColor: '#022c22', color: '#ecfdf5' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '30px' }}>
           <div>
-            <h3 className="text-xl font-bold text-white mb-3">📍 موقعنا</h3>
-            <p className="text-emerald-300 leading-relaxed text-sm">
-              جمهورية مصر العربية - محافظة أسوان
-            </p>
+            <h3 style={{ margin: '0 0 10px 0', color: '#fff' }}>📍 موقعنا</h3>
+            <p style={{ margin: 0, color: '#a7f3d0', fontSize: '14px' }}>جمهورية مصر العربية - محافظة أسوان</p>
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white mb-3">📞 أرقام التواصل</h3>
-            <p className="text-emerald-300 text-sm dir-ltr text-right">
-              +20 114 916 9346
-            </p>
+            <h3 style={{ margin: '0 0 10px 0', color: '#fff' }}>📞 أرقام التواصل</h3>
+            <p style={{ margin: 0, color: '#a7f3d0', fontSize: '14px', direction: 'ltr', textAlign: 'right' }}>+20 114 916 9346</p>
           </div>
         </div>
       </section>
 
-      {/* 8. الحقوق والتصميم */}
-      <footer className="bg-slate-900 text-slate-400 text-center py-4 text-xs border-t border-slate-800">
-        تصميم وتطوير: <span className="text-emerald-400 font-bold">أستاذ عثمان صديق</span> (01149169346)
+      {/* 8. الفوتر */}
+      <footer style={{ backgroundColor: '#0f172a', color: '#94a3b8', textAlign: 'center', padding: '15px', fontSize: '13px', borderTop: '1px solid #1e293b' }}>
+        تصميم وتطوير: <span style={{ color: '#34d399', fontWeight: 'bold' }}>أستاذ عثمان صديق</span> (01149169346)
       </footer>
 
-      {/* نمط تحريك الشريط الإخباري */}
+      {/* CSS الخاص بالتحريك والتوقف عند الماوس */}
       <style>{`
         @keyframes marquee {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-100%); }
         }
-        .animate-marquee {
-          display: inline-block;
-          animation: marquee 25s linear infinite;
+        .marquee-container:hover .marquee-content {
+          animation-play-state: paused !important;
         }
       `}</style>
     </div>
