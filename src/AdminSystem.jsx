@@ -11,6 +11,22 @@ import SupervisorsSection from './components/ClassSupervisorsSection';
 export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
   const [activeTab, setActiveTab] = useState('students');
 
+  // التأكد التام أنكِ الأدمن الرئيسي ومديرة النظام
+  const isAdmin = 
+    currentUser?.role === 'admin' || 
+    currentUser?.role === 'مدير' || 
+    currentUser?.role === 'أدمن' || 
+    currentUser?.can_manage_admin === true || 
+    currentUser?.permissions?.admin === true;
+
+  // فحص الصلاحيات للموظفين العاديين
+  const hasPermission = (key, canManageKey) => {
+    if (isAdmin) return true; // الأدمن يرى كل الأقسام دائماً
+    if (currentUser?.permissions && currentUser.permissions[key]) return true;
+    if (currentUser && currentUser[canManageKey] === true) return true;
+    return false;
+  };
+
   const navBtnStyle = (isActive) => ({
     padding: '8px 16px',
     borderRadius: '10px',
@@ -34,7 +50,9 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
             <img src="/logo.png" alt="logo" onError={(e) => { e.target.src = "https://placehold.co/100?text=Logo"; }} style={{ width: '42px', height: '42px', borderRadius: '50%', border: '2px solid #f59e0b', backgroundColor: '#fff' }} />
             <div>
               <h3 style={{ color: '#fff', margin: 0, fontSize: '17px', fontWeight: '900' }}>لوحة التحكم والإدارة</h3>
-              <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold' }}>المستخدم: {currentUser?.name || 'مستخدم'} ({currentUser?.role || 'إداري'})</span>
+              <span style={{ color: '#fef08a', fontSize: '12px', fontWeight: 'bold' }}>
+                المستخدم: {currentUser?.full_name || currentUser?.username || 'مستخدم'} ({currentUser?.role || 'إداري'})
+              </span>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -45,28 +63,36 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
 
         {/* أزرار التنقل بين الأقسام */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-          {(currentUser?.permissions?.admin || currentUser?.role === 'admin') && (
+          {/* زر إدارة المستخدمين والصلاحيات يظهر لكِ أنتِ فقط */}
+          {isAdmin && (
             <button style={navBtnStyle(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>إدارة المستخدمين والصلاحيات ⚙️</button>
           )}
-          {(currentUser?.permissions?.students || currentUser?.permissions?.admin || !currentUser?.permissions) && (
+          
+          {hasPermission('students', 'can_manage_students') && (
             <button style={navBtnStyle(activeTab === 'students')} onClick={() => setActiveTab('students')}>شؤون الطلاب 📚</button>
           )}
-          {(currentUser?.permissions?.classes || currentUser?.permissions?.admin) && (
+          
+          {hasPermission('classes', 'can_manage_classes') && (
             <button style={navBtnStyle(activeTab === 'classes')} onClick={() => setActiveTab('classes')}>الفصول 🏛️</button>
           )}
-          {(currentUser?.permissions?.teachers || currentUser?.permissions?.admin) && (
+          
+          {hasPermission('teachers', 'can_manage_teachers') && (
             <button style={navBtnStyle(activeTab === 'teachers')} onClick={() => setActiveTab('teachers')}>المعلمين 👨‍🏫</button>
           )}
-          {(currentUser?.permissions?.finance || currentUser?.permissions?.admin) && (
+          
+          {hasPermission('finance', 'can_manage_finance') && (
             <button style={navBtnStyle(activeTab === 'accounts')} onClick={() => setActiveTab('accounts')}>الحسابات والمالية 💰</button>
           )}
-          {(currentUser?.permissions?.results || currentUser?.permissions?.admin) && (
+          
+          {hasPermission('results', 'can_manage_results') && (
             <button style={navBtnStyle(activeTab === 'results')} onClick={() => setActiveTab('results')}>النتائج والشهادات 📋</button>
           )}
-          {(currentUser?.permissions?.transport || currentUser?.permissions?.admin) && (
-            <button style={navBtnStyle(activeTab === 'transport')} onClick={() => setActiveTab('transport')}>التراحيل 🚌</button>
+          
+          {hasPermission('transport', 'can_manage_transport') && (
+            <button style={navBtnStyle(activeTab === 'transport')}>التراحيل 🚌</button>
           )}
-          {(currentUser?.permissions?.supervisors || currentUser?.permissions?.admin) && (
+          
+          {hasPermission('supervisors', 'can_manage_supervisors') && (
             <button style={navBtnStyle(activeTab === 'supervisors')} onClick={() => setActiveTab('supervisors')}>المشرفات 👩‍💼</button>
           )}
         </div>
@@ -77,11 +103,11 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
         <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', width: '100%', overflowX: 'auto' }}>
           {activeTab === 'students' && <StudentsSection currentUser={currentUser} />}
           {activeTab === 'classes' && <ClassesSection currentUser={currentUser} />}
-          {activeTab === 'teachers' && <TeachersSection />}
-          {activeTab === 'accounts' && <AccountsSection />}
-          {activeTab === 'results' && <ResultsSection />}
-          {activeTab === 'transport' && <TransportSection />}
-          {activeTab === 'supervisors' && <SupervisorsSection />}
+          {activeTab === 'teachers' && <TeachersSection currentUser={currentUser} />}
+          {activeTab === 'accounts' && <AccountsSection currentUser={currentUser} />}
+          {activeTab === 'results' && <ResultsSection currentUser={currentUser} />}
+          {activeTab === 'transport' && <TransportSection currentUser={currentUser} />}
+          {activeTab === 'supervisors' && <SupervisorsSection currentUser={currentUser} />}
           {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('students')} />}
         </div>
       </main>
