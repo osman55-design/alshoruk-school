@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { supabase } from './supabaseClient';
 
-export default function LandingPage({ onLoginSuccess, currentUser }) {
-  const [showLoginModal, setShowLoginModal] = useState(false);
+export default function LandingPage({ onLoginSuccess, goToAdmin }) {
+  const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // معالجة تسجيل الدخول للمستخدمين المسجلين
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -21,19 +20,22 @@ export default function LandingPage({ onLoginSuccess, currentUser }) {
       });
 
       if (error) {
-        throw new Error('خطأ في بيانات الدخول: البريد أو كلمة المرور غير صحيحة.');
+        throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       }
 
       if (data?.user) {
-        // جلب بيانات المستخدم الشخصية والصلاحيات
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .single();
 
-        onLoginSuccess(profile || data.user);
-        setShowLoginModal(false);
+        if (onLoginSuccess) {
+          onLoginSuccess(profile || data.user);
+        }
+        if (goToAdmin) {
+          goToAdmin();
+        }
       }
     } catch (err) {
       setErrorMsg(err.message);
@@ -42,155 +44,127 @@ export default function LandingPage({ onLoginSuccess, currentUser }) {
     }
   };
 
+  const handleOpenLogin = () => {
+    // إذا كانت هناك دالة توجيه مباشرة سننفذها، وإلا نفتح نافذة الدخول
+    if (goToAdmin && !onLoginSuccess) {
+      goToAdmin();
+    } else {
+      setShowModal(true);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 dir-rtl text-slate-800 font-sans">
-      {/* الشريط العلوي / الهيدر */}
-      <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-md">
-              🏫
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 leading-tight">
-                مدرسة الشروق السودانية
-              </h1>
-              <p className="text-xs text-slate-500 font-medium">
-                البوابة التعليمية المتكاملة
-              </p>
-            </div>
-          </div>
-
-          {/* زر فتح نافذة دخول المستخدمين */}
+    <div style={{ fontFamily: 'sans-serif', direction: 'rtl', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#1e293b', margin: 0, padding: 0 }}>
+      
+      {/* الهيدر */}
+      <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', itemsCenter: 'center', sticky: 'top' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ backgroundColor: '#059669', color: '#fff', fontSize: '24px', padding: '8px 12px', borderRadius: '10px' }}>🏫</div>
           <div>
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-full font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 cursor-pointer"
-            >
-              <span>🔑</span>
-              <span>بوابة النظام</span>
-            </button>
+            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>مدرسة الشروق السودانية</h1>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>البوابة التعليمية المتكاملة</span>
           </div>
-
         </div>
+
+        <button 
+          onClick={handleOpenLogin} 
+          style={{ backgroundColor: '#059669', color: '#ffffff', border: 'none', padding: '10px 22px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+        >
+          🔑 بوابة النظام
+        </button>
       </header>
 
-      {/* المحتوى الرئيسي */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-        <section className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-slate-200/80 shadow-sm relative overflow-hidden">
-          <div className="max-w-3xl mx-auto space-y-4">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-snug">
-              مرحباً بكم في صرح الشروق التعليمي 🎓
-            </h2>
-            <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
-              بوابتكم التعليمية الذكية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز بالمنهج السوداني المطور.
-            </p>
-            
-            <div className="flex flex-wrap justify-center gap-3 pt-2">
-              <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-full border border-amber-200/60">
-                ✨ توكل • نجاح • تفوق
-              </span>
-              <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-full border border-emerald-200/60">
-                📚 المنهج السوداني المطور
-              </span>
-            </div>
+      {/* محتوى الصفحة */}
+      <main style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 20px' }}>
+        
+        {/* الترحيب */}
+        <div style={{ backgroundColor: '#ffffff', padding: '40px', borderRadius: '15px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px' }}>
+          <h2 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '15px' }}>مرحباً بكم في صرح الشروق التعليمي 🎓</h2>
+          <p style={{ color: '#475569', fontSize: '16px', lineHeight: '1.6' }}>
+            بوابتكم التعليمية الذكية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز بالمنهج السوداني المطور.
+          </p>
+          <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+            <span style={{ backgroundColor: '#fef3c7', color: '#92400e', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>✨ توكل • نجاح • تفوق</span>
+            <span style={{ backgroundColor: '#d1fae5', color: '#065f46', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>📚 المنهج السوداني المطور</span>
           </div>
-        </section>
+        </div>
 
-        {/* كروت التعريف */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200 space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">📖</span>
-              <h3 className="text-lg font-bold text-slate-900">مَن نحن؟</h3>
-            </div>
-            <p className="text-slate-600 text-sm leading-relaxed">
+        {/* الكروت */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>📖 مَن نحن؟</h3>
+            <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
               مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد متخصص لتقديم المنهج السوداني الرصين بكفاءة عالية عبر جميع المراحل.
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200 space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🎯</span>
-              <h3 className="text-lg font-bold text-slate-900">أهدافنا ورسالتنا</h3>
-            </div>
-            <ul className="text-slate-600 text-sm leading-relaxed space-y-1.5 list-disc list-inside">
+          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>🎯 أهدافنا ورسالتنا</h3>
+            <ul style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', paddingRight: '20px', margin: 0 }}>
               <li>تقديم تعليم متميز يتوافق مع المعايير التربوية الحديثة.</li>
               <li>تعزيز القيم الأخلاقية والوطنية الراسخة في الطلاب.</li>
             </ul>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200 space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">💼</span>
-              <h3 className="text-lg font-bold text-slate-900">الحلول الرقمية الذكية</h3>
-            </div>
-            <p className="text-slate-600 text-sm leading-relaxed">
+          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>💼 الحلول الرقمية الذكية</h3>
+            <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
               بوابة إلكترونية متقدمة تتضمن لوحة تحكم سحابية مخصصة لإدارة شؤون الطلاب، المعلمين، الحسابات، والنتائج بسهولة وموثوقية.
             </p>
           </div>
-        </section>
+        </div>
+
       </main>
 
-      {/* نافذة دخول المستخدمين (Login Modal) */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 sm:p-8 relative">
+      {/* نافذة تسجيل الدخول المنبثقة */}
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '15px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
             
-            {/* زر الإغلاق */}
-            <button
-              onClick={() => setShowLoginModal(false)}
-              className="absolute top-4 left-4 text-slate-400 hover:text-slate-600 text-xl font-bold"
+            <button 
+              onClick={() => setShowModal(false)}
+              style={{ position: 'absolute', top: '15px', left: '15px', border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer', color: '#94a3b8' }}
             >
               ✕
             </button>
 
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl mb-2">
-                🔒
-              </div>
-              <h3 className="text-xl font-bold text-slate-900">تسجيل دخول المستخدمين</h3>
-              <p className="text-xs text-slate-500 mt-1">أدخل بيانات حسابك المسجل للوصول للنظام</p>
-            </div>
-
+            <h3 style={{ textAlign: 'center', marginTop: 0, color: '#0f172a' }}>🔒 تسجيل دخول المستخدمين</h3>
+            
             {errorMsg && (
-              <div className="bg-red-50 text-red-700 text-xs p-3 rounded-lg border border-red-200 mb-4 text-center">
+              <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px', textAlign: 'center' }}>
                 {errorMsg}
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">البريد الإلكتروني / اسم المستخدم</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
+            <form onSubmit={handleLogin}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>البريد الإلكتروني</label>
+                <input 
+                  type="email" 
+                  required 
+                  value={email} 
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@domain.com"
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">كلمة المرور</label>
-                <input
-                  type="password"
-                  required
-                  value={password}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>كلمة المرور</label>
+                <input 
+                  type="password" 
+                  required 
+                  value={password} 
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <button
-                type="submit"
+              <button 
+                type="submit" 
                 disabled={loading}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl transition-colors duration-200 shadow-sm disabled:opacity-50"
+                style={{ width: '100%', backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
               >
-                {loading ? 'جاري التحقق...' : 'دخول للنظام'}
+                {loading ? 'جاري الدخول...' : 'تسجيل الدخول'}
               </button>
             </form>
           </div>
@@ -198,14 +172,10 @@ export default function LandingPage({ onLoginSuccess, currentUser }) {
       )}
 
       {/* الفوتر */}
-      <footer className="border-t border-slate-200 mt-12 py-6 bg-white text-center">
-        <div className="max-w-7xl mx-auto px-4 text-xs sm:text-sm text-slate-500 flex flex-wrap justify-center items-center gap-2">
-          <span>✨ تصميم وتطوير:</span>
-          <span className="font-semibold text-slate-700">الأستاذ عثمان صديق ( أبو حلا )</span>
-          <span className="text-slate-300">|</span>
-          <span className="font-mono dir-ltr text-slate-600">📱 01149169346</span>
-        </div>
+      <footer style={{ borderTop: '1px solid #e2e8f0', marginTop: '50px', padding: '20px', backgroundColor: '#ffffff', textAlign: 'center', fontSize: '14px', color: '#64748b' }}>
+        ✨ تصميم وتطوير: <strong>الأستاذ عثمان صديق ( أبو حلا )</strong> | 📱 01149169346
       </footer>
+
     </div>
   );
 }
