@@ -7,6 +7,15 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
   const [boardMembers, setBoardMembers] = useState([]);
   const [primaryTopStudents, setPrimaryTopStudents] = useState([]);
   const [middleTopStudents, setMiddleTopStudents] = useState([]);
+  
+  // حالة نافذة تسجيل الدخول ببيانات Supabase
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [usersList, setUsersList] = useState([]);
+  const [selectedUsername, setSelectedUsername] = useState('');
+  const [passwordCode, setPasswordCode] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -33,6 +42,79 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
     }
   };
 
+  // جلب المستخدمين المسجلين من جدول users في Supabase
+  const handleLoginClick = async () => {
+    if (onOpenLogin) onOpenLogin();
+    setShowLoginModal(true);
+    setLoadingUsers(true);
+    setLoginError('');
+
+    try {
+      const { data: usersData, error } = await supabase.from('users').select('*');
+      
+      if (error) throw error;
+
+      if (usersData && usersData.length > 0) {
+        setUsersList(usersData);
+        setSelectedUsername(usersData[0].username || usersData[0].name || '');
+      } else {
+        setLoginError('لم يتم العثور على مستخدمين في قاعدة البيانات.');
+      }
+    } catch (err) {
+      setLoginError('خطأ في جلب بيانات المستخدمين من Supabase: ' + err.message);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // التحقق من تسجيل الدخول للمستخدم المحدد
+  const handleUserLoginSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedUsername) {
+      setLoginError('الرجاء اختيار مستخدم من القائمة.');
+      return;
+    }
+
+    setLoading(true);
+    setLoginError('');
+
+    try {
+      // البحث عن المستخدم والتحقق من كود المرور في Supabase
+      const { data: matchedUser, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', selectedUsername)
+        .single();
+
+      if (error || !matchedUser) {
+        setLoginError('اسم المستخدم غير موجود.');
+        setLoading(false);
+        return;
+      }
+
+      // مطابقة رمز الدخول إذا كان مطلوباً
+      if (matchedUser.password_code && passwordCode !== matchedUser.password_code) {
+        setLoginError('كود المرور غير صحيح.');
+        setLoading(false);
+        return;
+      }
+
+      // حفظ جلسة الدخول والانتقال للوحة التحكم
+      localStorage.setItem('current_user', JSON.stringify(matchedUser));
+      setShowLoginModal(false);
+
+      if (onBackToDashboard) {
+        onBackToDashboard();
+      } else {
+        window.location.reload();
+      }
+    } catch (err) {
+      setLoginError('حدث خطأ أثناء تسجيل الدخول: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -51,36 +133,36 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #062c1e 0%, #0c3e2b 50%, #041f15 100%)',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
       minHeight: '100vh',
       fontFamily: "'Tajawal', 'Segoe UI', system-ui, sans-serif",
       direction: 'rtl',
       textAlign: 'right',
       margin: 0,
       padding: 0,
-      color: '#e2e8f0'
+      color: '#065f46'
     }}>
-      
-      {/* 1. الهيدر الزجاجي (Glassmorphism Header) */}
+
+      {/* 1. الهيدر الأبيض الزجاجي */}
       <header style={{
-        background: 'rgba(6, 44, 30, 0.75)',
+        background: 'rgba(255, 255, 255, 0.85)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+        borderBottom: '1px solid rgba(6, 95, 70, 0.15)',
         padding: '16px 24px',
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ position: 'relative', cursor: 'pointer', width: '70px', height: '70px', flexShrink: 0 }}>
               {logoUrl ? (
-                <img src={logoUrl} alt="شعار المدرسة" style={{ width: '70px', height: '70px', borderRadius: '50%', border: '2px solid rgba(245, 158, 11, 0.8)', backgroundColor: '#fff', objectFit: 'contain', boxShadow: '0 0 15px rgba(245, 158, 11, 0.3)' }} />
+                <img src={logoUrl} alt="شعار المدرسة" style={{ width: '70px', height: '70px', borderRadius: '50%', border: '2px solid #065f46', backgroundColor: '#fff', objectFit: 'contain' }} />
               ) : (
-                <div style={{ width: '70px', height: '70px', borderRadius: '50%', border: '2px dashed #f59e0b', backgroundColor: 'rgba(255,255,255,0.05)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', textAlign: 'center', fontWeight: 'bold' }}>
+                <div style={{ width: '70px', height: '70px', borderRadius: '50%', border: '2px dashed #065f46', backgroundColor: 'rgba(6, 95, 70, 0.05)', color: '#065f46', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', textAlign: 'center', fontWeight: 'bold' }}>
                   رفع الشعار 📤
                 </div>
               )}
@@ -88,8 +170,8 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
             </div>
 
             <div>
-              <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.3px' }}>مدرسة الشروق السودانية</h1>
-              <p style={{ margin: '4px 0 0 0', color: '#f59e0b', fontSize: '13px', fontWeight: '600' }}>أسوان - جمهورية مصر العربية 🇪🇬 🇸🇩</p>
+              <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '800', color: '#1e3a8a', letterSpacing: '-0.3px' }}>مدرسة الشروق السودانية</h1>
+              <p style={{ margin: '4px 0 0 0', color: '#047857', fontSize: '13px', fontWeight: '700' }}>أسوان - جمهورية مصر العربية 🇪🇬 🇸🇩</p>
             </div>
           </div>
 
@@ -98,16 +180,14 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
               <button 
                 onClick={onBackToDashboard}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  backdropFilter: 'blur(10px)',
+                  background: 'rgba(6, 95, 70, 0.1)',
+                  color: '#065f46',
+                  border: '1px solid rgba(6, 95, 70, 0.25)',
                   padding: '9px 18px',
                   borderRadius: '12px',
                   fontWeight: '700',
                   fontSize: '13px',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
                 }}
               >
                 ⬅️ العودة للوحة التحكم
@@ -115,17 +195,17 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
             )}
 
             <button 
-              onClick={onOpenLogin}
+              onClick={handleLoginClick}
               style={{
-                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                color: '#0f172a',
+                background: '#065f46',
+                color: '#ffffff',
                 border: 'none',
                 padding: '10px 22px',
                 borderRadius: '12px',
                 fontWeight: '800',
                 fontSize: '14px',
                 cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(245, 158, 11, 0.35)'
+                boxShadow: '0 4px 12px rgba(6, 95, 70, 0.25)'
               }}
             >
               🔐 بوابة الدخول
@@ -135,12 +215,10 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
         </div>
       </header>
 
-      {/* 2. شريط الأخبار المتحرك زجاجياً (Animated Marquee Bar) */}
+      {/* 2. شريط الأخبار المتحرك */}
       <section style={{
-        background: 'rgba(245, 158, 11, 0.15)',
-        backdropFilter: 'blur(12px)',
-        borderTop: '1px solid rgba(245, 158, 11, 0.2)',
-        borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
+        background: 'rgba(255, 255, 255, 0.9)',
+        borderBottom: '1px solid rgba(6, 95, 70, 0.15)',
         height: '44px',
         display: 'flex',
         alignItems: 'center',
@@ -162,12 +240,12 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
           }
         `}</style>
 
-        <div style={{ backgroundColor: '#f59e0b', color: '#062c1e', fontWeight: '800', padding: '0 20px', height: '100%', display: 'flex', alignItems: 'center', fontSize: '13px', whiteSpace: 'nowrap', zIndex: 2, boxShadow: '2px 0 10px rgba(0,0,0,0.2)' }}>
+        <div style={{ backgroundColor: '#065f46', color: '#ffffff', fontWeight: '800', padding: '0 20px', height: '100%', display: 'flex', alignItems: 'center', fontSize: '13px', whiteSpace: 'nowrap', zIndex: 2 }}>
           آخر الأخبار 📢
         </div>
 
         <div style={{ overflow: 'hidden', width: '100%', position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <div className="animate-marquee" style={{ fontSize: '14px', fontWeight: '600', color: '#fbbf24' }}>
+          <div className="animate-marquee" style={{ fontSize: '14px', fontWeight: '600', color: '#047857' }}>
             {news.length > 0 ? (
               news.map((item, idx) => <span key={idx} style={{ marginLeft: '50px' }}>🔸 {item.title || item.content}</span>)
             ) : (
@@ -175,155 +253,121 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
             )}
           </div>
         </div>
-
-        {onBackToDashboard && (
-          <button onClick={onBackToDashboard} style={{ zIndex: 2, margin: '0 10px', backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            ✏️ تعديل
-          </button>
-        )}
       </section>
 
-      {/* المحتوى الرئيسي بكروت فريم زجاجي (Glassmorphism Cards) */}
+      {/* 3. المحتوى الرئيسي */}
       <main style={{ maxWidth: '1150px', margin: '35px auto', padding: '0 20px' }}>
         
-        {/* 3. من نحن */}
+        {/* من نحن */}
         <section style={{ marginBottom: '40px' }}>
           <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
+            background: 'rgba(255, 255, 255, 0.75)',
+            backdropFilter: 'blur(16px)',
             borderRadius: '20px',
             padding: '30px',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
-            position: 'relative'
+            border: '1px solid rgba(255, 255, 255, 0.8)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
           }}>
-            {onBackToDashboard && (
-              <button onClick={onBackToDashboard} style={{ position: 'absolute', top: '20px', left: '20px', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '5px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
-                ✏️ تعديل
-              </button>
-            )}
-            <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '12px', fontWeight: '800', padding: '5px 14px', borderRadius: '20px', display: 'inline-block', marginBottom: '14px', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+            <span style={{ backgroundColor: 'rgba(6, 95, 70, 0.1)', color: '#065f46', fontSize: '12px', fontWeight: '800', padding: '5px 14px', borderRadius: '20px', display: 'inline-block', marginBottom: '14px' }}>
               عن المدرسة
             </span>
-            <h2 style={{ margin: '0 0 14px 0', fontSize: '22px', color: '#ffffff', fontWeight: '800' }}>من نحن</h2>
-            <p style={{ margin: 0, color: '#cbd5e1', lineHeight: '2', fontSize: '15px', fontWeight: '400' }}>
+            <h2 style={{ margin: '0 0 14px 0', fontSize: '22px', color: '#065f46', fontWeight: '800' }}>من نحن</h2>
+            <p style={{ margin: 0, color: '#334155', lineHeight: '2', fontSize: '15px', fontWeight: '500' }}>
               مدرسة الشروق السودانية بأسوان هي صرح تعليمي وتربوي يهدف إلى تقديم أفضل المناهج التعليمية السودانية لأبنائنا الطلاب في جمهورية مصر العربية. نسعى لبناء جيل متميز أكاديمياً وأخلاقياً، وتوفير بيئة تعليمية محفزة تدعم الإبداع والتفوق.
             </p>
           </div>
         </section>
 
-        {/* 4. مجلس الإدارة */}
+        {/* مجلس الإدارة */}
         <section style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '20px', margin: 0, color: '#ffffff', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ width: '8px', height: '22px', backgroundColor: '#f59e0b', borderRadius: '4px', display: 'inline-block' }}></span>
-              🏛️ مجلس الإدارة
-            </h2>
-            {onBackToDashboard && (
-              <button onClick={onBackToDashboard} style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
-                ✏️ تعديل الأعضاء
-              </button>
-            )}
-          </div>
+          <h2 style={{ fontSize: '20px', margin: '0 0 20px 0', color: '#065f46', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ width: '8px', height: '22px', backgroundColor: '#065f46', borderRadius: '4px', display: 'inline-block' }}></span>
+            🏛️ مجلس الإدارة
+          </h2>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
             {boardMembers.length > 0 ? (
               boardMembers.map((member, idx) => (
                 <div key={idx} style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'rgba(255, 255, 255, 0.75)',
                   backdropFilter: 'blur(16px)',
                   borderRadius: '16px',
                   padding: '20px 15px',
                   textAlign: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.2)'
+                  border: '1px solid rgba(255, 255, 255, 0.8)',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.03)'
                 }}>
-                  <img src={member.photo_url || 'https://via.placeholder.com/80'} alt={member.name} style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px auto', border: '2px solid #f59e0b', boxShadow: '0 0 10px rgba(245,158,11,0.2)' }} />
-                  <h3 style={{ fontSize: '14px', margin: '4px 0', color: '#ffffff', fontWeight: '700' }}>{member.name}</h3>
-                  <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600' }}>{member.role || member.title}</span>
+                  <img src={member.photo_url || 'https://via.placeholder.com/80'} alt={member.name} style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px auto', border: '2px solid #065f46' }} />
+                  <h3 style={{ fontSize: '14px', margin: '4px 0', color: '#1e293b', fontWeight: '700' }}>{member.name}</h3>
+                  <span style={{ fontSize: '12px', color: '#065f46', fontWeight: '700' }}>{member.role || member.title}</span>
                 </div>
               ))
             ) : (
-              <div style={{ gridColumn: '1 / -1', padding: '25px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', color: '#94a3b8', textAlign: 'center', fontSize: '14px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <div style={{ gridColumn: '1 / -1', padding: '25px', background: 'rgba(255,255,255,0.6)', borderRadius: '16px', color: '#64748b', textAlign: 'center', fontSize: '14px', border: '1px dashed #cbd5e1' }}>
                 لم يتم إضافة أعضاء مجلس الإدارة بعد.
               </div>
             )}
           </div>
         </section>
 
-        {/* 5. أوائل الشهادة الابتدائية */}
+        {/* أوائل الشهادة الابتدائية */}
         <section style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '20px', margin: 0, color: '#ffffff', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ width: '8px', height: '22px', backgroundColor: '#34d399', borderRadius: '4px', display: 'inline-block' }}></span>
-              🏆 أوائل الشهادة الابتدائية
-            </h2>
-            {onBackToDashboard && (
-              <button onClick={onBackToDashboard} style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
-                ✏️ تعديل المتفوقين
-              </button>
-            )}
-          </div>
+          <h2 style={{ fontSize: '20px', margin: '0 0 20px 0', color: '#065f46', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ width: '8px', height: '22px', backgroundColor: '#047857', borderRadius: '4px', display: 'inline-block' }}></span>
+            🏆 أوائل الشهادة الابتدائية
+          </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
             {primaryTopStudents.length > 0 ? (
               primaryTopStudents.map((student, idx) => (
                 <div key={idx} style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'rgba(255, 255, 255, 0.75)',
                   backdropFilter: 'blur(16px)',
                   borderRadius: '16px',
                   padding: '20px 15px',
                   textAlign: 'center',
-                  border: '1px solid rgba(52, 211, 153, 0.2)',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.2)'
+                  border: '1px solid rgba(255, 255, 255, 0.8)',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.03)'
                 }}>
-                  <img src={student.photo_url || 'https://via.placeholder.com/80'} alt={student.name} style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px auto', border: '2px solid #34d399', boxShadow: '0 0 10px rgba(52,211,153,0.2)' }} />
-                  <h3 style={{ fontSize: '14px', margin: '4px 0', color: '#ffffff', fontWeight: '700' }}>{student.name}</h3>
-                  <span style={{ fontSize: '13px', color: '#34d399', fontWeight: '800' }}>النسبة: {student.score}%</span>
+                  <img src={student.photo_url || 'https://via.placeholder.com/80'} alt={student.name} style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px auto', border: '2px solid #047857' }} />
+                  <h3 style={{ fontSize: '14px', margin: '4px 0', color: '#1e293b', fontWeight: '700' }}>{student.name}</h3>
+                  <span style={{ fontSize: '13px', color: '#047857', fontWeight: '800' }}>النسبة: {student.score}%</span>
                 </div>
               ))
             ) : (
-              <div style={{ gridColumn: '1 / -1', padding: '25px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', color: '#94a3b8', textAlign: 'center', fontSize: '14px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <div style={{ gridColumn: '1 / -1', padding: '25px', background: 'rgba(255,255,255,0.6)', borderRadius: '16px', color: '#64748b', textAlign: 'center', fontSize: '14px', border: '1px dashed #cbd5e1' }}>
                 لم يتم إضافة طلاب متفوقين بعد.
               </div>
             )}
           </div>
         </section>
 
-        {/* 6. أوائل الشهادة المتوسطة */}
+        {/* أوائل الشهادة المتوسطة */}
         <section style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '20px', margin: 0, color: '#ffffff', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ width: '8px', height: '22px', backgroundColor: '#38bdf8', borderRadius: '4px', display: 'inline-block' }}></span>
-              🎓 أوائل الشهادة المتوسطة
-            </h2>
-            {onBackToDashboard && (
-              <button onClick={onBackToDashboard} style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
-                ✏️ تعديل المتفوقين
-              </button>
-            )}
-          </div>
+          <h2 style={{ fontSize: '20px', margin: '0 0 20px 0', color: '#065f46', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ width: '8px', height: '22px', backgroundColor: '#065f46', borderRadius: '4px', display: 'inline-block' }}></span>
+            🎓 أوائل الشهادة المتوسطة
+          </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
             {middleTopStudents.length > 0 ? (
               middleTopStudents.map((student, idx) => (
                 <div key={idx} style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'rgba(255, 255, 255, 0.75)',
                   backdropFilter: 'blur(16px)',
                   borderRadius: '16px',
                   padding: '20px 15px',
                   textAlign: 'center',
-                  border: '1px solid rgba(56, 189, 248, 0.2)',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.2)'
+                  border: '1px solid rgba(255, 255, 255, 0.8)',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.03)'
                 }}>
-                  <img src={student.photo_url || 'https://via.placeholder.com/80'} alt={student.name} style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px auto', border: '2px solid #38bdf8', boxShadow: '0 0 10px rgba(56,189,248,0.2)' }} />
-                  <h3 style={{ fontSize: '14px', margin: '4px 0', color: '#ffffff', fontWeight: '700' }}>{student.name}</h3>
-                  <span style={{ fontSize: '13px', color: '#38bdf8', fontWeight: '800' }}>النسبة: {student.score}%</span>
+                  <img src={student.photo_url || 'https://via.placeholder.com/80'} alt={student.name} style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px auto', border: '2px solid #065f46' }} />
+                  <h3 style={{ fontSize: '14px', margin: '4px 0', color: '#1e293b', fontWeight: '700' }}>{student.name}</h3>
+                  <span style={{ fontSize: '13px', color: '#065f46', fontWeight: '800' }}>النسبة: {student.score}%</span>
                 </div>
               ))
             ) : (
-              <div style={{ gridColumn: '1 / -1', padding: '25px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', color: '#94a3b8', textAlign: 'center', fontSize: '14px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <div style={{ gridColumn: '1 / -1', padding: '25px', background: 'rgba(255,255,255,0.6)', borderRadius: '16px', color: '#64748b', textAlign: 'center', fontSize: '14px', border: '1px dashed #cbd5e1' }}>
                 لم يتم إضافة طلاب متفوقين بعد.
               </div>
             )}
@@ -332,29 +376,104 @@ export default function LandingPage({ onOpenLogin, onBackToDashboard, currentUse
 
       </main>
 
-      {/* 7. الفوتر الزجاجي الداكن */}
+      {/* الفوتر */}
       <footer style={{
-        background: 'rgba(4, 31, 21, 0.95)',
-        backdropFilter: 'blur(16px)',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'rgba(255, 255, 255, 0.9)',
+        borderTop: '1px solid rgba(6, 95, 70, 0.15)',
         paddingTop: '35px',
-        paddingBottom: '20px'
+        paddingBottom: '20px',
+        color: '#065f46'
       }}>
         <div style={{ maxWidth: '1150px', margin: '0 auto', padding: '0 20px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '25px' }}>
           <div>
-            <h3 style={{ margin: '0 0 10px 0', color: '#f59e0b', fontSize: '16px', fontWeight: '700' }}>📞 أرقام التواصل</h3>
-            <p style={{ margin: 0, fontSize: '14px', direction: 'ltr', color: '#cbd5e1', fontWeight: '600' }}>+20 114 916 9346 / 01149169346</p>
+            <h3 style={{ margin: '0 0 10px 0', color: '#1e3a8a', fontSize: '16px', fontWeight: '800' }}>📞 أرقام التواصل</h3>
+            <p style={{ margin: 0, fontSize: '14px', direction: 'ltr', color: '#065f46', fontWeight: '700' }}>+20 114 916 9346 / 01149169346</p>
           </div>
           <div>
-            <h3 style={{ margin: '0 0 10px 0', color: '#f59e0b', fontSize: '16px', fontWeight: '700' }}>📍 موقعنا</h3>
-            <p style={{ margin: 0, fontSize: '14px', color: '#cbd5e1', fontWeight: '600' }}>جمهورية مصر العربية - محافظة أسوان</p>
+            <h3 style={{ margin: '0 0 10px 0', color: '#1e3a8a', fontSize: '16px', fontWeight: '800' }}>📍 موقعنا</h3>
+            <p style={{ margin: 0, fontSize: '14px', color: '#065f46', fontWeight: '700' }}>جمهورية مصر العربية - محافظة أسوان</p>
           </div>
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', marginTop: '25px', paddingTop: '15px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
-          تصميم وتطوير: <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>أستاذ عثمان صديق</span> (01149169346)
+        <div style={{ borderTop: '1px solid rgba(6, 95, 70, 0.1)', marginTop: '25px', paddingTop: '15px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
+          تصميم وتطوير: <span style={{ color: '#065f46', fontWeight: 'bold' }}>أستاذ عثمان صديق</span> (01149169346)
         </div>
       </footer>
+
+      {/* نافذة اختيار المستخدم المباشر والتأكيد مع Supabase */}
+      {showLoginModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(5px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{
+            background: '#ffffff', padding: '30px', borderRadius: '16px',
+            width: '90%', maxWidth: '420px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0', color: '#0f172a'
+          }}>
+            <h2 style={{ margin: '0 0 10px 0', fontSize: '20px', color: '#065f46', textAlign: 'center', fontWeight: '800' }}>
+              🔐 تسجيل الدخول للأنظمة
+            </h2>
+            <p style={{ textAlign: 'center', color: '#64748b', fontSize: '13px', marginTop: 0, marginBottom: '20px' }}>
+              اختر اسم المستخدم المباشر من قاعدة بيانات Supabase
+            </p>
+
+            {loginError && <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px' }}>{loginError}</div>}
+
+            {loadingUsers ? (
+              <div style={{ textAlign: 'center', padding: '20px 0', color: '#065f46', fontWeight: 'bold' }}>
+                ⏳ جاري تحميل المستخدمين من Supabase...
+              </div>
+            ) : (
+              <form onSubmit={handleUserLoginSubmit}>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#334155' }}>
+                    اسم المستخدم (Username):
+                  </label>
+                  <select 
+                    value={selectedUsername} 
+                    onChange={(e) => setSelectedUsername(e.target.value)}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '2px solid #065f46', fontSize: '14px', backgroundColor: '#fff', cursor: 'pointer', outline: 'none' }}
+                  >
+                    {usersList.length > 0 ? (
+                      usersList.map((user, idx) => (
+                        <option key={idx} value={user.username || user.name}>
+                          {user.name || user.username} {user.role ? `(${user.role})` : ''}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">لا يوجد مستخدمون مسجلين بالجدول</option>
+                    )}
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#334155' }}>
+                    كود المرور (Password Code):
+                  </label>
+                  <input 
+                    type="password" 
+                    placeholder="أدخل كود المرور الخاص بالحساب"
+                    value={passwordCode} 
+                    onChange={(e) => setPasswordCode(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" disabled={loading || usersList.length === 0} style={{ flex: 1, backgroundColor: '#065f46', color: '#fff', border: 'none', padding: '11px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
+                    {loading ? 'جاري الدخول...' : 'دخول النظام 🚀'}
+                  </button>
+                  <button type="button" onClick={() => setShowLoginModal(false)} style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '11px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
+                    إلغاء
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );
