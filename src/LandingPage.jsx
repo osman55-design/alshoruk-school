@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
-export default function LandingPage() {
+export default function LandingPage({ onOpenLogin }) {
   const [logoUrl, setLogoUrl] = useState(null);
   const [news, setNews] = useState([]);
   const [boardMembers, setBoardMembers] = useState([]);
@@ -51,22 +51,47 @@ export default function LandingPage() {
 
   return (
     <div>
-      {/* 1. الهيدر والشعار */}
+      {/* 1. الهيدر: الشعار قبل الاسم + زر بوابة الدخول */}
       <header className="header-container">
-        <div className="header-content">
-          <div>
-            <h1 className="school-title">مدرسة الشروق السودانية</h1>
-            <div className="school-sub">أسوان - جمهورية مصر العربية 🇪🇬 🇸🇩</div>
+        <div className="header-content" style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between' }}>
+          
+          {/* الشعار ثم الاسم */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className="logo-uploader">
+              {logoUrl ? (
+                <img src={logoUrl} alt="شعار المدرسة" className="logo-img" />
+              ) : (
+                <div className="logo-placeholder">رفع الشعار 📤</div>
+              )}
+              <input type="file" accept="image/*" onChange={handleLogoUpload} className="file-input" title="تغيير الشعار" />
+            </div>
+
+            <div>
+              <h1 className="school-title">مدرسة الشروق السودانية</h1>
+              <div className="school-sub">أسوان - جمهورية مصر العربية 🇪🇬 🇸🇩</div>
+            </div>
           </div>
 
-          <div className="logo-uploader">
-            {logoUrl ? (
-              <img src={logoUrl} alt="شعار المدرسة" className="logo-img" />
-            ) : (
-              <div className="logo-placeholder">اضغط لرفع الشعار 📤</div>
-            )}
-            <input type="file" accept="image/*" onChange={handleLogoUpload} className="file-input" />
+          {/* زر بوابة الدخول */}
+          <div>
+            <button 
+              onClick={onOpenLogin}
+              style={{
+                backgroundColor: '#f59e0b',
+                color: '#0f172a',
+                border: 'none',
+                padding: '10px 22px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+              }}
+            >
+              🔐 بوابة الدخول
+            </button>
           </div>
+
         </div>
       </header>
 
@@ -95,7 +120,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. مجلس الإدارة (يظهر فقط عند وجود أعضاء) */}
+      {/* 4. مجلس الإدارة */}
       {boardMembers.length > 0 && (
         <section className="main-section" style={{ paddingTop: 0 }}>
           <h2 className="section-title" style={{ textAlign: 'center' }}>مجلس الإدارة</h2>
@@ -143,16 +168,16 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* 7. الفوتر والتواصل */}
+      {/* 7. التواصل قبل موقعنا */}
       <section className="footer-contact">
         <div className="footer-content">
           <div>
-            <h3 style={{ margin: '0 0 8px 0', color: '#fbbf24' }}>📍 موقعنا</h3>
-            <p style={{ margin: 0, fontSize: '14px' }}>جمهورية مصر العربية - محافظة أسوان</p>
-          </div>
-          <div>
             <h3 style={{ margin: '0 0 8px 0', color: '#fbbf24' }}>📞 أرقام التواصل</h3>
             <p style={{ margin: 0, fontSize: '14px', direction: 'ltr' }}>+20 114 916 9346 / 01149169346</p>
+          </div>
+          <div>
+            <h3 style={{ margin: '0 0 8px 0', color: '#fbbf24' }}>📍 موقعنا</h3>
+            <p style={{ margin: 0, fontSize: '14px' }}>جمهورية مصر العربية - محافظة أسوان</p>
           </div>
         </div>
       </section>
