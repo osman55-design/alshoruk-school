@@ -14,25 +14,37 @@ export default function LandingPage() {
 
   const fetchData = async () => {
     try {
+      // جلب الشعار
       const { data: logoData } = await supabase.from('school_settings').select('logo_url').single();
       if (logoData?.logo_url) setLogoUrl(logoData.logo_url);
 
+      // جلب الأخبار
       const { data: newsData } = await supabase.from('news').select('*').order('created_at', { ascending: false });
       if (newsData) setNews(newsData);
 
+      // جلب أعضاء مجلس الإدارة (حتى 10 أعضاء بشرط وجود الاسم والصورة)
       const { data: boardData } = await supabase.from('board_members').select('*').limit(10);
-      if (boardData) setBoardMembers(boardData.filter(m => m.name && m.photo_url && m.name.trim() !== ''));
+      if (boardData) {
+        setBoardMembers(boardData.filter(m => m.name && m.photo_url && m.name.trim() !== ''));
+      }
 
+      // جلب المتفوقين في المرحلة الابتدائية (حتى 5 طلاب بشرط وجود الاسم والصورة)
       const { data: primData } = await supabase.from('top_students').select('*').eq('stage', 'primary').limit(5);
-      if (primData) setPrimaryTopStudents(primData.filter(s => s.name && s.photo_url && s.name.trim() !== ''));
+      if (primData) {
+        setPrimaryTopStudents(primData.filter(s => s.name && s.photo_url && s.name.trim() !== ''));
+      }
 
+      // جلب المتفوقين في المرحلة المتوسطة (حتى 5 طلاب بشرط وجود الاسم والصورة)
       const { data: midData } = await supabase.from('top_students').select('*').eq('stage', 'middle').limit(5);
-      if (midData) setMiddleTopStudents(midData.filter(s => s.name && s.photo_url && s.name.trim() !== ''));
+      if (midData) {
+        setMiddleTopStudents(midData.filter(s => s.name && s.photo_url && s.name.trim() !== ''));
+      }
     } catch (err) {
-      console.log('ملاحظة في جلب البيانات:', err.message);
+      console.log('ملاحظة جلب البيانات:', err.message);
     }
   };
 
+  // دالة رفع وتحديث الشعار
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -50,34 +62,38 @@ export default function LandingPage() {
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', color: '#1e293b', fontFamily: "'Segoe UI', Roboto, sans-serif", direction: 'rtl', minHeight: '100vh', margin: 0 }}>
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans dir-rtl text-right">
       
-      {/* 1. الهيدر الرئيسي والشعار */}
-      <header style={{ background: 'linear-gradient(135deg, #065f46 0%, #134e4a 100%)', color: '#fff', padding: '30px 20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+      {/* 1. الهيدر الرئيسي مع الشعار والنصوص */}
+      <header className="bg-emerald-900 text-white py-6 px-6 shadow-lg border-b-4 border-amber-500">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           
-          <div style={{ textAlign: 'right' }}>
-            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#ecfdf5' }}>
+          <div className="text-center md:text-right flex-1">
+            <h1 className="text-3xl md:text-4xl font-black text-white tracking-wide">
               مدرسة الشروق السودانية
             </h1>
-            <p style={{ margin: '8px 0 0 0', fontSize: '18px', color: '#a7f3d0' }}>
-              فرع أسوان - مصر 🇪🇬 🇸🇩
+            <p className="text-amber-400 font-semibold text-base md:text-lg mt-1">
+              أسوان - جمهورية مصر العربية 🇪🇬 🇸🇩
             </p>
           </div>
 
-          <div style={{ position: 'relative', cursor: 'pointer' }}>
+          <div className="relative group cursor-pointer shrink-0">
             {logoUrl ? (
-              <img src={logoUrl} alt="شعار المدرسة" style={{ width: '90px', height: '90px', objectFit: 'contain', borderRadius: '50%', border: '3px solid #34d399', backgroundColor: '#fff', padding: '4px' }} />
+              <img 
+                src={logoUrl} 
+                alt="شعار المدرسة" 
+                className="w-24 h-24 object-contain rounded-full border-2 border-amber-400 bg-white p-1 shadow-md transition transform group-hover:scale-105" 
+              />
             ) : (
-              <div style={{ width: '90px', height: '90px', borderRadius: '50%', border: '2px dashed #a7f3d0', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', fontSize: '12px', color: '#ecfdf5', textAlign: 'center', padding: '5px' }}>
-                رفع الشعار 📤
+              <div className="w-24 h-24 rounded-full border-2 border-dashed border-emerald-300 flex items-center justify-center bg-emerald-800 text-xs text-emerald-100 text-center p-2 font-medium">
+                اضغط لرفع الشعار 📤
               </div>
             )}
             <input 
               type="file" 
               accept="image/*" 
               onChange={handleLogoUpload} 
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+              className="absolute inset-0 opacity-0 cursor-pointer" 
               title="تغيير الشعار"
             />
           </div>
@@ -85,48 +101,57 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 2. شريط الأخبار المتحرك */}
-      <section style={{ backgroundColor: '#f59e0b', color: '#0f172a', display: 'flex', alignItems: 'center', overflow: 'hidden', borderBottom: '2px solid #d97706' }}>
-        <div style={{ backgroundColor: '#b45309', color: '#fff', fontWeight: 'bold', padding: '10px 20px', zIndex: 2, fontSize: '14px', shrink: 0 }}>
+      {/* 2. شريط الأخبار المتحرك المضبوط أفقياً ويتوقف عند التحويم */}
+      <section className="bg-amber-500 text-slate-900 h-12 flex items-center overflow-hidden border-b border-amber-600 relative shadow-inner">
+        <div className="bg-amber-800 text-white font-bold px-5 h-full flex items-center z-20 shrink-0 text-sm shadow-md">
           آخر الأخبار 📣
         </div>
-        <div className="marquee-container" style={{ width: '100%', overflow: 'hidden', whitespace: 'nowrap', position: 'relative' }}>
-          <div className="marquee-content" style={{ display: 'inline-block', paddingLeft: '100%', animation: 'marquee 22s linear infinite', fontSize: '15px', fontWeight: 'bold' }}>
+        
+        <div className="w-full overflow-hidden whitespace-nowrap relative h-full flex items-center">
+          <div className="animate-marquee text-sm md:text-base font-bold text-slate-900 px-4">
             {news.length > 0 ? (
               news.map((item, idx) => (
-                <span key={idx} style={{ marginLeft: '40px' }}>🔸 {item.title || item.content}</span>
+                <span key={idx} className="inline-block ml-12">🔸 {item.title || item.content}</span>
               ))
             ) : (
-              <span>مرحباً بكم في مدرسة الشروق السودانية بأسوان - يسعدنا استقبال استفساراتكم وتسجيل الطلاب للعام الدراسي الجديد.</span>
+              <span className="inline-block whitespace-nowrap">
+                مرحباً بكم في مدرسة الشروق السودانية بأسوان - يسعدنا استقبال استفساراتكم وتسجيل الطلاب للعام الدراسي الجديد.
+              </span>
             )}
           </div>
         </div>
       </section>
 
-      {/* 3. من نحن */}
-      <section style={{ padding: '50px 20px', maxWidth: '1000px', margin: '0 auto' }}>
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '35px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-          <span style={{ backgroundColor: '#d1fae5', color: '#065f46', fontSize: '12px', fontWeight: 'bold', padding: '6px 14px', borderRadius: '20px', display: 'inline-block', marginBottom: '12px' }}>
+      {/* 3. قسم من نحن */}
+      <section className="py-12 px-4 max-w-5xl mx-auto">
+        <div className="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-slate-200/80">
+          <span className="inline-block bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full mb-3">
             عن المدرسة
           </span>
-          <h2 style={{ margin: '0 0 15px 0', fontSize: '24px', color: '#0f172a' }}>من نحن</h2>
-          <p style={{ color: '#475569', lineHeight: '1.8', fontSize: '16px', margin: 0 }}>
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">من نحن</h2>
+          <p className="text-slate-600 leading-relaxed text-base md:text-lg">
             مدرسة الشروق السودانية بأسوان هي صرح تعليمي وتربوي يهدف إلى تقديم أفضل المناهج التعليمية السودانية لأبنائنا الطلاب في جمهورية مصر العربية. نسعى لبناء جيل متميز أكاديمياً وأخلاقياً، وتوفير بيئة تعليمية محفزة تدعم الإبداع والتفوق تحت إشراف نخبة من أفضل الكوادر التعليمية.
           </p>
         </div>
       </section>
 
-      {/* 4. أعضاء مجلس الإدارة */}
+      {/* 4. قسم اعضاء مجلس الإدارة (مخفي الا إذا تم إضافة اسم وصورة والعدد حتى 10) */}
       {boardMembers.length > 0 && (
-        <section style={{ padding: '40px 20px', backgroundColor: '#f1f5f9' }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <h2 style={{ textAlign: 'center', color: '#0f172a', marginBottom: '30px' }}>مجلس الإدارة</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
+        <section className="py-12 bg-slate-100 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-center text-slate-900 mb-8">
+              مجلس الإدارة
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
               {boardMembers.slice(0, 10).map((member, index) => (
-                <div key={index} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '15px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                  <img src={member.photo_url} alt={member.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #059669', margin: '0 auto 10px auto' }} />
-                  <h3 style={{ margin: '5px 0', fontSize: '15px', color: '#1e293b' }}>{member.name}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: 'bold' }}>{member.role || member.title}</p>
+                <div key={index} className="bg-white rounded-xl p-4 text-center shadow-sm border border-slate-200">
+                  <img 
+                    src={member.photo_url} 
+                    alt={member.name} 
+                    className="w-20 h-20 mx-auto rounded-full object-cover border-2 border-emerald-600 mb-3 shadow-sm" 
+                  />
+                  <h3 className="font-bold text-slate-800 text-sm">{member.name}</h3>
+                  <p className="text-xs text-emerald-700 mt-1 font-semibold">{member.role || member.title}</p>
                 </div>
               ))}
             </div>
@@ -134,33 +159,45 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* 5. المتفوقون في الابتدائي */}
+      {/* 5. الطلاب المتفوقون في الشهادة الابتدائية (مخفي الا إذا تم إضافة بيانات والعدد حتى 5) */}
       {primaryTopStudents.length > 0 && (
-        <section style={{ padding: '40px 20px', maxWidth: '1100px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', color: '#065f46', marginBottom: '30px' }}>🏆 أوايل الشهادة الابتدائية</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
+        <section className="py-12 px-4 max-w-6xl mx-auto">
+          <h2 className="text-2xl font-bold text-center text-emerald-800 mb-8">
+            🏆 أوائل الشهادة الابتدائية
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             {primaryTopStudents.slice(0, 5).map((student, index) => (
-              <div key={index} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '15px', textAlign: 'center', border: '1px solid #a7f3d0' }}>
-                <img src={student.photo_url} alt={student.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #f59e0b', margin: '0 auto 10px auto' }} />
-                <h3 style={{ margin: '5px 0', fontSize: '15px', color: '#1e293b' }}>{student.name}</h3>
-                <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>النسبة: {student.score}%</p>
+              <div key={index} className="bg-white rounded-xl p-4 text-center shadow-sm border border-emerald-100">
+                <img 
+                  src={student.photo_url} 
+                  alt={student.name} 
+                  className="w-20 h-20 mx-auto rounded-full object-cover border-2 border-amber-400 mb-3 shadow-sm" 
+                />
+                <h3 className="font-bold text-slate-800 text-sm">{student.name}</h3>
+                <p className="text-xs text-slate-500 mt-1 font-medium">النسبة: {student.score}%</p>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* 6. المتفوقون في المتوسط */}
+      {/* 6. الطلاب المتفوقون في الشهادة المتوسطة (مخفي الا إذا تم إضافة بيانات والعدد حتى 5) */}
       {middleTopStudents.length > 0 && (
-        <section style={{ padding: '40px 20px', backgroundColor: '#f1f5f9' }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <h2 style={{ textAlign: 'center', color: '#0f766e', marginBottom: '30px' }}>🎓 أوائل الشهادة المتوسطة</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
+        <section className="py-12 bg-slate-100 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-center text-teal-800 mb-8">
+              🎓 أوائل الشهادة المتوسطة
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
               {middleTopStudents.slice(0, 5).map((student, index) => (
-                <div key={index} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '15px', textAlign: 'center', border: '1px solid #99f6e4' }}>
-                  <img src={student.photo_url} alt={student.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #0d9488', margin: '0 auto 10px auto' }} />
-                  <h3 style={{ margin: '5px 0', fontSize: '15px', color: '#1e293b' }}>{student.name}</h3>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>النسبة: {student.score}%</p>
+                <div key={index} className="bg-white rounded-xl p-4 text-center shadow-sm border border-teal-100">
+                  <img 
+                    src={student.photo_url} 
+                    alt={student.name} 
+                    className="w-20 h-20 mx-auto rounded-full object-cover border-2 border-teal-600 mb-3 shadow-sm" 
+                  />
+                  <h3 className="font-bold text-slate-800 text-sm">{student.name}</h3>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">النسبة: {student.score}%</p>
                 </div>
               ))}
             </div>
@@ -169,34 +206,24 @@ export default function LandingPage() {
       )}
 
       {/* 7. الموقع وأرقام التواصل */}
-      <section style={{ padding: '40px 20px', backgroundColor: '#022c22', color: '#ecfdf5' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '30px' }}>
+      <section className="py-12 px-6 bg-emerald-950 text-white">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-right">
           <div>
-            <h3 style={{ margin: '0 0 10px 0', color: '#fff' }}>📍 موقعنا</h3>
-            <p style={{ margin: 0, color: '#a7f3d0', fontSize: '14px' }}>جمهورية مصر العربية - محافظة أسوان</p>
+            <h3 className="text-lg font-bold text-amber-400 mb-1">📍 موقعنا</h3>
+            <p className="text-emerald-100 text-sm">جمهورية مصر العربية - محافظة أسوان</p>
           </div>
           <div>
-            <h3 style={{ margin: '0 0 10px 0', color: '#fff' }}>📞 أرقام التواصل</h3>
-            <p style={{ margin: 0, color: '#a7f3d0', fontSize: '14px', direction: 'ltr', textAlign: 'right' }}>+20 114 916 9346</p>
+            <h3 className="text-lg font-bold text-amber-400 mb-1">📞 أرقام التواصل</h3>
+            <p className="text-emerald-100 text-sm dir-ltr">01149169346 / +20 114 916 9346</p>
           </div>
         </div>
       </section>
 
-      {/* 8. الفوتر */}
-      <footer style={{ backgroundColor: '#0f172a', color: '#94a3b8', textAlign: 'center', padding: '15px', fontSize: '13px', borderTop: '1px solid #1e293b' }}>
-        تصميم وتطوير: <span style={{ color: '#34d399', fontWeight: 'bold' }}>أستاذ عثمان صديق</span> (01149169346)
+      {/* 8. حقوق التصميم والتطوير */}
+      <footer className="bg-slate-900 text-slate-400 text-center py-4 text-xs border-t border-slate-800">
+        تصميم وتطوير: <span className="text-amber-400 font-bold">أستاذ عثمان صديق</span> (01149169346)
       </footer>
 
-      {/* CSS الخاص بالتحريك والتوقف عند الماوس */}
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-100%); }
-        }
-        .marquee-container:hover .marquee-content {
-          animation-play-state: paused !important;
-        }
-      `}</style>
     </div>
   );
 }
