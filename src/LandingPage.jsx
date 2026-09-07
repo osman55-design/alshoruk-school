@@ -8,7 +8,7 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // معالجة تسجيل الدخول والتحقق من قاعدة البيانات
+  // معالجة تسجيل الدخول والتحقق من جدول users
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -18,15 +18,15 @@ export default function LandingPage({ onLoginSuccess, goToAdmin }) {
       const cleanUsername = username.trim();
       const cleanPassword = password.trim();
 
-      // البحث عن المستخدم باستخدام اسم المستخدم
+      // البحث عن المستخدم في جدول users بدلاً من profiles
       const { data: userProfile, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .eq('username', cleanUsername)
         .maybeSingle();
 
       if (error) {
-        throw new Error(`خطأ اتطابق مع Supabase: ${error.message}`);
+        throw new Error(`خطأ في الاتصال بقاعدة البيانات: ${error.message}`);
       }
 
       if (!userProfile) {
