@@ -56,21 +56,27 @@ export default function LandingPage({ onLoginSuccess }) {
     }
   };
 
-  // دالة تسجيل الدخول عبر Supabase
+  // دالة تسجيل الدخول عبر Supabase باستخدام العمود password_code
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError('');
     setLoading(true);
 
+    const cleanUsername = username.trim();
+    const cleanPassword = password.trim();
+
     try {
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('username', username.trim())
-        .eq('password', password.trim())
-        .single();
+        .eq('username', cleanUsername)
+        .eq('password_code', cleanPassword)
+        .maybeSingle();
 
-      if (error || !data) {
+      if (error) {
+        console.error('Supabase Login Error:', error);
+        setLoginError('خطأ في قاعدة البيانات: ' + error.message);
+      } else if (!data) {
         setLoginError('اسم المستخدم أو كلمة المرور غير صحيحة');
       } else {
         setShowLoginModal(false);
@@ -81,7 +87,8 @@ export default function LandingPage({ onLoginSuccess }) {
         }
       }
     } catch (err) {
-      setLoginError('حدث خطأ أثناء الاتصال بقاعدة البيانات');
+      console.error('Unexpected error:', err);
+      setLoginError('حدث خطأ غير متوقع أثناء الدخول');
     } finally {
       setLoading(false);
     }
@@ -153,7 +160,7 @@ export default function LandingPage({ onLoginSuccess }) {
         </div>
       </section>
 
-      {/* 4. مجلس الإدارة (يظهر عند وجود بيانات) */}
+      {/* 4. مجلس الإدارة */}
       {boardMembers.length > 0 && (
         <section style={{ padding: '0 20px 30px 20px', maxWidth: '1000px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: '20px', marginBottom: '20px', color: '#0f172a' }}>مجلس الإدارة</h2>
@@ -189,7 +196,7 @@ export default function LandingPage({ onLoginSuccess }) {
 
       {/* 6. النافذة المنبثقة (Modal) لتسجيل الدخول */}
       {showLoginModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', itemsCenter: 'center', justifyContent: 'center', zIndex: 100, padding: '15px' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '15px' }}>
           <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', width: '100%', maxWidth: '380px', padding: '25px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', position: 'relative' }}>
             
             <button 
