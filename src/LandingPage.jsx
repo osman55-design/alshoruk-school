@@ -5,32 +5,44 @@ export default function LandingPage({ onGoToPortal }) {
   const [news, setNews] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [boardMembers, setBoardMembers] = useState([]);
+  const [honors, setHonors] = useState([]);
+  const [aboutUs, setAboutUs] = useState('');
+  const [goals, setGoals] = useState([]);
 
   useEffect(() => {
     const fetchAllData = async () => {
-      // 1. جلب الأخبار للشريط المتحرك والكروت
+      // 1. جلب الأخبار
       try {
-        const { data: newsData } = await supabase.from('news').select('*');
-        if (newsData) setNews(newsData);
-      } catch (e) {
-        console.warn("تنبيه: لم يتم جلب الأخبار");
-      }
+        const { data } = await supabase.from('news').select('*');
+        if (data) setNews(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب الأخبار"); }
 
-      // 2. جلب قائمة المعلمين
+      // 2. جلب إدارة المدرسة (محددة بـ 5 اعضاء)
       try {
-        const { data: teachersData } = await supabase.from('teachers').select('*');
-        if (teachersData) setTeachers(teachersData);
-      } catch (e) {
-        console.warn("تنبيه: لم يتم جلب المعلمين");
-      }
+        const { data } = await supabase.from('board_members').select('*').limit(5);
+        if (data) setBoardMembers(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب أعضاء الإدارة"); }
 
-      // 3. جلب أعضاء الإدارة
+      // 3. جلب الكادر التعليمي (محدد بـ 25 معلم)
       try {
-        const { data: boardData } = await supabase.from('board_members').select('*');
-        if (boardData) setBoardMembers(boardData);
-      } catch (e) {
-        console.warn("تنبيه: لم يتم جلب أعضاء الإدارة");
-      }
+        const { data } = await supabase.from('teachers').select('*').limit(25);
+        if (data) setTeachers(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب المعلمين"); }
+
+      // 4. جلب لوحة الشرف (محددة بـ 10 طلاب)
+      try {
+        const { data } = await supabase.from('students').select('*').eq('is_honor', true).limit(10);
+        if (data) setHonors(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب لوحة الشرف"); }
+
+      // 5. جلب من نحن والأهداف من جدول الإعدادات
+      try {
+        const { data } = await supabase.from('settings').select('*').maybeSingle();
+        if (data) {
+          if (data.about_us) setAboutUs(data.about_us);
+          if (data.goals) setGoals(Array.isArray(data.goals) ? data.goals : JSON.parse(data.goals));
+        }
+      } catch (e) { console.warn("تنبيه: لم يتم جلب بيانات الإعدادات"); }
     };
 
     fetchAllData();
@@ -38,7 +50,7 @@ export default function LandingPage({ onGoToPortal }) {
 
   return (
     <div style={styles.container}>
-      {/* 1. الشريط العلوي مع زر دخول واحد فقط */}
+      {/* 1. الهيدر العلوي - زر دخول واحد فقط */}
       <header style={styles.header}>
         <div style={styles.logoSection}>
           <img src="/logo.png" alt="شعار المدرسة" style={styles.logo} onError={(e) => e.target.style.display = 'none'} />
@@ -49,7 +61,7 @@ export default function LandingPage({ onGoToPortal }) {
         </button>
       </header>
 
-      {/* 2. الشريط المتحرك للأخبار */}
+      {/* 2. الشريط المتحرك من اليسار إلى اليمين */}
       <div style={styles.tickerContainer}>
         <span style={styles.tickerBadge}>📢 آخر الأخبار:</span>
         <div style={styles.tickerWrapper}>
@@ -62,27 +74,33 @@ export default function LandingPage({ onGoToPortal }) {
       </div>
 
       <main style={styles.mainContent}>
-        {/* 3. قسم من نحن وأهدافنا */}
+        {/* 3. من نحن وأهدافنا */}
         <section style={styles.gridTwoCols}>
           <div style={styles.card}>
             <h3 style={styles.cardTitle}>📖 من نحن؟</h3>
             <p style={styles.cardText}>
-              مدرسة الشروق السودانية المتكاملة صرح تعليمي متميز يهدف إلى تقديم المنهج السوداني المعتمد بأعلى معايير الجودة، مع الاهتمام بالتربية القويمة وبناء شخصية الطالب.
+              {aboutUs || 'مدرسة الشروق السودانية المتكاملة صرح تعليمي متميز يهدف إلى تقديم المنهج السوداني المعتمد بأعلى معايير الجودة.'}
             </p>
           </div>
           <div style={styles.card}>
             <h3 style={styles.cardTitle}>🎯 أهدافنا</h3>
             <ul style={styles.list}>
-              <li>تقديم تعليم متطور يواكب المعايير الحديثة.</li>
-              <li>ترسيخ القيم الأخلاقية والوطنية لدى الطلاب.</li>
-              <li>بناء بيئة تعليمية آمنة ومحفزة للابتكار.</li>
+              {goals.length > 0 ? (
+                goals.map((goal, index) => <li key={index}>{goal}</li>)
+              ) : (
+                <>
+                  <li>تقديم تعليم متطور يواكب المعايير الحديثة.</li>
+                  <li>ترسيخ القيم الأخلاقية والوطنية لدى الطلاب.</li>
+                  <li>بناء بيئة تعليمية آمنة ومحفزة للابتكار.</li>
+                </>
+              )}
             </ul>
           </div>
         </section>
 
-        {/* 4. قسم مجلس الإدارة */}
+        {/* 4. إدارة المدرسة (5 أعضاء) */}
         <section style={styles.section}>
-          <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة</h3>
+          <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة (5 أعضاء)</h3>
           <div style={styles.cardGrid}>
             {boardMembers.length > 0 ? (
               boardMembers.map((member) => (
@@ -93,14 +111,14 @@ export default function LandingPage({ onGoToPortal }) {
                 </div>
               ))
             ) : (
-              <p style={styles.emptyText}>سيتم إدراج أعضاء الإدارة قريباً.</p>
+              <p style={styles.emptyText}>يمكنك إضافة أعضاء الإدارة من لوحة التحكم بعد تسجيل الدخول.</p>
             )}
           </div>
         </section>
 
-        {/* 5. قسم الكادر التعليمي (المعلمين) */}
+        {/* 5. الكادر التعليمي (25 معلم) */}
         <section style={styles.section}>
-          <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي</h3>
+          <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي (25 معلم)</h3>
           <div style={styles.cardGrid}>
             {teachers.length > 0 ? (
               teachers.map((teacher) => (
@@ -111,29 +129,48 @@ export default function LandingPage({ onGoToPortal }) {
                 </div>
               ))
             ) : (
-              <p style={styles.emptyText}>سيتم إدراج قائمة المعلمين قريباً.</p>
+              <p style={styles.emptyText}>يمكنك إضافة الكادر التعليمي من لوحة التحكم بعد تسجيل الدخول.</p>
             )}
           </div>
         </section>
 
-        {/* 6. قسم الطلاب المتفوقين */}
+        {/* 6. لوحة الشرف (10 طلاب) */}
         <section style={styles.section}>
-          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (الطلاب المتفوقون)</h3>
+          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (10 طلاب متفوقين)</h3>
           <div style={styles.cardGrid}>
-            <div style={styles.personCard}>
-              <div style={styles.avatar}>🏆</div>
-              <h4 style={styles.personName}>أوائل المدرسة</h4>
-              <p style={styles.personRole}>المرحلة الثانوية والمتوسطة</p>
-            </div>
+            {honors.length > 0 ? (
+              honors.map((student) => (
+                <div key={student.id} style={styles.personCard}>
+                  <div style={styles.avatar}>🏆</div>
+                  <h4 style={styles.personName}>{student.full_name || student.name}</h4>
+                  <p style={styles.personRole}>{student.class_name || 'طالب متفوق'}</p>
+                </div>
+              ))
+            ) : (
+              <p style={styles.emptyText}>يمكنك تحديد الطلاب المتفوقين من لوحة التحكم بعد تسجيل الدخول.</p>
+            )}
           </div>
         </section>
       </main>
 
-      {/* 7. التذييل وحقوق التصميم */}
+      {/* 7. التذييل والحقوق */}
       <footer style={styles.footer}>
         <p>© 2026 مدرسة الشروق السودانية المتكاملة - جميع الحقوق محفوظة</p>
-        <p style={styles.designerCredit}>تم التصميم والتطوير بواسطة: <strong>حنين عثمان</strong> 💻</p>
+        <p style={styles.designerCredit}>تم التصميم والتطوير بواسطة: <strong>أستاذ عثمان صديق </strong> 💻</p>
       </footer>
+
+      {/* كود حركة الشريط الإخباري من اليسار إلى اليمين */}
+      <style>{`
+        @keyframes scrollLeftToRight {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .ticker-move {
+          display: inline-block;
+          white-space: nowrap;
+          animation: scrollLeftToRight 25s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
@@ -177,9 +214,9 @@ const styles = {
     fontSize: '14px',
     overflow: 'hidden',
   },
-  tickerBadge: { fontWeight: 'bold', marginLeft: '15px', whiteSpace: 'nowrap' },
-  tickerWrapper: { overflow: 'hidden', width: '100%' },
-  tickerContent: { whiteSpace: 'nowrap' },
+  tickerBadge: { fontWeight: 'bold', marginLeft: '15px', whiteSpace: 'nowrap', zIndex: 2 },
+  tickerWrapper: { overflow: 'hidden', width: '100%', direction: 'ltr' },
+  tickerContent: { className: 'ticker-move' },
   mainContent: {
     flex: 1,
     padding: '30px 20px',
@@ -208,7 +245,7 @@ const styles = {
   sectionTitle: { color: '#1e293b', fontSize: '18px', marginBottom: '15px', fontWeight: 'bold' },
   cardGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
     gap: '15px',
   },
   personCard: {
@@ -219,8 +256,8 @@ const styles = {
     boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
   },
   avatar: { fontSize: '32px', marginBottom: '8px' },
-  personName: { color: '#0f172a', margin: '0 0 5px 0', fontSize: '15px', fontWeight: 'bold' },
-  personRole: { color: '#64748b', fontSize: '13px', margin: 0 },
+  personName: { color: '#0f172a', margin: '0 0 5px 0', fontSize: '14px', fontWeight: 'bold' },
+  personRole: { color: '#64748b', fontSize: '12px', margin: 0 },
   emptyText: { color: '#94a3b8', fontSize: '13px' },
   footer: {
     backgroundColor: '#0f172a',
