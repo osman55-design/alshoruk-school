@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 export default function LandingPage({ onLoginClick }) {
-  // حالات البيانات الديناميكية
   const [siteSettings, setSiteSettings] = useState({
     school_name: 'مدرسة الشروق السودانية',
     subtitle: 'البوابة التعليمية المتكاملة',
@@ -45,9 +44,8 @@ export default function LandingPage({ onLoginClick }) {
 
   return (
     <div style={styles.container}>
-      {/* 1. الهيدر العلوي */}
+      {/* الهيدر العلوي */}
       <header style={styles.header}>
-        {/* زر بوابة النظام في أقصى اليسار/اليمين ليعمل مباشرة */}
         <button type="button" style={styles.systemPortalBtn} onClick={onLoginClick}>
           🔑 بوابة النظام
         </button>
@@ -61,7 +59,7 @@ export default function LandingPage({ onLoginClick }) {
         </div>
       </header>
 
-      {/* 2. القسم الترحيبي بالمنحنى الحقيقي (Curve) */}
+      {/* القسم الترحيبي بالمنحنى */}
       <section style={styles.heroCurvedSection}>
         <div style={styles.heroContent}>
           <h2 style={styles.heroTitle}>{siteSettings.hero_title}</h2>
@@ -74,7 +72,7 @@ export default function LandingPage({ onLoginClick }) {
         </div>
       </section>
 
-      {/* 3. المحتوى السفلي */}
+      {/* المحتوى الرئيسي */}
       <main style={styles.mainContent}>
 
         {/* الكروت الثلاثة */}
@@ -216,14 +214,13 @@ const styles = {
     cursor: 'pointer',
     boxShadow: '0 4px 12px rgba(6, 95, 70, 0.2)',
   },
-  // المنحنى الدائري الحقيقي بدون أخطاء SVG
   heroCurvedSection: {
     background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
     color: '#ffffff',
     padding: '60px 20px 100px 20px',
     textAlign: 'center',
-    borderBottomLeftRadius: '50% 30px',
-    borderBottomRightRadius: '50% 30px',
+    borderBottomLeftRadius: '50% 40px',
+    borderBottomRightRadius: '50% 40px',
   },
   heroContent: {
     maxWidth: '800px',
