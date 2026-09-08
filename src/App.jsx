@@ -7,8 +7,8 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('landing');
   const [currentUser, setCurrentUser] = useState(null);
 
-  // حالات تسجيل الدخول
-  const [email, setEmail] = useState('');
+  // حالات تسجيل الدخول باسم المستخدم وكلمة المرور
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
@@ -17,12 +17,12 @@ export default function App() {
     e.preventDefault();
     setLoginError('');
 
-    if (email && password) {
+    if (username.trim() && password.trim()) {
       // إسناد صلاحية الآدمن والمستخدم
-      setCurrentUser({ email, role: 'admin' });
+      setCurrentUser({ username, role: 'admin' });
       setCurrentPage('admin');
     } else {
-      setLoginError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+      setLoginError('الرجاء إدخال اسم المستخدم وكلمة المرور');
     }
   };
 
@@ -45,7 +45,7 @@ export default function App() {
       <div style={loginStyles.pageContainer}>
         <div style={loginStyles.card}>
           <div style={loginStyles.header}>
-            <span style={{ fontSize: '42px' }}>🏫</span>
+            <div style={loginStyles.iconCircle}>🔑</div>
             <h2 style={loginStyles.title}>بوابة دخول النظام</h2>
             <p style={loginStyles.subtitle}>مدرسة الشروق السودانية المتكاملة</p>
           </div>
@@ -54,14 +54,14 @@ export default function App() {
 
           <form onSubmit={handleLoginSubmit} style={loginStyles.form}>
             <div style={loginStyles.inputGroup}>
-              <label style={loginStyles.label}>البريد الإلكتروني</label>
+              <label style={loginStyles.label}>اسم المستخدم</label>
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 style={loginStyles.input}
-                placeholder="admin@school.com"
+                placeholder="أدخل اسم المستخدم"
               />
             </div>
 
@@ -98,7 +98,7 @@ export default function App() {
   return <LandingPage goToLogin={() => setCurrentPage('login')} />;
 }
 
-// تنسيقات صفحة تسجيل الدخول المستقلة
+// تنسيقات صفحة تسجيل الدخول
 const loginStyles = {
   pageContainer: {
     minHeight: '100vh',
@@ -115,16 +115,30 @@ const loginStyles = {
     borderRadius: '20px',
     padding: '40px 30px',
     width: '100%',
-    maxWidth: '420px',
-    boxShadow: '0 15px 35px rgba(0,0,0,0.25)',
+    maxWidth: '400px',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
     textAlign: 'center',
   },
   header: {
     marginBottom: '25px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: '70px',
+    height: '70px',
+    backgroundColor: '#ecfdf5',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '32px',
+    marginBottom: '10px',
   },
   title: {
     color: '#065f46',
-    margin: '10px 0 5px 0',
+    margin: '5px 0',
     fontSize: '22px',
     fontWeight: 'bold',
   },
@@ -165,6 +179,8 @@ const loginStyles = {
     border: '1px solid #cbd5e1',
     fontSize: '15px',
     outline: 'none',
+    boxSizing: 'border-box',
+    width: '100%',
   },
   loginBtn: {
     backgroundColor: '#065f46',
