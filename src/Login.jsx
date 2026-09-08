@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import supabase from './supabaseClient';
-export default function Login({ onLoginSuccess, goToLanding }) {
-  const [username, setUsername] = useState('');
+import { supabase } from './supabaseClient';
   const [passwordCode, setPasswordCode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
