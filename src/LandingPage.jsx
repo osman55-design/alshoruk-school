@@ -40,21 +40,44 @@ export default function LandingPage({ goToLogin }) {
 
   return (
     <div style={styles.container}>
-      {/* الهيدر العلوي المتجاوب */}
+      {/* إدراج تنسيقات السحب الأفقي للموبايل */}
+      <style>{`
+        .scroll-container {
+          display: flex;
+          gap: 12px;
+          overflow-x: auto;
+          padding-bottom: 12px;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+        }
+        .scroll-container::-webkit-scrollbar {
+          height: 6px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1;
+          border-radius: 10px;
+        }
+        .scroll-item {
+          scroll-snap-align: start;
+          flex: 0 0 160px; /* عرض مناسب يتيح رؤية عدة عناصر أو التمرير بسلاسة على الموبايل */
+        }
+      `}</style>
+
+      {/* الهيدر العلوي */}
       <header style={styles.header}>
         <button type="button" style={styles.systemPortalBtn} onClick={goToLogin}>
           🔑 بوابة النظام
         </button>
 
         <div style={styles.logoContainer}>
-          <img src="/logo.png" alt="شعارات المدرسة" style={styles.logoImage} />
+          <img src="/logo.png" alt="شعار المدرسة" style={styles.logoImage} />
         </div>
       </header>
 
       {/* المحتوى الرئيسي */}
       <main style={styles.mainContent}>
 
-        {/* الكروت الثلاثة */}
+        {/* الكروت الثلاثة الرئيسية */}
         <section style={styles.cardsGrid}>
           <div style={styles.infoCard}>
             <h3 style={styles.cardTitle}>📖 من نحن؟</h3>
@@ -75,54 +98,81 @@ export default function LandingPage({ goToLogin }) {
         {/* مجلس الإدارة */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>🏛️ مجلس الإدارة</h2>
-          <div style={styles.membersGrid}>
-            {(boardMembers.length > 0 ? boardMembers : Array(5).fill({ name: 'اسم العضو', role: 'الصفة الإدارية' })).map((item, idx) => (
-              <div key={idx} style={styles.goldCard}>
+          <div className="scroll-container">
+            {(boardMembers.length > 0 ? boardMembers : [
+              { name: 'عثمان صديق', role: 'رئيس مجلس الإدارة' },
+              { name: 'أحمد علي', role: 'نائب الرئيس' },
+              { name: 'محمد حسن', role: 'المدير التنفيذي' },
+              { name: 'عالم مصطفى', role: 'المشرف العام' },
+              { name: 'حلا عثمان', role: 'الأمانة العامة' },
+            ]).map((item, idx) => (
+              <div key={idx} className="scroll-item" style={styles.goldCard}>
                 <div style={styles.avatarCircle}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '👤'}</div>
                 <h4 style={styles.memberName}>{item.name}</h4>
-                <p style={styles.memberRole}>{item.role}</p>
+                <p style={styles.memberRole}>{item.role || 'المسمى الوظيفي'}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* المتفوقون - ابتدائية */}
+        {/* المتفوقون - المرحلة الابتدائية */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>🌟 المتفوقون - المرحلة الابتدائية</h2>
-          <div style={styles.membersGrid}>
-            {(primaryStudents.length > 0 ? primaryStudents : Array(5).fill({ name: 'اسم الطالب/ة', grade: 'المرتبة الأولى' })).map((item, idx) => (
-              <div key={idx} style={styles.studentCard}>
+          <div className="scroll-container">
+            {(primaryStudents.length > 0 ? primaryStudents : [
+              { name: 'محمد أحمد', grade: 'المرتبة الأولى', total_score: '98.5%' },
+              { name: 'سارة يوسف', grade: 'المرتبة الثانية', total_score: '97.2%' },
+              { name: 'عمر خالد', grade: 'المرتبة الثالثة', total_score: '96.8%' },
+              { name: 'فاطمة علي', grade: 'المرتبة الرابعة', total_score: '95.5%' },
+              { name: 'عبدالله حسن', grade: 'المرتبة الخامسة', total_score: '94.0%' },
+            ]).map((item, idx) => (
+              <div key={idx} className="scroll-item" style={styles.studentCard}>
                 <div style={styles.studentAvatar}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '⭐'}</div>
                 <h4 style={styles.memberName}>{item.name}</h4>
-                <span style={styles.studentGrade}>{item.grade}</span>
+                <div style={styles.badgeGroup}>
+                  <span style={styles.studentGrade}>{item.grade || 'المرتبة'}</span>
+                  <span style={styles.scoreBadge}>الدرجة: {item.total_score || item.score || '98%'}</span>
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* المتفوقون - متوسطة */}
+        {/* المتفوقون - المرحلة المتوسطة */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>🎓 المتفوقون - المرحلة المتوسطة</h2>
-          <div style={styles.membersGrid}>
-            {(middleStudents.length > 0 ? middleStudents : Array(5).fill({ name: 'اسم الطالب/ة', grade: 'المرتبة الأولى' })).map((item, idx) => (
-              <div key={idx} style={styles.studentCard}>
+          <div className="scroll-container">
+            {(middleStudents.length > 0 ? middleStudents : [
+              { name: 'أحمد محمود', grade: 'المرتبة الأولى', total_score: '99.0%' },
+              { name: 'ريم العبيد', grade: 'المرتبة الثانية', total_score: '98.1%' },
+              { name: 'خالد إبراهيم', grade: 'المرتبة الثالثة', total_score: '97.4%' },
+              { name: 'منى طارق', grade: 'المرتبة الرابعة', total_score: '96.0%' },
+              { name: 'حمزة عثمان', grade: 'المرتبة الخامسة', total_score: '95.2%' },
+            ]).map((item, idx) => (
+              <div key={idx} className="scroll-item" style={styles.studentCard}>
                 <div style={styles.studentAvatar}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '🏆'}</div>
                 <h4 style={styles.memberName}>{item.name}</h4>
-                <span style={styles.studentGrade}>{item.grade}</span>
+                <div style={styles.badgeGroup}>
+                  <span style={styles.studentGrade}>{item.grade || 'المرتبة'}</span>
+                  <span style={styles.scoreBadge}>الدرجة: {item.total_score || item.score || '99%'}</span>
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* المعلمون */}
+        {/* طاقم التدريس */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>👨‍🏫 طاقم التدريس المتميز</h2>
-          <div style={styles.teachersGrid}>
-            {(teachers.length > 0 ? teachers : Array(25).fill({ name: 'اسم المعلم/ة', subject: 'المادة الدراسية' })).map((item, idx) => (
-              <div key={idx} style={styles.teacherCard}>
+          <div className="scroll-container">
+            {(teachers.length > 0 ? teachers : Array(10).fill(null).map((_, i) => ({
+              name: `معلم ${i + 1}`,
+              subject: 'اللغة العربية'
+            }))).map((item, idx) => (
+              <div key={idx} className="scroll-item" style={styles.teacherCard}>
                 <div style={styles.teacherAvatar}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '👨‍🏫'}</div>
                 <h5 style={styles.teacherName}>{item.name}</h5>
-                <p style={styles.teacherSubject}>{item.subject}</p>
+                <p style={styles.teacherSubject}>المادة: {item.subject || 'غير محدد'}</p>
               </div>
             ))}
           </div>
@@ -152,30 +202,28 @@ const styles = {
     alignItems: 'center',
     padding: '12px 20px',
     backgroundColor: '#ffffff',
-    borderBottom: '2px solid #d97706',
+    borderBottom: '3px solid #d97706',
     boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-    flexWrap: 'wrap',
-    gap: '12px',
+    maxWidth: '1200px',
+    margin: '0 auto',
   },
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
-    maxWidth: '100%',
   },
   logoImage: {
-    maxHeight: '65px',
-    maxWidth: '100%',
-    height: 'auto',
+    height: '85px',
+    width: 'auto',
     objectFit: 'contain',
   },
   systemPortalBtn: {
     backgroundColor: '#065f46',
     color: '#ffffff',
     border: '2px solid #d97706',
-    padding: '8px 18px',
+    padding: '8px 20px',
     borderRadius: '25px',
     fontWeight: 'bold',
-    fontSize: '13px',
+    fontSize: '14px',
     cursor: 'pointer',
     boxShadow: '0 4px 10px rgba(6, 95, 70, 0.15)',
     whiteSpace: 'nowrap',
@@ -209,47 +257,52 @@ const styles = {
     margin: 0,
   },
   sectionContainer: {
-    marginTop: '40px',
+    marginTop: '36px',
   },
   sectionHeading: {
     color: '#065f46',
     fontSize: '20px',
     borderRight: '5px solid #d97706',
     paddingRight: '10px',
-    marginBottom: '20px',
-  },
-  membersGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-    gap: '12px',
+    marginBottom: '16px',
   },
   goldCard: {
     backgroundColor: '#ffffff',
     border: '1px solid #fef3c7',
     borderRadius: '12px',
-    padding: '14px',
+    padding: '14px 10px',
     textAlign: 'center',
     boxShadow: '0 2px 8px rgba(217, 119, 6, 0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    height: '100%',
+    boxSizing: 'border-box',
   },
   studentCard: {
     backgroundColor: '#ffffff',
     border: '1px solid #e2e8f0',
     borderRadius: '12px',
-    padding: '14px',
+    padding: '14px 10px',
     textAlign: 'center',
-  },
-  teachersGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-    gap: '12px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    height: '100%',
+    boxSizing: 'border-box',
   },
   teacherCard: {
     backgroundColor: '#ffffff',
-    borderRadius: '10px',
-    padding: '12px',
+    borderRadius: '12px',
+    padding: '14px 10px',
     textAlign: 'center',
     border: '1px solid #f1f5f9',
     boxShadow: '0 2px 5px rgba(0,0,0,0.03)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    height: '100%',
+    boxSizing: 'border-box',
   },
   avatarCircle: {
     width: '55px',
@@ -260,7 +313,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 8px auto',
+    marginBottom: '8px',
     fontSize: '22px',
   },
   studentAvatar: {
@@ -272,19 +325,19 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 8px auto',
+    marginBottom: '8px',
     fontSize: '20px',
   },
   teacherAvatar: {
-    width: '45px',
-    height: '45px',
+    width: '48px',
+    height: '48px',
     borderRadius: '50%',
     backgroundColor: '#f8fafc',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 6px auto',
-    fontSize: '18px',
+    marginBottom: '8px',
+    fontSize: '20px',
   },
   avatarImg: {
     width: '100%',
@@ -295,30 +348,57 @@ const styles = {
   memberName: {
     margin: '0 0 4px 0',
     fontSize: '14px',
+    fontWeight: 'bold',
     color: '#1e293b',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '140px',
   },
   memberRole: {
     margin: 0,
-    fontSize: '11px',
+    fontSize: '12px',
     color: '#d97706',
+    fontWeight: 'bold',
+  },
+  badgeGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    alignItems: 'center',
+    marginTop: '2px',
   },
   studentGrade: {
     fontSize: '11px',
     backgroundColor: '#ecfdf5',
     color: '#065f46',
-    padding: '2px 6px',
-    borderRadius: '8px',
+    padding: '2px 8px',
+    borderRadius: '10px',
+    fontWeight: 'bold',
+  },
+  scoreBadge: {
+    fontSize: '11px',
+    backgroundColor: '#fef3c7',
+    color: '#b45309',
+    padding: '2px 8px',
+    borderRadius: '10px',
     fontWeight: 'bold',
   },
   teacherName: {
-    margin: '0 0 2px 0',
-    fontSize: '13px',
+    margin: '0 0 4px 0',
+    fontSize: '14px',
+    fontWeight: 'bold',
     color: '#1e293b',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '140px',
   },
   teacherSubject: {
     margin: 0,
-    fontSize: '11px',
-    color: '#64748b',
+    fontSize: '12px',
+    color: '#065f46',
+    fontWeight: 'bold',
   },
   footer: {
     backgroundColor: '#ffffff',
