@@ -5,8 +5,6 @@ export default function LandingPage({ goToLogin }) {
   const [siteSettings, setSiteSettings] = useState({
     school_name: 'مدرسة الشروق السودانية',
     subtitle: 'البوابة التعليمية المتكاملة',
-    hero_title: 'مرحباً بكم في صرح الشروق التعليمي 🎓',
-    hero_description: 'بوابتكم التعليمية الذكية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز بالمنهج السوداني المطور.',
     about_text: 'مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد متخصص لتقديم المنهج السوداني الرصين بكفاءة عالية عبر جميع المراحل.',
     goals_text: 'تقديم تعليم متميز يتوافق مع المعايير التربوية الحديثة، وتعزيز القيم الأخلاقية والوطنية الراسخة في الطلاب.',
     solutions_text: 'بوابة إلكترونية متقدمة تتضمن لوحة تحكم سحابية مخصصة لإدارة شؤون الطلاب، المعلمين، الحسابات، والنتائج بسهولة وموثوقية.',
@@ -59,20 +57,7 @@ export default function LandingPage({ goToLogin }) {
         </div>
       </header>
 
-      {/* القسم الترحيبي بالمنحنى */}
-      <section style={styles.heroCurvedSection}>
-        <div style={styles.heroContent}>
-          <h2 style={styles.heroTitle}>{siteSettings.hero_title}</h2>
-          <p style={styles.heroDescription}>{siteSettings.hero_description}</p>
-
-          <div style={styles.badgeContainer}>
-            <span style={styles.goldBadge}>🧚‍♂️ توكل • نجاح • تفوق</span>
-            <span style={styles.greenBadge}>📚 المنهج السوداني المطور</span>
-          </div>
-        </div>
-      </section>
-
-      {/* المحتوى الرئيسي */}
+      {/* المحتوى الرئيسي مباشرة دون الشريط الأخضر */}
       <main style={styles.mainContent}>
 
         {/* الكروت الثلاثة */}
@@ -162,7 +147,7 @@ export default function LandingPage({ goToLogin }) {
 const styles = {
   container: {
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
     direction: 'rtl',
     minHeight: '100vh',
     color: '#1e293b',
@@ -214,67 +199,21 @@ const styles = {
     cursor: 'pointer',
     boxShadow: '0 4px 12px rgba(6, 95, 70, 0.2)',
   },
-  heroCurvedSection: {
-    background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
-    color: '#ffffff',
-    padding: '60px 20px 100px 20px',
-    textAlign: 'center',
-    borderBottomLeftRadius: '50% 40px',
-    borderBottomRightRadius: '50% 40px',
-  },
-  heroContent: {
-    maxWidth: '800px',
-    margin: '0 auto',
-  },
-  heroTitle: {
-    fontSize: '30px',
-    fontWeight: 'bold',
-    marginBottom: '16px',
-  },
-  heroDescription: {
-    fontSize: '15px',
-    lineHeight: '1.6',
-    opacity: 0.95,
-    marginBottom: '24px',
-  },
-  badgeContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '12px',
-    flexWrap: 'wrap',
-  },
-  goldBadge: {
-    backgroundColor: '#d97706',
-    color: '#ffffff',
-    padding: '6px 16px',
-    borderRadius: '20px',
-    fontSize: '13px',
-    fontWeight: 'bold',
-  },
-  greenBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    border: '1px solid #ffffff',
-    color: '#ffffff',
-    padding: '6px 16px',
-    borderRadius: '20px',
-    fontSize: '13px',
-  },
   mainContent: {
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: '0 20px 60px 20px',
+    padding: '40px 20px 60px 20px',
   },
   cardsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '20px',
-    marginTop: '-40px',
   },
   infoCard: {
     backgroundColor: '#ffffff',
     borderRadius: '16px',
     padding: '24px',
-    boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
     borderTop: '4px solid #065f46',
   },
   cardTitle: {
