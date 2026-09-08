@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 export default function LandingPage({ onLoginClick }) {
-  // حالات البيانات الديناميكية من قاعدة البيانات
+  // حالات البيانات الديناميكية
   const [siteSettings, setSiteSettings] = useState({
     school_name: 'مدرسة الشروق السودانية',
     subtitle: 'البوابة التعليمية المتكاملة',
@@ -18,94 +18,66 @@ export default function LandingPage({ onLoginClick }) {
   const [primaryStudents, setPrimaryStudents] = useState([]);
   const [middleStudents, setMiddleStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  // جلب البيانات من Supabase عند التحميل
   useEffect(() => {
     async function fetchData() {
       try {
-        setLoading(true);
-
-        // 1. جلب إعدادات النصوص العامة
         const { data: settings } = await supabase.from('site_settings').select('*').single();
         if (settings) setSiteSettings(prev => ({ ...prev, ...settings }));
 
-        // 2. جلب أعضاء مجلس الإدارة (5 أعضاء)
         const { data: board } = await supabase.from('board_members').select('*').limit(5);
-        if (board && board.length > 0) setBoardMembers(board);
+        if (board) setBoardMembers(board);
 
-        // 3. جلب متفوقي المرحلة الابتدائية (5 طلاب)
-        const { data: priStudents } = await supabase
-          .from('top_students')
-          .select('*')
-          .eq('stage', 'primary')
-          .limit(5);
-        if (priStudents && priStudents.length > 0) setPrimaryStudents(priStudents);
+        const { data: priStudents } = await supabase.from('top_students').select('*').eq('stage', 'primary').limit(5);
+        if (priStudents) setPrimaryStudents(priStudents);
 
-        // 4. جلب متفوقي المرحلة المتوسطة (5 طلاب)
-        const { data: midStudents } = await supabase
-          .from('top_students')
-          .select('*')
-          .eq('stage', 'middle')
-          .limit(5);
-        if (midStudents && midStudents.length > 0) setMiddleStudents(midStudents);
+        const { data: midStudents } = await supabase.from('top_students').select('*').eq('stage', 'middle').limit(5);
+        if (midStudents) setMiddleStudents(midStudents);
 
-        // 5. جلب طاقم التدريس (25 معلم)
         const { data: teacherList } = await supabase.from('teachers').select('*').limit(25);
-        if (teacherList && teacherList.length > 0) setTeachers(teacherList);
-
+        if (teacherList) setTeachers(teacherList);
       } catch (err) {
-        console.log('استخدام البيانات الافتراضية للواجهة');
-      } finally {
-        setLoading(false);
+        console.log('استخدام البيانات الافتراضية');
       }
     }
-
     fetchData();
   }, []);
 
   return (
     <div style={styles.container}>
-      {/* 1. الشريط العلوي الرأسي (Header) */}
+      {/* 1. الهيدر العلوي */}
       <header style={styles.header}>
+        {/* زر بوابة النظام في أقصى اليسار/اليمين ليعمل مباشرة */}
+        <button type="button" style={styles.systemPortalBtn} onClick={onLoginClick}>
+          🔑 بوابة النظام
+        </button>
+
         <div style={styles.headerRight}>
-          <div style={styles.logoBadge}>🏫</div>
           <div>
             <h1 style={styles.schoolName}>{siteSettings.school_name}</h1>
             <p style={styles.schoolSubtitle}>{siteSettings.subtitle}</p>
           </div>
+          <div style={styles.logoBadge}>🏫</div>
         </div>
-
-        {/* زر بوابة النظام في أقصى اليمين/الأعلى */}
-        <button style={styles.systemPortalBtn} onClick={onLoginClick}>
-          🔑 بوابة النظام
-        </button>
       </header>
 
-      {/* 2. القسم الترحيبي العشبي المتدرج (Hero Section) */}
-      <section style={styles.heroSection}>
+      {/* 2. القسم الترحيبي بالمنحنى الحقيقي (Curve) */}
+      <section style={styles.heroCurvedSection}>
         <div style={styles.heroContent}>
           <h2 style={styles.heroTitle}>{siteSettings.hero_title}</h2>
           <p style={styles.heroDescription}>{siteSettings.hero_description}</p>
-          
+
           <div style={styles.badgeContainer}>
             <span style={styles.goldBadge}>🧚‍♂️ توكل • نجاح • تفوق</span>
             <span style={styles.greenBadge}>📚 المنهج السوداني المطور</span>
           </div>
         </div>
-
-        {/* المنحنى الانسيابي الذهبي/الأبيض */}
-        <div style={styles.waveCurve}>
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,32L120,42.7C240,53,480,75,720,74.7C960,75,1200,53,1320,42.7L1440,32L1440,120L1320,120C1200,120,960,120,720,120C480,120,240,120,120,120L0,120Z" fill="#ffffff"></path>
-          </svg>
-        </div>
       </section>
 
-      {/* 3. المحتوى الأبيض المنحني الأساسي */}
+      {/* 3. المحتوى السفلي */}
       <main style={styles.mainContent}>
 
-        {/* البطاقات التعريفية الثلاث */}
+        {/* الكروت الثلاثة */}
         <section style={styles.cardsGrid}>
           <div style={styles.infoCard}>
             <h3 style={styles.cardTitle}>📖 من نحن؟</h3>
@@ -123,7 +95,7 @@ export default function LandingPage({ onLoginClick }) {
           </div>
         </section>
 
-        {/* 4. قسم مجلس الإدارة (5 أعضاء) */}
+        {/* مجلس الإدارة */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>🏛️ مجلس الإدارة</h2>
           <div style={styles.membersGrid}>
@@ -137,7 +109,7 @@ export default function LandingPage({ onLoginClick }) {
           </div>
         </section>
 
-        {/* 5. قسم المتفوقين - المرحلة الابتدائية (5 طلاب) */}
+        {/* المتفوقون - ابتدائية */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>🌟 المتفوقون - المرحلة الابتدائية</h2>
           <div style={styles.membersGrid}>
@@ -151,7 +123,7 @@ export default function LandingPage({ onLoginClick }) {
           </div>
         </section>
 
-        {/* 6. قسم المتفوقين - المرحلة المتوسطة (5 طلاب) */}
+        {/* المتفوقون - متوسطة */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>🎓 المتفوقون - المرحلة المتوسطة</h2>
           <div style={styles.membersGrid}>
@@ -165,7 +137,7 @@ export default function LandingPage({ onLoginClick }) {
           </div>
         </section>
 
-        {/* 7. قسم طاقم التدريس (25 معلم) */}
+        {/* المعلمون */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>👨‍🏫 طاقم التدريس المتميز</h2>
           <div style={styles.teachersGrid}>
@@ -181,7 +153,7 @@ export default function LandingPage({ onLoginClick }) {
 
       </main>
 
-      {/* 8. الشريط السفلي (Footer) */}
+      {/* الفوتر */}
       <footer style={styles.footer}>
         <p style={styles.footerText}>✨ {siteSettings.developer_text}</p>
       </footer>
@@ -189,11 +161,10 @@ export default function LandingPage({ onLoginClick }) {
   );
 }
 
-// التنسيقات البصرية والألوان (الأخضر الزمردي، الذهبي، والأبيض)
 const styles = {
   container: {
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
     direction: 'rtl',
     minHeight: '100vh',
     color: '#1e293b',
@@ -204,11 +175,8 @@ const styles = {
     alignItems: 'center',
     padding: '16px 40px',
     backgroundColor: '#ffffff',
-    borderBottom: '2px solid #d97706', // خط ذهبي رفيع
+    borderBottom: '2px solid #d97706',
     boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
   },
   headerRight: {
     display: 'flex',
@@ -230,12 +198,12 @@ const styles = {
     margin: 0,
     fontSize: '20px',
     fontWeight: 'bold',
-    color: '#065f46', // أخضر زمردي
+    color: '#065f46',
   },
   schoolSubtitle: {
     margin: 0,
     fontSize: '12px',
-    color: '#d97706', // ذهبي
+    color: '#d97706',
   },
   systemPortalBtn: {
     backgroundColor: '#065f46',
@@ -247,27 +215,27 @@ const styles = {
     fontSize: '14px',
     cursor: 'pointer',
     boxShadow: '0 4px 12px rgba(6, 95, 70, 0.2)',
-    transition: 'transform 0.2s',
   },
-  heroSection: {
-    background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)', // أخضر زمردي متدرج
+  // المنحنى الدائري الحقيقي بدون أخطاء SVG
+  heroCurvedSection: {
+    background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
     color: '#ffffff',
-    paddingTop: '60px',
+    padding: '60px 20px 100px 20px',
     textAlign: 'center',
-    position: 'relative',
+    borderBottomLeftRadius: '50% 30px',
+    borderBottomRightRadius: '50% 30px',
   },
   heroContent: {
     maxWidth: '800px',
     margin: '0 auto',
-    padding: '0 20px',
   },
   heroTitle: {
-    fontSize: '32px',
+    fontSize: '30px',
     fontWeight: 'bold',
     marginBottom: '16px',
   },
   heroDescription: {
-    fontSize: '16px',
+    fontSize: '15px',
     lineHeight: '1.6',
     opacity: 0.95,
     marginBottom: '24px',
@@ -277,7 +245,6 @@ const styles = {
     justifyContent: 'center',
     gap: '12px',
     flexWrap: 'wrap',
-    marginBottom: '40px',
   },
   goldBadge: {
     backgroundColor: '#d97706',
@@ -288,16 +255,12 @@ const styles = {
     fontWeight: 'bold',
   },
   greenBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     border: '1px solid #ffffff',
     color: '#ffffff',
     padding: '6px 16px',
     borderRadius: '20px',
     fontSize: '13px',
-  },
-  waveCurve: {
-    lineHeight: 0,
-    width: '100%',
   },
   mainContent: {
     maxWidth: '1200px',
@@ -308,15 +271,13 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '20px',
-    marginTop: '-30px',
-    position: 'relative',
-    zIndex: 10,
+    marginTop: '-40px',
   },
   infoCard: {
     backgroundColor: '#ffffff',
     borderRadius: '16px',
     padding: '24px',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
     borderTop: '4px solid #065f46',
   },
   cardTitle: {
@@ -371,6 +332,7 @@ const styles = {
     padding: '14px',
     textAlign: 'center',
     border: '1px solid #f1f5f9',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.03)',
   },
   avatarCircle: {
     width: '60px',
