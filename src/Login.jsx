@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from './supabaseClient';
+
+export default function Login({ onLoginSuccess, goToLanding }) {
+  const [username, setUsername] = useState('');
   const [passwordCode, setPasswordCode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -9,14 +12,13 @@ import { supabase } from './supabaseClient';
     setErrorMsg('');
 
     if (!username.trim() || !passwordCode.trim()) {
-      setErrorMsg('الرجاء إدخال اسم المستخدم وكلمة المرور/الرمز');
+      setErrorMsg('الرجاء إدخال اسم المستخدم وكلمة المرور');
       return;
     }
 
     setLoading(true);
 
     try {
-      // الاستعلام من جدول users في Supabase مطابقة لـ username و password_code
       const { data: user, error } = await supabase
         .from('users')
         .select('*')
@@ -29,13 +31,12 @@ import { supabase } from './supabaseClient';
       if (!user) {
         setErrorMsg('اسم المستخدم أو كلمة المرور غير صحيحة!');
       } else {
-        // نمرر كائن الموظف كاملاً بصلاحياته للـ App/AdminSystem
         if (onLoginSuccess) {
           onLoginSuccess(user);
         }
       }
     } catch (err) {
-      console.error('خطأ الدخول:', err);
+      console.error('Login Error:', err);
       setErrorMsg('حدث خطأ أثناء الاتصال بقاعدة البيانات: ' + err.message);
     } finally {
       setLoading(false);
@@ -47,14 +48,14 @@ import { supabase } from './supabaseClient';
       <div style={styles.card}>
         <div style={styles.header}>
           <h2 style={styles.title}>🔐 تسجيل الدخول لبوابة النظام</h2>
-          <p style={styles.subtitle}>أدخل بيانات الموظف المعتمدة للوصول للأقسام المصرح بها</p>
+          <p style={styles.subtitle}>أدخل بيانات الموظف المعتمدة للوصول للنظام</p>
         </div>
 
         {errorMsg && <div style={styles.errorAlert}>{errorMsg}</div>}
 
         <form onSubmit={handleLogin} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>اسم المستخدم البرمجي:</label>
+            <label style={styles.label}>اسم المستخدم:</label>
             <input
               type="text"
               value={username}
@@ -78,7 +79,7 @@ import { supabase } from './supabaseClient';
           </div>
 
           <button type="submit" disabled={loading} style={styles.submitBtn}>
-            {loading ? 'جاري التحقق من البيانات...' : 'دخول للبوابة 🔑'}
+            {loading ? 'جاري التحقق...' : 'دخول للبوابة 🔑'}
           </button>
         </form>
 
@@ -107,26 +108,14 @@ const styles = {
     backgroundColor: '#ffffff',
     padding: '35px 30px',
     borderRadius: '16px',
-    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)',
     width: '100%',
     maxWidth: '400px',
     borderTop: '5px solid #047857',
   },
-  header: {
-    textAlign: 'center',
-    marginBottom: '25px',
-  },
-  title: {
-    color: '#047857',
-    margin: '0 0 8px 0',
-    fontSize: '20px',
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    color: '#64748b',
-    fontSize: '13px',
-    margin: 0,
-  },
+  header: { textAlign: 'center', marginBottom: '25px' },
+  title: { color: '#047857', margin: '0 0 8px 0', fontSize: '20px', fontWeight: 'bold' },
+  subtitle: { color: '#64748b', fontSize: '13px', margin: 0 },
   errorAlert: {
     backgroundColor: '#fef2f2',
     color: '#dc2626',
@@ -138,21 +127,9 @@ const styles = {
     textAlign: 'center',
     fontWeight: 'bold',
   },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '18px',
-  },
-  inputGroup: {
-    textAlign: 'right',
-  },
-  label: {
-    display: 'block',
-    fontSize: '13px',
-    color: '#334155',
-    marginBottom: '6px',
-    fontWeight: 'bold',
-  },
+  form: { display: 'flex', flexDirection: 'column', gap: '18px' },
+  inputGroup: { textAlign: 'right' },
+  label: { display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: 'bold' },
   input: {
     width: '100%',
     padding: '10px 12px',
