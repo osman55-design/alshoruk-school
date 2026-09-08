@@ -7,6 +7,7 @@ import DashboardSection from './components/DashboardSection';
 import ResultsSection from './components/ResultsSection';
 import TransportSection from './components/TransportSection';
 import SupervisorsSection from './components/ClassSupervisorsSection';
+import HomeSettingsSection from './components/HomeSettingsSection';
 
 export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
   const [activeTab, setActiveTab] = useState('students');
@@ -63,9 +64,14 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
 
         {/* أزرار التنقل بين الأقسام */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-          {/* زر إدارة المستخدمين والصلاحيات يظهر لكِ أنتِ فقط */}
+          {/* زر إدارة المستخدمين والصلاحيات */}
           {isAdmin && (
             <button style={navBtnStyle(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>إدارة المستخدمين والصلاحيات ⚙️</button>
+          )}
+
+          {/* زر إدارة محتوى الصفحة الرئيسية */}
+          {isAdmin && (
+            <button style={navBtnStyle(activeTab === 'home_settings')} onClick={() => setActiveTab('home_settings')}>إدارة الصفحة الرئيسية 🌐</button>
           )}
           
           {hasPermission('students', 'can_manage_students') && (
@@ -89,7 +95,7 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
           )}
           
           {hasPermission('transport', 'can_manage_transport') && (
-            <button style={navBtnStyle(activeTab === 'transport')}>التراحيل 🚌</button>
+            <button style={navBtnStyle(activeTab === 'transport')} onClick={() => setActiveTab('transport')}>التراحيل 🚌</button>
           )}
           
           {hasPermission('supervisors', 'can_manage_supervisors') && (
@@ -108,6 +114,7 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
           {activeTab === 'results' && <ResultsSection currentUser={currentUser} />}
           {activeTab === 'transport' && <TransportSection currentUser={currentUser} />}
           {activeTab === 'supervisors' && <SupervisorsSection currentUser={currentUser} />}
+          {activeTab === 'home_settings' && <HomeSettingsSection />}
           {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('students')} />}
         </div>
       </main>
