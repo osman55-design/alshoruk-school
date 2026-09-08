@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
-export default function LandingPage({ onLoginClick }) {
+export default function LandingPage({ goToLogin }) {
   const [siteSettings, setSiteSettings] = useState({
     school_name: 'مدرسة الشروق السودانية',
     subtitle: 'البوابة التعليمية المتكاملة',
     hero_title: 'مرحباً بكم في صرح الشروق التعليمي 🎓',
     hero_description: 'بوابتكم التعليمية الذكية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز بالمنهج السوداني المطور.',
     about_text: 'مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد متخصص لتقديم المنهج السوداني الرصين بكفاءة عالية عبر جميع المراحل.',
-    goals_text: 'تقديم تعليم متميز يتوافق مع المعاير التربوية الحديثة، وتعزيز القيم الأخلاقية والوطنية الراسخة في الطلاب.',
+    goals_text: 'تقديم تعليم متميز يتوافق مع المعايير التربوية الحديثة، وتعزيز القيم الأخلاقية والوطنية الراسخة في الطلاب.',
     solutions_text: 'بوابة إلكترونية متقدمة تتضمن لوحة تحكم سحابية مخصصة لإدارة شؤون الطلاب، المعلمين، الحسابات، والنتائج بسهولة وموثوقية.',
     developer_text: 'تصميم وتطوير: الأستاذ عثمان صديق ( أبو حلا ) | 📱 01149169346'
   });
@@ -46,7 +46,7 @@ export default function LandingPage({ onLoginClick }) {
     <div style={styles.container}>
       {/* الهيدر العلوي */}
       <header style={styles.header}>
-        <button type="button" style={styles.systemPortalBtn} onClick={onLoginClick}>
+        <button type="button" style={styles.systemPortalBtn} onClick={goToLogin}>
           🔑 بوابة النظام
         </button>
 
