@@ -141,7 +141,7 @@ export default function DashboardSection({ onBack }) {
                         {u.can_manage_results && <span style={badgeStyle}>النتائج</span>}
                         {u.can_manage_transport && <span style={badgeStyle}>التراحيل</span>}
                         {u.can_manage_supervisors && <span style={badgeStyle}>المشرفات</span>}
-                        {u.can_manage_landing && <span style={badgeStyle}>الرئيسية</span>}
+                        {u.can_manage_landing && <span style={badgeStyle}>إدارة الصفحة الرئيسية</span>}
                         {u.can_manage_admin && <span style={{ ...badgeStyle, backgroundColor: '#fef3c7', color: '#b45309' }}>كل الصلاحيات</span>}
                       </div>
                     </td>
@@ -208,7 +208,8 @@ export default function DashboardSection({ onBack }) {
                   <label><input type="checkbox" checked={editingUser.can_manage_results || false} onChange={(e) => setEditingUser({ ...editingUser, can_manage_results: e.target.checked })} /> 📋 النتيجة</label>
                   <label><input type="checkbox" checked={editingUser.can_manage_transport || false} onChange={(e) => setEditingUser({ ...editingUser, can_manage_transport: e.target.checked })} /> 🚌 التراحيل</label>
                   <label><input type="checkbox" checked={editingUser.can_manage_supervisors || false} onChange={(e) => setEditingUser({ ...editingUser, can_manage_supervisors: e.target.checked })} /> 👩‍💼 المشرفات</label>
-                  <label><input type="checkbox" checked={editingUser.can_manage_landing || false} onChange={(e) => setEditingUser({ ...editingUser, can_manage_landing: e.target.checked })} /> 🏠 الصفحة الرئيسية</label>
+                  {/* تم تحديث الاسم هنا ليتطابق مع إدارة الصفحة الرئيسية */}
+                  <label><input type="checkbox" checked={editingUser.can_manage_landing || false} onChange={(e) => setEditingUser({ ...editingUser, can_manage_landing: e.target.checked })} /> 🌐 إدارة الصفحة الرئيسية</label>
                   <label><input type="checkbox" checked={editingUser.can_manage_admin || false} onChange={(e) => setEditingUser({ ...editingUser, can_manage_admin: e.target.checked })} /> 👑 الإدارة</label>
                 </div>
               </div>
