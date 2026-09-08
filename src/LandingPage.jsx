@@ -1,186 +1,456 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
-export default function LandingPage({ onLoginSuccess, goToAdmin }) {
-  const [showModal, setShowModal] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+export default function LandingPage({ onLoginClick }) {
+  // حالات البيانات الديناميكية من قاعدة البيانات
+  const [siteSettings, setSiteSettings] = useState({
+    school_name: 'مدرسة الشروق السودانية',
+    subtitle: 'البوابة التعليمية المتكاملة',
+    hero_title: 'مرحباً بكم في صرح الشروق التعليمي 🎓',
+    hero_description: 'بوابتكم التعليمية الذكية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز بالمنهج السوداني المطور.',
+    about_text: 'مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد متخصص لتقديم المنهج السوداني الرصين بكفاءة عالية عبر جميع المراحل.',
+    goals_text: 'تقديم تعليم متميز يتوافق مع المعاير التربوية الحديثة، وتعزيز القيم الأخلاقية والوطنية الراسخة في الطلاب.',
+    solutions_text: 'بوابة إلكترونية متقدمة تتضمن لوحة تحكم سحابية مخصصة لإدارة شؤون الطلاب، المعلمين، الحسابات، والنتائج بسهولة وموثوقية.',
+    developer_text: 'تصميم وتطوير: الأستاذ عثمان صديق ( أبو حلا ) | 📱 01149169346'
+  });
 
-  // معالجة تسجيل الدخول والتحقق من جدول users
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg('');
+  const [boardMembers, setBoardMembers] = useState([]);
+  const [primaryStudents, setPrimaryStudents] = useState([]);
+  const [middleStudents, setMiddleStudents] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    try {
-      const cleanUsername = username.trim();
-      const cleanPassword = password.trim();
+  // جلب البيانات من Supabase عند التحميل
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
 
-      // البحث عن المستخدم في جدول users
-      const { data: userProfile, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', cleanUsername)
-        .maybeSingle();
+        // 1. جلب إعدادات النصوص العامة
+        const { data: settings } = await supabase.from('site_settings').select('*').single();
+        if (settings) setSiteSettings(prev => ({ ...prev, ...settings }));
 
-      if (error) {
-        throw new Error(`خطأ في الاتصال بقاعدة البيانات: ${error.message}`);
+        // 2. جلب أعضاء مجلس الإدارة (5 أعضاء)
+        const { data: board } = await supabase.from('board_members').select('*').limit(5);
+        if (board && board.length > 0) setBoardMembers(board);
+
+        // 3. جلب متفوقي المرحلة الابتدائية (5 طلاب)
+        const { data: priStudents } = await supabase
+          .from('top_students')
+          .select('*')
+          .eq('stage', 'primary')
+          .limit(5);
+        if (priStudents && priStudents.length > 0) setPrimaryStudents(priStudents);
+
+        // 4. جلب متفوقي المرحلة المتوسطة (5 طلاب)
+        const { data: midStudents } = await supabase
+          .from('top_students')
+          .select('*')
+          .eq('stage', 'middle')
+          .limit(5);
+        if (midStudents && midStudents.length > 0) setMiddleStudents(midStudents);
+
+        // 5. جلب طاقم التدريس (25 معلم)
+        const { data: teacherList } = await supabase.from('teachers').select('*').limit(25);
+        if (teacherList && teacherList.length > 0) setTeachers(teacherList);
+
+      } catch (err) {
+        console.log('استخدام البيانات الافتراضية للواجهة');
+      } finally {
+        setLoading(false);
       }
-
-      if (!userProfile) {
-        throw new Error('اسم المستخدم غير مسجل في النظام.');
-      }
-
-      // مطابقة كلمة المرور مع الحقل password_code في الجدول
-      if (userProfile.password_code !== cleanPassword) {
-        throw new Error('كلمة المرور غير صحيحة.');
-      }
-
-      // تسجيل الدخول بنجاح والتوجيه
-      if (onLoginSuccess) {
-        onLoginSuccess(userProfile);
-      }
-      if (goToAdmin) {
-        goToAdmin();
-      }
-
-      setShowModal(false);
-    } catch (err) {
-      setErrorMsg(err.message);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    fetchData();
+  }, []);
 
   return (
-    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#1e293b', margin: 0, padding: 0 }}>
-      
-      {/* الهيدر العلوي */}
-      <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ backgroundColor: '#059669', color: '#fff', fontSize: '24px', padding: '8px 12px', borderRadius: '12px' }}>🏫</div>
+    <div style={styles.container}>
+      {/* 1. الشريط العلوي الرأسي (Header) */}
+      <header style={styles.header}>
+        <div style={styles.headerRight}>
+          <div style={styles.logoBadge}>🏫</div>
           <div>
-            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#0f172a' }}>مدرسة الشروق السودانية</h1>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>البوابة التعليمية المتكاملة</span>
+            <h1 style={styles.schoolName}>{siteSettings.school_name}</h1>
+            <p style={styles.schoolSubtitle}>{siteSettings.subtitle}</p>
           </div>
         </div>
 
-        <button 
-          onClick={() => setShowModal(true)} 
-          style={{ backgroundColor: '#059669', color: '#ffffff', border: 'none', padding: '10px 22px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
-        >
+        {/* زر بوابة النظام في أقصى اليمين/الأعلى */}
+        <button style={styles.systemPortalBtn} onClick={onLoginClick}>
           🔑 بوابة النظام
         </button>
       </header>
 
-      {/* المحتوى الرئيسي */}
-      <main style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 20px' }}>
-        <div style={{ backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px' }}>
-          <h2 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '15px' }}>مرحباً بكم في صرح الشروق التعليمي 🎓</h2>
-          <p style={{ color: '#475569', fontSize: '16px', lineHeight: '1.6', margin: '0 auto', maxWidth: '700px' }}>
-            بوابتكم التعليمية الذكية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز بالمنهج السوداني المطور.
-          </p>
-          <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={{ backgroundColor: '#fef3c7', color: '#92400e', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #fde68a' }}>✨ توكل • نجاح • تفوق</span>
-            <span style={{ backgroundColor: '#d1fae5', color: '#065f46', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #a7f3d0' }}>📚 المنهج السوداني المطور</span>
+      {/* 2. القسم الترحيبي العشبي المتدرج (Hero Section) */}
+      <section style={styles.heroSection}>
+        <div style={styles.heroContent}>
+          <h2 style={styles.heroTitle}>{siteSettings.hero_title}</h2>
+          <p style={styles.heroDescription}>{siteSettings.hero_description}</p>
+          
+          <div style={styles.badgeContainer}>
+            <span style={styles.goldBadge}>🧚‍♂️ توكل • نجاح • تفوق</span>
+            <span style={styles.greenBadge}>📚 المنهج السوداني المطور</span>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#0f172a' }}>📖 مَن نحن؟</h3>
-            <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-              مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد متخصص لتقديم المنهج السوداني الرصين بكفاءة عالية عبر جميع المراحل.
-            </p>
-          </div>
-
-          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#0f172a' }}>🎯 أهدافنا ورسالتنا</h3>
-            <ul style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', paddingRight: '20px', margin: 0 }}>
-              <li>تقديم تعليم متميز يتوافق مع المعايير التربوية الحديثة.</li>
-              <li>تعزيز القيم الأخلاقية والوطنية الراسخة في الطلاب.</li>
-            </ul>
-          </div>
-
-          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#0f172a' }}>💼 الحلول الرقمية الذكية</h3>
-            <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-              بوابة إلكترونية متقدمة تتضمن لوحة تحكم سحابية مخصصة لإدارة شؤون الطلاب، المعلمين، الحسابات، والنتائج بسهولة وموثوقية.
-            </p>
-          </div>
+        {/* المنحنى الانسيابي الذهبي/الأبيض */}
+        <div style={styles.waveCurve}>
+          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,32L120,42.7C240,53,480,75,720,74.7C960,75,1200,53,1320,42.7L1440,32L1440,120L1320,120C1200,120,960,120,720,120C480,120,240,120,120,120L0,120Z" fill="#ffffff"></path>
+          </svg>
         </div>
+      </section>
+
+      {/* 3. المحتوى الأبيض المنحني الأساسي */}
+      <main style={styles.mainContent}>
+
+        {/* البطاقات التعريفية الثلاث */}
+        <section style={styles.cardsGrid}>
+          <div style={styles.infoCard}>
+            <h3 style={styles.cardTitle}>📖 من نحن؟</h3>
+            <p style={styles.cardText}>{siteSettings.about_text}</p>
+          </div>
+
+          <div style={styles.infoCard}>
+            <h3 style={styles.cardTitle}>🎯 أهدافنا ورسالتنا</h3>
+            <p style={styles.cardText}>{siteSettings.goals_text}</p>
+          </div>
+
+          <div style={styles.infoCard}>
+            <h3 style={styles.cardTitle}>💼 الحلول الرقمية الذكية</h3>
+            <p style={styles.cardText}>{siteSettings.solutions_text}</p>
+          </div>
+        </section>
+
+        {/* 4. قسم مجلس الإدارة (5 أعضاء) */}
+        <section style={styles.sectionContainer}>
+          <h2 style={styles.sectionHeading}>🏛️ مجلس الإدارة</h2>
+          <div style={styles.membersGrid}>
+            {(boardMembers.length > 0 ? boardMembers : Array(5).fill({ name: 'اسم العضو', role: 'الصفة الإدارية' })).map((item, idx) => (
+              <div key={idx} style={styles.goldCard}>
+                <div style={styles.avatarCircle}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '👤'}</div>
+                <h4 style={styles.memberName}>{item.name}</h4>
+                <p style={styles.memberRole}>{item.role}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 5. قسم المتفوقين - المرحلة الابتدائية (5 طلاب) */}
+        <section style={styles.sectionContainer}>
+          <h2 style={styles.sectionHeading}>🌟 المتفوقون - المرحلة الابتدائية</h2>
+          <div style={styles.membersGrid}>
+            {(primaryStudents.length > 0 ? primaryStudents : Array(5).fill({ name: 'اسم الطالب/ة', grade: 'المرتبة الأولى' })).map((item, idx) => (
+              <div key={idx} style={styles.studentCard}>
+                <div style={styles.studentAvatar}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '⭐'}</div>
+                <h4 style={styles.memberName}>{item.name}</h4>
+                <span style={styles.studentGrade}>{item.grade}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 6. قسم المتفوقين - المرحلة المتوسطة (5 طلاب) */}
+        <section style={styles.sectionContainer}>
+          <h2 style={styles.sectionHeading}>🎓 المتفوقون - المرحلة المتوسطة</h2>
+          <div style={styles.membersGrid}>
+            {(middleStudents.length > 0 ? middleStudents : Array(5).fill({ name: 'اسم الطالب/ة', grade: 'المرتبة الأولى' })).map((item, idx) => (
+              <div key={idx} style={styles.studentCard}>
+                <div style={styles.studentAvatar}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '🏆'}</div>
+                <h4 style={styles.memberName}>{item.name}</h4>
+                <span style={styles.studentGrade}>{item.grade}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 7. قسم طاقم التدريس (25 معلم) */}
+        <section style={styles.sectionContainer}>
+          <h2 style={styles.sectionHeading}>👨‍🏫 طاقم التدريس المتميز</h2>
+          <div style={styles.teachersGrid}>
+            {(teachers.length > 0 ? teachers : Array(25).fill({ name: 'اسم المعلم/ة', subject: 'المادة الدراسية' })).map((item, idx) => (
+              <div key={idx} style={styles.teacherCard}>
+                <div style={styles.teacherAvatar}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '👨‍🏫'}</div>
+                <h5 style={styles.teacherName}>{item.name}</h5>
+                <p style={styles.teacherSubject}>{item.subject}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
       </main>
 
-      {/* نافذة تسجيل الدخول */}
-      {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '16px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            
-            <button 
-              onClick={() => setShowModal(false)}
-              style={{ position: 'absolute', top: '15px', left: '15px', border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer', color: '#94a3b8' }}
-            >
-              ✕
-            </button>
-
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{ width: '48px', height: '48px', backgroundColor: '#d1fae5', color: '#059669', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px auto', fontSize: '20px' }}>
-                🔒
-              </div>
-              <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px' }}>تسجيل دخول المستخدمين</h3>
-              <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#64748b' }}>أدخل بيانات حسابك المسجل للوصول للنظام</p>
-            </div>
-            
-            {errorMsg && (
-              <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px', textAlign: 'center' }}>
-                {errorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleLogin}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#334155' }}>اسم المستخدم</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={username} 
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="أدخل اسم المستخدم..."
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '14px', outline: 'none' }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#334155' }}>كلمة المرور</label>
-                <input 
-                  type="password" 
-                  required 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="أدخل كلمة المرور..."
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '14px', outline: 'none' }}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={loading}
-                style={{ width: '100%', backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', opacity: loading ? 0.7 : 1 }}
-              >
-                {loading ? 'جاري التحقق...' : 'دخول للنظام'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* الفوتر */}
-      <footer style={{ borderTop: '1px solid #e2e8f0', marginTop: '50px', padding: '20px', backgroundColor: '#ffffff', textAlign: 'center', fontSize: '14px', color: '#64748b' }}>
-        ✨ تصميم وتطوير: <strong>الأستاذ عثمان صديق ( أبو حلا )</strong> | 📱 01149169346
+      {/* 8. الشريط السفلي (Footer) */}
+      <footer style={styles.footer}>
+        <p style={styles.footerText}>✨ {siteSettings.developer_text}</p>
       </footer>
-
     </div>
   );
 }
+
+// التنسيقات البصرية والألوان (الأخضر الزمردي، الذهبي، والأبيض)
+const styles = {
+  container: {
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    backgroundColor: '#f8fafc',
+    direction: 'rtl',
+    minHeight: '100vh',
+    color: '#1e293b',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px 40px',
+    backgroundColor: '#ffffff',
+    borderBottom: '2px solid #d97706', // خط ذهبي رفيع
+    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  logoBadge: {
+    fontSize: '28px',
+    backgroundColor: '#065f46',
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#ffffff',
+  },
+  schoolName: {
+    margin: 0,
+    fontSize: '20px',
+    fontWeight: 'bold',
+    color: '#065f46', // أخضر زمردي
+  },
+  schoolSubtitle: {
+    margin: 0,
+    fontSize: '12px',
+    color: '#d97706', // ذهبي
+  },
+  systemPortalBtn: {
+    backgroundColor: '#065f46',
+    color: '#ffffff',
+    border: '2px solid #d97706',
+    padding: '10px 22px',
+    borderRadius: '25px',
+    fontWeight: 'bold',
+    fontSize: '14px',
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(6, 95, 70, 0.2)',
+    transition: 'transform 0.2s',
+  },
+  heroSection: {
+    background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)', // أخضر زمردي متدرج
+    color: '#ffffff',
+    paddingTop: '60px',
+    textAlign: 'center',
+    position: 'relative',
+  },
+  heroContent: {
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '0 20px',
+  },
+  heroTitle: {
+    fontSize: '32px',
+    fontWeight: 'bold',
+    marginBottom: '16px',
+  },
+  heroDescription: {
+    fontSize: '16px',
+    lineHeight: '1.6',
+    opacity: 0.95,
+    marginBottom: '24px',
+  },
+  badgeContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '12px',
+    flexWrap: 'wrap',
+    marginBottom: '40px',
+  },
+  goldBadge: {
+    backgroundColor: '#d97706',
+    color: '#ffffff',
+    padding: '6px 16px',
+    borderRadius: '20px',
+    fontSize: '13px',
+    fontWeight: 'bold',
+  },
+  greenBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    border: '1px solid #ffffff',
+    color: '#ffffff',
+    padding: '6px 16px',
+    borderRadius: '20px',
+    fontSize: '13px',
+  },
+  waveCurve: {
+    lineHeight: 0,
+    width: '100%',
+  },
+  mainContent: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 20px 60px 20px',
+  },
+  cardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '20px',
+    marginTop: '-30px',
+    position: 'relative',
+    zIndex: 10,
+  },
+  infoCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+    borderTop: '4px solid #065f46',
+  },
+  cardTitle: {
+    color: '#065f46',
+    margin: '0 0 12px 0',
+    fontSize: '18px',
+  },
+  cardText: {
+    color: '#475569',
+    fontSize: '14px',
+    lineHeight: '1.6',
+    margin: 0,
+  },
+  sectionContainer: {
+    marginTop: '50px',
+  },
+  sectionHeading: {
+    color: '#065f46',
+    fontSize: '22px',
+    borderRight: '5px solid #d97706',
+    paddingRight: '12px',
+    marginBottom: '24px',
+  },
+  membersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: '16px',
+  },
+  goldCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #fef3c7',
+    borderRadius: '12px',
+    padding: '16px',
+    textAlign: 'center',
+    boxShadow: '0 2px 8px rgba(217, 119, 6, 0.08)',
+  },
+  studentCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '16px',
+    textAlign: 'center',
+  },
+  teachersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+    gap: '14px',
+  },
+  teacherCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '10px',
+    padding: '14px',
+    textAlign: 'center',
+    border: '1px solid #f1f5f9',
+  },
+  avatarCircle: {
+    width: '60px',
+    height: '60px',
+    borderRadius: '50%',
+    backgroundColor: '#fef3c7',
+    color: '#d97706',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 10px auto',
+    fontSize: '24px',
+  },
+  studentAvatar: {
+    width: '55px',
+    height: '55px',
+    borderRadius: '50%',
+    backgroundColor: '#ecfdf5',
+    color: '#065f46',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 10px auto',
+    fontSize: '22px',
+  },
+  teacherAvatar: {
+    width: '50px',
+    height: '50px',
+    borderRadius: '50%',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 8px auto',
+    fontSize: '20px',
+  },
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover',
+  },
+  memberName: {
+    margin: '0 0 4px 0',
+    fontSize: '15px',
+    color: '#1e293b',
+  },
+  memberRole: {
+    margin: 0,
+    fontSize: '12px',
+    color: '#d97706',
+  },
+  studentGrade: {
+    fontSize: '12px',
+    backgroundColor: '#ecfdf5',
+    color: '#065f46',
+    padding: '2px 8px',
+    borderRadius: '10px',
+    fontWeight: 'bold',
+  },
+  teacherName: {
+    margin: '0 0 2px 0',
+    fontSize: '14px',
+    color: '#1e293b',
+  },
+  teacherSubject: {
+    margin: 0,
+    fontSize: '12px',
+    color: '#64748b',
+  },
+  footer: {
+    backgroundColor: '#ffffff',
+    borderTop: '1px solid #e2e8f0',
+    padding: '20px',
+    textAlign: 'center',
+  },
+  footerText: {
+    margin: 0,
+    fontSize: '13px',
+    color: '#475569',
+    fontWeight: 'bold',
+  },
+};
