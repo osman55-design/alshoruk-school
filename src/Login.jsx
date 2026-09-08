@@ -7,8 +7,8 @@ export default function Login({ onLoginSuccess, goToLanding }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // دالة الدخول المباشرة عند الضغط على الزر
-  const executeLogin = async () => {
+  const executeLogin = async (e) => {
+    if (e) e.preventDefault();
     setErrorMsg('');
 
     if (!username.trim() || !passwordCode.trim()) {
@@ -26,18 +26,18 @@ export default function Login({ onLoginSuccess, goToLanding }) {
         .eq('password_code', passwordCode.trim())
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message || 'فشل الاتصال بقاعدة البيانات');
+      }
 
       if (!user) {
         setErrorMsg('اسم المستخدم أو كلمة المرور غير صحيحة!');
       } else {
-        if (onLoginSuccess) {
-          onLoginSuccess(user);
-        }
+        if (onLoginSuccess) onLoginSuccess(user);
       }
     } catch (err) {
       console.error('Login Error:', err);
-      setErrorMsg('حدث خطأ أثناء الاتصال بقاعدة البيانات: ' + err.message);
+      setErrorMsg('خطأ: ' + (err.message || 'تعذر الاتصال بـ Supabase. تأكدي من إعدادات Vercel'));
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ export default function Login({ onLoginSuccess, goToLanding }) {
 
         {errorMsg && <div style={styles.errorAlert}>{errorMsg}</div>}
 
-        <div style={styles.form}>
+        <form onSubmit={executeLogin} style={styles.form}>
           <div style={styles.inputGroup}>
             <label style={styles.label}>اسم المستخدم:</label>
             <input
@@ -77,14 +77,13 @@ export default function Login({ onLoginSuccess, goToLanding }) {
           </div>
 
           <button 
-            type="button" 
-            onClick={executeLogin} 
+            type="submit" 
             disabled={loading} 
             style={styles.submitBtn}
           >
             {loading ? 'جاري التحقق...' : 'دخول للبوابة 🔑'}
           </button>
-        </div>
+        </form>
 
         {goToLanding && (
           <button type="button" onClick={goToLanding} style={styles.backBtn}>
