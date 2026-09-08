@@ -10,7 +10,8 @@ import SupervisorsSection from './components/ClassSupervisorsSection';
 import HomeSettingsSection from './components/HomeSettingsSection';
 
 export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
-  const [activeTab, setActiveTab] = useState('students');
+  // فتح النظام مباشرة على "إدارة الصفحة الرئيسية" عند تسجيل الدخول
+  const [activeTab, setActiveTab] = useState('home_settings');
 
   // التأكد التام أنكِ الأدمن الرئيسي ومديرة النظام
   const isAdmin = 
@@ -44,7 +45,7 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
-      {/* هيدر شريط الإدارة العلوي بتصميم عصري نظيف */}
+      {/* هيدر شريط الإدارة العلوي */}
       <header style={{ padding: '16px 4%', background: 'linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)', boxShadow: '0 4px 20px rgba(4,120,87,0.2)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           
@@ -61,17 +62,11 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
             </div>
           </div>
 
-          {/* أزرار الإجراءات العليا (الواجهة والخروج) */}
+          {/* زر الخروج فقط (تم حذف زر الواجهة الرئيسية نهائياً) */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <button 
-              onClick={goToLanding} 
-              style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(4px)' }}
-            >
-              🏠 الواجهة الرئيسية
-            </button>
-            <button 
               onClick={onLogout} 
-              style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '8px 14px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               خروج 🚪
             </button>
