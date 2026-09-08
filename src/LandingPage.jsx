@@ -12,6 +12,7 @@ export default function LandingPage({ goToLogin }) {
   const [boardMembers, setBoardMembers] = useState([]);
   const [primaryStudents, setPrimaryStudents] = useState([]);
   const [middleStudents, setMiddleStudents] = useState([]);
+  const [secondaryStudents, setSecondaryStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
 
   useEffect(() => {
@@ -29,6 +30,9 @@ export default function LandingPage({ goToLogin }) {
         const { data: midStudents } = await supabase.from('top_students').select('*').eq('stage', 'middle').limit(5);
         if (midStudents) setMiddleStudents(midStudents);
 
+        const { data: secStudents } = await supabase.from('top_students').select('*').eq('stage', 'secondary').limit(5);
+        if (secStudents) setSecondaryStudents(secStudents);
+
         const { data: teacherList } = await supabase.from('teachers').select('*').limit(25);
         if (teacherList) setTeachers(teacherList);
       } catch (err) {
@@ -40,7 +44,7 @@ export default function LandingPage({ goToLogin }) {
 
   return (
     <div style={styles.container}>
-      {/* إدراج تنسيقات السحب الأفقي للموبايل */}
+      {/* تنسيقات السحب الأفقي للموبايل */}
       <style>{`
         .scroll-container {
           display: flex;
@@ -59,18 +63,29 @@ export default function LandingPage({ goToLogin }) {
         }
         .scroll-item {
           scroll-snap-align: start;
-          flex: 0 0 160px; /* عرض مناسب يتيح رؤية عدة عناصر أو التمرير بسلاسة على الموبايل */
+          flex: 0 0 150px;
         }
       `}</style>
 
-      {/* الهيدر العلوي */}
+      {/* الهيدر العلوي المنسق الأنيق بخلفية خضراء فاتحة */}
       <header style={styles.header}>
-        <button type="button" style={styles.systemPortalBtn} onClick={goToLogin}>
-          🔑 بوابة النظام
-        </button>
+        {/* الصف العلوي: زر البوابة والشعار متناسقان على نفس المستوى */}
+        <div style={styles.headerTopRow}>
+          <button type="button" style={styles.systemPortalBtn} onClick={goToLogin}>
+            🔑 بوابة النظام
+          </button>
 
-        <div style={styles.logoContainer}>
-          <img src="/logo.png" alt="شعار المدرسة" style={styles.logoImage} />
+          <div style={styles.logoContainer}>
+            <img src="/logo.png" alt="شعار المدرسة" style={styles.logoImage} />
+          </div>
+        </div>
+
+        {/* الصف السفلي: شريط المراحل التعليمية المنسق */}
+        <div style={styles.stagesBar}>
+          <span style={styles.stageBadge}>👶 روضة</span>
+          <span style={styles.stageBadge}>🎒 ابتدائي</span>
+          <span style={styles.stageBadge}>📚 متوسط</span>
+          <span style={styles.stageBadge}>🎓 ثانوي</span>
         </div>
       </header>
 
@@ -161,6 +176,29 @@ export default function LandingPage({ goToLogin }) {
           </div>
         </section>
 
+        {/* المتفوقون - المرحلة الثانوية */}
+        <section style={styles.sectionContainer}>
+          <h2 style={styles.sectionHeading}>👑 المتفوقون - المرحلة الثانوية</h2>
+          <div className="scroll-container">
+            {(secondaryStudents.length > 0 ? secondaryStudents : [
+              { name: 'مصطفى عثمان', grade: 'المرتبة الأولى', total_score: '99.4%' },
+              { name: 'آية الصادق', grade: 'المرتبة الثانية', total_score: '98.8%' },
+              { name: 'ياسين أحمد', grade: 'المرتبة الثالثة', total_score: '98.0%' },
+              { name: 'هبة عمر', grade: 'المرتبة الرابعة', total_score: '97.5%' },
+              { name: 'هشام الهادي', grade: 'المرتبة الخامسة', total_score: '96.9%' },
+            ]).map((item, idx) => (
+              <div key={idx} className="scroll-item" style={styles.studentCard}>
+                <div style={styles.studentAvatar}>{item.avatar ? <img src={item.avatar} alt="" style={styles.avatarImg} /> : '👑'}</div>
+                <h4 style={styles.memberName}>{item.name}</h4>
+                <div style={styles.badgeGroup}>
+                  <span style={styles.studentGrade}>{item.grade || 'المرتبة'}</span>
+                  <span style={styles.scoreBadge}>الدرجة: {item.total_score || item.score || '99%'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* طاقم التدريس */}
         <section style={styles.sectionContainer}>
           <h2 style={styles.sectionHeading}>👨‍🏫 طاقم التدريس المتميز</h2>
@@ -197,22 +235,26 @@ const styles = {
     color: '#1e293b',
   },
   header: {
+    backgroundColor: '#ecfdf5', // خلفية خضراء فاتحة بالكامل
+    borderBottom: '3px solid #065f46',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
+    padding: '12px 20px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    borderRadius: '0 0 16px 16px',
+  },
+  headerTopRow: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '12px 20px',
-    backgroundColor: '#ffffff',
-    borderBottom: '3px solid #d97706',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-    maxWidth: '1200px',
-    margin: '0 auto',
+    marginBottom: '12px',
   },
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
   },
   logoImage: {
-    height: '85px',
+    height: '60px', // حجم متناسق وأنيق للشعار
     width: 'auto',
     objectFit: 'contain',
   },
@@ -220,12 +262,32 @@ const styles = {
     backgroundColor: '#065f46',
     color: '#ffffff',
     border: '2px solid #d97706',
-    padding: '8px 20px',
-    borderRadius: '25px',
+    padding: '8px 18px',
+    borderRadius: '20px',
     fontWeight: 'bold',
-    fontSize: '14px',
+    fontSize: '13px',
     cursor: 'pointer',
-    boxShadow: '0 4px 10px rgba(6, 95, 70, 0.15)',
+    boxShadow: '0 2px 8px rgba(6, 95, 70, 0.15)',
+    whiteSpace: 'nowrap',
+  },
+  stagesBar: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'wrap',
+    paddingTop: '8px',
+    borderTop: '1px solid #a7f3d0',
+  },
+  stageBadge: {
+    backgroundColor: '#ffffff',
+    color: '#065f46',
+    border: '1px solid #6ee7b7',
+    padding: '4px 12px',
+    borderRadius: '15px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
     whiteSpace: 'nowrap',
   },
   mainContent: {
@@ -261,7 +323,7 @@ const styles = {
   },
   sectionHeading: {
     color: '#065f46',
-    fontSize: '20px',
+    fontSize: '19px',
     borderRight: '5px solid #d97706',
     paddingRight: '10px',
     marginBottom: '16px',
@@ -305,8 +367,8 @@ const styles = {
     boxSizing: 'border-box',
   },
   avatarCircle: {
-    width: '55px',
-    height: '55px',
+    width: '50px',
+    height: '50px',
     borderRadius: '50%',
     backgroundColor: '#fef3c7',
     color: '#d97706',
@@ -314,11 +376,11 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: '8px',
-    fontSize: '22px',
+    fontSize: '20px',
   },
   studentAvatar: {
-    width: '50px',
-    height: '50px',
+    width: '48px',
+    height: '48px',
     borderRadius: '50%',
     backgroundColor: '#ecfdf5',
     color: '#065f46',
@@ -326,18 +388,18 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: '8px',
-    fontSize: '20px',
+    fontSize: '18px',
   },
   teacherAvatar: {
-    width: '48px',
-    height: '48px',
+    width: '45px',
+    height: '45px',
     borderRadius: '50%',
     backgroundColor: '#f8fafc',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: '8px',
-    fontSize: '20px',
+    fontSize: '18px',
   },
   avatarImg: {
     width: '100%',
@@ -347,17 +409,17 @@ const styles = {
   },
   memberName: {
     margin: '0 0 4px 0',
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 'bold',
     color: '#1e293b',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    maxWidth: '140px',
+    maxWidth: '130px',
   },
   memberRole: {
     margin: 0,
-    fontSize: '12px',
+    fontSize: '11px',
     color: '#d97706',
     fontWeight: 'bold',
   },
@@ -386,17 +448,17 @@ const styles = {
   },
   teacherName: {
     margin: '0 0 4px 0',
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 'bold',
     color: '#1e293b',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    maxWidth: '140px',
+    maxWidth: '130px',
   },
   teacherSubject: {
     margin: 0,
-    fontSize: '12px',
+    fontSize: '11px',
     color: '#065f46',
     fontWeight: 'bold',
   },
