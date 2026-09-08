@@ -1,178 +1,186 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from './supabaseClient';
 
-export default function LandingPage({ onOpenLogin, onBackToDashboard, schoolLogo }) {
-  const [logoUrl, setLogoUrl] = useState(schoolLogo || null);
-  const [news, setNews] = useState([]);
-  const [boardMembers, setBoardMembers] = useState([]);
-  const [primaryTopStudents, setPrimaryTopStudents] = useState([]);
-  const [middleTopStudents, setMiddleTopStudents] = useState([]);
-  const [isPaused, setIsPaused] = useState(false);
+export default function LandingPage({ onLoginSuccess, goToAdmin }) {
+  const [showModal, setShowModal] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // معالجة تسجيل الدخول والتحقق من جدول users
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
 
-  const loadData = async () => {
     try {
-      // 1. الشعار
-      const { data: logoData } = await supabase.from('school_settings').select('logo_url').single();
-      if (logoData?.logo_url) setLogoUrl(logoData.logo_url);
+      const cleanUsername = username.trim();
+      const cleanPassword = password.trim();
 
-      // 2. الأخبار
-      const { data: newsData } = await supabase.from('news').select('*').order('created_at', { ascending: false });
-      if (newsData) setNews(newsData);
+      // البحث عن المستخدم في جدول users
+      const { data: userProfile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', cleanUsername)
+        .maybeSingle();
 
-      // 3. أعضاء مجلس الإدارة
-      const { data: boardData } = await supabase.from('board_members').select('*');
-      if (boardData) setBoardMembers(boardData);
+      if (error) {
+        throw new Error(`خطأ في الاتصال بقاعدة البيانات: ${error.message}`);
+      }
 
-      // 4. المتفوقين
-      const { data: primData } = await supabase.from('top_students').select('*').eq('stage', 'primary');
-      if (primData) setPrimaryTopStudents(primData);
+      if (!userProfile) {
+        throw new Error('اسم المستخدم غير مسجل في النظام.');
+      }
 
-      const { data: midData } = await supabase.from('top_students').select('*').eq('stage', 'middle');
-      if (midData) setMiddleTopStudents(midData);
+      // مطابقة كلمة المرور مع الحقل password_code في الجدول
+      if (userProfile.password_code !== cleanPassword) {
+        throw new Error('كلمة المرور غير صحيحة.');
+      }
+
+      // تسجيل الدخول بنجاح والتوجيه
+      if (onLoginSuccess) {
+        onLoginSuccess(userProfile);
+      }
+      if (goToAdmin) {
+        goToAdmin();
+      }
+
+      setShowModal(false);
     } catch (err) {
-      console.log('Notice:', err.message);
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ fontFamily: 'Cairo, sans-serif', direction: 'rtl', textAlign: 'right', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#1e293b' }}>
+    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#1e293b', margin: 0, padding: 0 }}>
       
-      {/* 1. الهيدر والشعار واسم المدرسة */}
-      <header style={{ background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)', color: '#fff', padding: '20px 40px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            {logoUrl ? (
-              <img src={logoUrl} alt="شعار المدرسة" style={{ width: '65px', height: '65px', objectFit: 'contain', borderRadius: '50%', background: '#fff', padding: '3px' }} />
-            ) : (
-              <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 'bold' }}>
-                ☀️
-              </div>
-            )}
-            <div>
-              <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', color: '#fbbf24' }}>مدرسة الشروق السودانية بأسوان</h1>
-              <span style={{ fontSize: '13px', opacity: 0.9 }}>العلم والتربية لبناء المستقبل</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            {onBackToDashboard && (
-              <button onClick={onBackToDashboard} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid #fff', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>
-                لوحة التحكم
-              </button>
-            )}
-            {/* استدعاء دالة الدخول الأصلية الخاصة بك كما هي */}
-            <button 
-              onClick={onOpenLogin}
-              style={{ background: '#d97706', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              🔐 بوابة الدخول
-            </button>
+      {/* الهيدر العلوي */}
+      <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ backgroundColor: '#059669', color: '#fff', fontSize: '24px', padding: '8px 12px', borderRadius: '12px' }}>🏫</div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#0f172a' }}>مدرسة الشروق السودانية</h1>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>البوابة التعليمية المتكاملة</span>
           </div>
         </div>
+
+        <button 
+          onClick={() => setShowModal(true)} 
+          style={{ backgroundColor: '#059669', color: '#ffffff', border: 'none', padding: '10px 22px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+        >
+          🔑 بوابة النظام
+        </button>
       </header>
 
-      {/* 2. شريط الأخبار المتحرك (يتوقف عند الوقوف بالماوس) */}
-      <div style={{ background: '#1e293b', color: '#fbbf24', padding: '10px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '3px solid #d97706' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center' }}>
-          <span style={{ background: '#d97706', color: '#fff', padding: '3px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', marginLeft: '15px', zIndex: 2 }}>
-            📢 شريط الأخبار:
-          </span>
-          <div 
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-            style={{
-              display: 'inline-block',
-              whiteSpace: 'nowrap',
-              animation: isPaused ? 'none' : 'marquee 25s linear infinite',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            {news.length > 0 ? (
-              news.map((item, idx) => (
-                <span key={idx} style={{ marginLeft: '50px' }}>🔹 {item.title || item.content}</span>
-              ))
-            ) : (
-              <span>🔹 مرحباً بكم في مدرسة الشروق السودانية بأسوان - بداية العام الدراسي الجديد.</span>
-            )}
+      {/* المحتوى الرئيسي */}
+      <main style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 20px' }}>
+        <div style={{ backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px' }}>
+          <h2 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '15px' }}>مرحباً بكم في صرح الشروق التعليمي 🎓</h2>
+          <p style={{ color: '#475569', fontSize: '16px', lineHeight: '1.6', margin: '0 auto', maxWidth: '700px' }}>
+            بوابتكم التعليمية الذكية لترسيخ المعرفة العريقة وبناء مستقبل أكاديمي متميز بالمنهج السوداني المطور.
+          </p>
+          <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span style={{ backgroundColor: '#fef3c7', color: '#92400e', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #fde68a' }}>✨ توكل • نجاح • تفوق</span>
+            <span style={{ backgroundColor: '#d1fae5', color: '#065f46', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #a7f3d0' }}>📚 المنهج السوداني المطور</span>
           </div>
         </div>
-      </div>
 
-      {/* 3. أقسام المحتوى */}
-      <main style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 20px' }}>
-        
-        {/* قسم من نحن */}
-        <section style={{ background: '#fff', borderRadius: '12px', padding: '30px', marginBottom: '30px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderRight: '5px solid #065f46' }}>
-          <h2 style={{ color: '#065f46', marginTop: 0, fontSize: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-            📖 من نحن
-          </h2>
-          <p style={{ lineHeight: '1.8', color: '#475569', fontSize: '15px' }}>
-            مدرسة الشروق السودانية بأسوان هي صرح تعليمي تربوي يهدف إلى تقديم أفضل المناهج والخبرات التعليمية للطلاب السودانيين بأسوان. نسعى لبناء جيل متميز أكاديمياً وأخلاقياً ضمن بيئة تعليمية متكاملة ومشجعة على الإبداع والنجاح.
-          </p>
-        </section>
-
-        {/* قسم أعضاء مجلس الإدارة */}
-        <section style={{ background: '#fff', borderRadius: '12px', padding: '30px', marginBottom: '30px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderRight: '5px solid #d97706' }}>
-          <h2 style={{ color: '#065f46', marginTop: 0, fontSize: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-            👥 أعضاء مجلس الإدارة
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '20px' }}>
-            {boardMembers.length > 0 ? (
-              boardMembers.map((member, idx) => (
-                <div key={idx} style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                  {member.photo_url && <img src={member.photo_url} alt={member.name} style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', marginBottom: '8px' }} />}
-                  <h4 style={{ margin: '5px 0', color: '#1e293b' }}>{member.name}</h4>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>{member.role || member.title}</p>
-                </div>
-              ))
-            ) : (
-              <p style={{ color: '#64748b', fontSize: '14px' }}>سيتم عرض أعضاء مجلس الإدارة قريباً.</p>
-            )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#0f172a' }}>📖 مَن نحن؟</h3>
+            <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+              مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد متخصص لتقديم المنهج السوداني الرصين بكفاءة عالية عبر جميع المراحل.
+            </p>
           </div>
-        </section>
 
-        {/* قسم الأوائل */}
-        <section style={{ background: '#fff', borderRadius: '12px', padding: '30px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderRight: '5px solid #065f46' }}>
-          <h2 style={{ color: '#065f46', marginTop: 0, fontSize: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-            🏆 الطلاب المتفوقون
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
-            <div>
-              <h3 style={{ color: '#d97706', fontSize: '16px' }}>الشهادة الابتدائية</h3>
-              {primaryTopStudents.length > 0 ? (
-                primaryTopStudents.map((st, i) => <div key={i}>🥇 {st.name} ({st.score}%)</div>)
-              ) : <p style={{ fontSize: '13px', color: '#94a3b8' }}>لا يوجد بيانات حالياً</p>}
-            </div>
-            <div>
-              <h3 style={{ color: '#d97706', fontSize: '16px' }}>الشهادة المتوسطة</h3>
-              {middleTopStudents.length > 0 ? (
-                middleTopStudents.map((st, i) => <div key={i}>🥇 {st.name} ({st.score}%)</div>)
-              ) : <p style={{ fontSize: '13px', color: '#94a3b8' }}>لا يوجد بيانات حالياً</p>}
-            </div>
+          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#0f172a' }}>🎯 أهدافنا ورسالتنا</h3>
+            <ul style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', paddingRight: '20px', margin: 0 }}>
+              <li>تقديم تعليم متميز يتوافق مع المعايير التربوية الحديثة.</li>
+              <li>تعزيز القيم الأخلاقية والوطنية الراسخة في الطلاب.</li>
+            </ul>
           </div>
-        </section>
 
+          <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#0f172a' }}>💼 الحلول الرقمية الذكية</h3>
+            <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+              بوابة إلكترونية متقدمة تتضمن لوحة تحكم سحابية مخصصة لإدارة شؤون الطلاب، المعلمين، الحسابات، والنتائج بسهولة وموثوقية.
+            </p>
+          </div>
+        </div>
       </main>
 
-      {/* 4. الفوتر */}
-      <footer style={{ background: '#064e3b', color: '#fff', padding: '25px', textAlign: 'center', marginTop: '40px', borderTop: '3px solid #d97706' }}>
-        <p style={{ margin: '5px 0' }}>📞 للتواصل: 01149169346 | 📍 أسوان، جمهورية مصر العربية</p>
-        <p style={{ margin: '5px 0', fontSize: '12px', opacity: 0.8 }}>حقوق الطبع والتطوير محفوظة - أستاذ عثمان صديق (01149169346)</p>
+      {/* نافذة تسجيل الدخول */}
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '16px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            
+            <button 
+              onClick={() => setShowModal(false)}
+              style={{ position: 'absolute', top: '15px', left: '15px', border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer', color: '#94a3b8' }}
+            >
+              ✕
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ width: '48px', height: '48px', backgroundColor: '#d1fae5', color: '#059669', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px auto', fontSize: '20px' }}>
+                🔒
+              </div>
+              <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px' }}>تسجيل دخول المستخدمين</h3>
+              <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#64748b' }}>أدخل بيانات حسابك المسجل للوصول للنظام</p>
+            </div>
+            
+            {errorMsg && (
+              <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px', textAlign: 'center' }}>
+                {errorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#334155' }}>اسم المستخدم</label>
+                <input 
+                  type="text" 
+                  required 
+                  value={username} 
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="أدخل اسم المستخدم..."
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '14px', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#334155' }}>كلمة المرور</label>
+                <input 
+                  type="password" 
+                  required 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="أدخل كلمة المرور..."
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '14px', outline: 'none' }}
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading}
+                style={{ width: '100%', backgroundColor: '#059669', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', opacity: loading ? 0.7 : 1 }}
+              >
+                {loading ? 'جاري التحقق...' : 'دخول للنظام'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* الفوتر */}
+      <footer style={{ borderTop: '1px solid #e2e8f0', marginTop: '50px', padding: '20px', backgroundColor: '#ffffff', textAlign: 'center', fontSize: '14px', color: '#64748b' }}>
+        ✨ تصميم وتطوير: <strong>الأستاذ عثمان صديق ( أبو حلا )</strong> | 📱 01149169346
       </footer>
 
-      {/* الحركة الخاصة بالشريط */}
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 }
