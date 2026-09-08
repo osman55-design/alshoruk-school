@@ -7,8 +7,8 @@ export default function Login({ onLoginSuccess, goToLanding }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // دالة الدخول المباشرة عند الضغط على الزر
+  const executeLogin = async () => {
     setErrorMsg('');
 
     if (!username.trim() || !passwordCode.trim()) {
@@ -53,7 +53,7 @@ export default function Login({ onLoginSuccess, goToLanding }) {
 
         {errorMsg && <div style={styles.errorAlert}>{errorMsg}</div>}
 
-        <form onSubmit={handleLogin} style={styles.form}>
+        <div style={styles.form}>
           <div style={styles.inputGroup}>
             <label style={styles.label}>اسم المستخدم:</label>
             <input
@@ -62,7 +62,6 @@ export default function Login({ onLoginSuccess, goToLanding }) {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="مثال: ahmed_m"
               style={styles.input}
-              required
             />
           </div>
 
@@ -74,17 +73,21 @@ export default function Login({ onLoginSuccess, goToLanding }) {
               onChange={(e) => setPasswordCode(e.target.value)}
               placeholder="****"
               style={styles.input}
-              required
             />
           </div>
 
-          <button type="submit" disabled={loading} style={styles.submitBtn}>
+          <button 
+            type="button" 
+            onClick={executeLogin} 
+            disabled={loading} 
+            style={styles.submitBtn}
+          >
             {loading ? 'جاري التحقق...' : 'دخول للبوابة 🔑'}
           </button>
-        </form>
+        </div>
 
         {goToLanding && (
-          <button onClick={goToLanding} style={styles.backBtn}>
+          <button type="button" onClick={goToLanding} style={styles.backBtn}>
             ⬅️ العودة للصفحة الرئيسية
           </button>
         )}
