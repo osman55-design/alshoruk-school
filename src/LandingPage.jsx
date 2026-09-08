@@ -3,8 +3,6 @@ import { supabase } from './supabaseClient';
 
 export default function LandingPage({ goToLogin }) {
   const [siteSettings, setSiteSettings] = useState({
-    school_name: 'مدرسة الشروق السودانية',
-    subtitle: 'البوابة التعليمية المتكاملة',
     about_text: 'مدرسة الشروق السودانية المتكاملة هي صرح تعليمي رائد متخصص لتقديم المنهج السوداني الرصين بكفاءة عالية عبر جميع المراحل.',
     goals_text: 'تقديم تعليم متميز يتوافق مع المعايير التربوية الحديثة، وتعزيز القيم الأخلاقية والوطنية الراسخة في الطلاب.',
     solutions_text: 'بوابة إلكترونية متقدمة تتضمن لوحة تحكم سحابية مخصصة لإدارة شؤون الطلاب، المعلمين، الحسابات، والنتائج بسهولة وموثوقية.',
@@ -42,22 +40,18 @@ export default function LandingPage({ goToLogin }) {
 
   return (
     <div style={styles.container}>
-      {/* الهيدر العلوي */}
+      {/* الهيدر العلوي المتجاوب */}
       <header style={styles.header}>
         <button type="button" style={styles.systemPortalBtn} onClick={goToLogin}>
           🔑 بوابة النظام
         </button>
 
-        <div style={styles.headerRight}>
-          <div>
-            <h1 style={styles.schoolName}>{siteSettings.school_name}</h1>
-            <p style={styles.schoolSubtitle}>{siteSettings.subtitle}</p>
-          </div>
-          <div style={styles.logoBadge}>🏫</div>
+        <div style={styles.logoContainer}>
+          <img src="/logo.png" alt="شعارات المدرسة" style={styles.logoImage} />
         </div>
       </header>
 
-      {/* المحتوى الرئيسي مباشرة دون الشريط الأخضر */}
+      {/* المحتوى الرئيسي */}
       <main style={styles.mainContent}>
 
         {/* الكروت الثلاثة */}
@@ -156,97 +150,84 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '16px 40px',
+    padding: '12px 20px',
     backgroundColor: '#ffffff',
     borderBottom: '2px solid #d97706',
     boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: '12px',
   },
-  logoBadge: {
-    fontSize: '28px',
-    backgroundColor: '#065f46',
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
+  logoContainer: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    color: '#ffffff',
+    maxWidth: '100%',
   },
-  schoolName: {
-    margin: 0,
-    fontSize: '20px',
-    fontWeight: 'bold',
-    color: '#065f46',
-  },
-  schoolSubtitle: {
-    margin: 0,
-    fontSize: '12px',
-    color: '#d97706',
+  logoImage: {
+    maxHeight: '65px',
+    maxWidth: '100%',
+    height: 'auto',
+    objectFit: 'contain',
   },
   systemPortalBtn: {
     backgroundColor: '#065f46',
     color: '#ffffff',
     border: '2px solid #d97706',
-    padding: '10px 22px',
+    padding: '8px 18px',
     borderRadius: '25px',
     fontWeight: 'bold',
-    fontSize: '14px',
+    fontSize: '13px',
     cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(6, 95, 70, 0.2)',
+    boxShadow: '0 4px 10px rgba(6, 95, 70, 0.15)',
+    whiteSpace: 'nowrap',
   },
   mainContent: {
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: '40px 20px 60px 20px',
+    padding: '24px 16px 60px 16px',
   },
   cardsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '20px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '16px',
   },
   infoCard: {
     backgroundColor: '#ffffff',
     borderRadius: '16px',
-    padding: '24px',
+    padding: '20px',
     boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
     borderTop: '4px solid #065f46',
   },
   cardTitle: {
     color: '#065f46',
-    margin: '0 0 12px 0',
-    fontSize: '18px',
+    margin: '0 0 10px 0',
+    fontSize: '17px',
   },
   cardText: {
     color: '#475569',
-    fontSize: '14px',
+    fontSize: '13px',
     lineHeight: '1.6',
     margin: 0,
   },
   sectionContainer: {
-    marginTop: '50px',
+    marginTop: '40px',
   },
   sectionHeading: {
     color: '#065f46',
-    fontSize: '22px',
+    fontSize: '20px',
     borderRight: '5px solid #d97706',
-    paddingRight: '12px',
-    marginBottom: '24px',
+    paddingRight: '10px',
+    marginBottom: '20px',
   },
   membersGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '16px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+    gap: '12px',
   },
   goldCard: {
     backgroundColor: '#ffffff',
     border: '1px solid #fef3c7',
     borderRadius: '12px',
-    padding: '16px',
+    padding: '14px',
     textAlign: 'center',
     boxShadow: '0 2px 8px rgba(217, 119, 6, 0.08)',
   },
@@ -254,56 +235,56 @@ const styles = {
     backgroundColor: '#ffffff',
     border: '1px solid #e2e8f0',
     borderRadius: '12px',
-    padding: '16px',
+    padding: '14px',
     textAlign: 'center',
   },
   teachersGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-    gap: '14px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+    gap: '12px',
   },
   teacherCard: {
     backgroundColor: '#ffffff',
     borderRadius: '10px',
-    padding: '14px',
+    padding: '12px',
     textAlign: 'center',
     border: '1px solid #f1f5f9',
     boxShadow: '0 2px 5px rgba(0,0,0,0.03)',
   },
   avatarCircle: {
-    width: '60px',
-    height: '60px',
+    width: '55px',
+    height: '55px',
     borderRadius: '50%',
     backgroundColor: '#fef3c7',
     color: '#d97706',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 10px auto',
-    fontSize: '24px',
+    margin: '0 auto 8px auto',
+    fontSize: '22px',
   },
   studentAvatar: {
-    width: '55px',
-    height: '55px',
+    width: '50px',
+    height: '50px',
     borderRadius: '50%',
     backgroundColor: '#ecfdf5',
     color: '#065f46',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 10px auto',
-    fontSize: '22px',
+    margin: '0 auto 8px auto',
+    fontSize: '20px',
   },
   teacherAvatar: {
-    width: '50px',
-    height: '50px',
+    width: '45px',
+    height: '45px',
     borderRadius: '50%',
     backgroundColor: '#f8fafc',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 8px auto',
-    fontSize: '20px',
+    margin: '0 auto 6px auto',
+    fontSize: '18px',
   },
   avatarImg: {
     width: '100%',
@@ -313,41 +294,41 @@ const styles = {
   },
   memberName: {
     margin: '0 0 4px 0',
-    fontSize: '15px',
+    fontSize: '14px',
     color: '#1e293b',
   },
   memberRole: {
     margin: 0,
-    fontSize: '12px',
+    fontSize: '11px',
     color: '#d97706',
   },
   studentGrade: {
-    fontSize: '12px',
+    fontSize: '11px',
     backgroundColor: '#ecfdf5',
     color: '#065f46',
-    padding: '2px 8px',
-    borderRadius: '10px',
+    padding: '2px 6px',
+    borderRadius: '8px',
     fontWeight: 'bold',
   },
   teacherName: {
     margin: '0 0 2px 0',
-    fontSize: '14px',
+    fontSize: '13px',
     color: '#1e293b',
   },
   teacherSubject: {
     margin: 0,
-    fontSize: '12px',
+    fontSize: '11px',
     color: '#64748b',
   },
   footer: {
     backgroundColor: '#ffffff',
     borderTop: '1px solid #e2e8f0',
-    padding: '20px',
+    padding: '16px',
     textAlign: 'center',
   },
   footerText: {
     margin: 0,
-    fontSize: '13px',
+    fontSize: '12px',
     color: '#475569',
     fontWeight: 'bold',
   },
