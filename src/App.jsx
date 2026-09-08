@@ -4,16 +4,14 @@ import Login from './Login';
 import AdminSystem from './AdminSystem';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'login' | 'admin'
+  const [currentView, setCurrentView] = useState('landing');
   const [currentUser, setCurrentUser] = useState(null);
 
-  // عند نجاح عملية تسجيل الدخول من ملف Login.jsx
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
     setCurrentView('admin');
   };
 
-  // عند تسجيل الخروج
   const handleLogout = () => {
     setCurrentUser(null);
     setCurrentView('landing');
@@ -21,12 +19,10 @@ export default function App() {
 
   return (
     <div>
-      {/* 1. الواجهة الرئيسية */}
       {currentView === 'landing' && (
         <LandingPage onGoToPortal={() => setCurrentView('login')} />
       )}
 
-      {/* 2. شاشة تسجيل الدخول */}
       {currentView === 'login' && (
         <Login
           onLoginSuccess={handleLoginSuccess}
@@ -34,7 +30,6 @@ export default function App() {
         />
       )}
 
-      {/* 3. لوحة التحكم والإدارة */}
       {currentView === 'admin' && (
         <AdminSystem
           currentUser={currentUser}
