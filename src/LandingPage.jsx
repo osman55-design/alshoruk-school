@@ -9,6 +9,12 @@ export default function LandingPage({ goToLogin }) {
     developer_text: 'تصميم وتطوير: الأستاذ عثمان صديق ( أبو حلا ) | 📱 01149169346'
   });
 
+  const [newsList, setNewsList] = useState([
+    'فتح باب التسجيل للعام الدراسي الجديد ٢٠٢٦ / ٢٠٢٧ م بجميع المراحل',
+    'تكريم الطلاب المتفوقين في امتحانات الفترة الدراسية الأولى',
+    'بدء الأنشطة الرياضية والثقافية والرحلات الميدانية للطلاب'
+  ]);
+
   const [boardMembers, setBoardMembers] = useState([]);
   const [primaryStudents, setPrimaryStudents] = useState([]);
   const [middleStudents, setMiddleStudents] = useState([]);
@@ -20,6 +26,11 @@ export default function LandingPage({ goToLogin }) {
       try {
         const { data: settings } = await supabase.from('site_settings').select('*').single();
         if (settings) setSiteSettings(prev => ({ ...prev, ...settings }));
+
+        const { data: newsData } = await supabase.from('school_news').select('title');
+        if (newsData && newsData.length > 0) {
+          setNewsList(newsData.map(n => n.title));
+        }
 
         const { data: board } = await supabase.from('board_members').select('*').limit(5);
         if (board) setBoardMembers(board);
@@ -44,7 +55,7 @@ export default function LandingPage({ goToLogin }) {
 
   return (
     <div style={styles.container}>
-      {/* تنسيقات التمرير الأفقي للموبايل */}
+      {/* التنسيقات الخاصة بالسحب والحركة */}
       <style>{`
         .scroll-container {
           display: flex;
@@ -65,15 +76,32 @@ export default function LandingPage({ goToLogin }) {
           scroll-snap-align: start;
           flex: 0 0 145px;
         }
+
+        /* تحريك شريط الأخبار من اليسار لليمين */
+        @keyframes scrollLeftToRight {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
+        .ticker-text-container {
+          display: flex;
+          align-items: center;
+          white-space: nowrap;
+          animation: scrollLeftToRight 25s linear infinite;
+        }
+        .ticker-wrapper:hover .ticker-text-container {
+          animation-play-state: paused;
+        }
       `}</style>
 
-      {/* الهيدر العلوي المدمج في سطر واحد */}
+      {/* الهيدر العلوي: الشعار يمين - المراحل في الوسط - البوابة شمال */}
       <header style={styles.header}>
-        <button type="button" style={styles.systemPortalBtn} onClick={goToLogin}>
-          🔑 بوابة النظام
-        </button>
+        {/* اليمين: الشعار */}
+        <div style={styles.logoContainer}>
+          <img src="/logo.png" alt="شعار المدرسة" style={styles.logoImage} />
+        </div>
 
-        {/* شريط المراحل المدمج في نفس السطر */}
+        {/* المنتصف: شريط المراحل */}
         <div style={styles.singleLineStages}>
           <span style={styles.stageChip}>👶 روضة</span>
           <span style={styles.stageChip}>🎒 ابتدائي</span>
@@ -81,13 +109,31 @@ export default function LandingPage({ goToLogin }) {
           <span style={styles.stageChip}>🎓 ثانوي</span>
         </div>
 
-        <div style={styles.logoContainer}>
-          <img src="/logo.png" alt="شعار المدرسة" style={styles.logoImage} />
-        </div>
+        {/* اليسار: بوابة النظام */}
+        <button type="button" style={styles.systemPortalBtn} onClick={goToLogin}>
+          🔑 بوابة النظام
+        </button>
       </header>
 
       {/* المحتوى الرئيسي */}
       <main style={styles.mainContent}>
+
+        {/* شريط أخبار المدرسة المتحرك (قبل قسم من نحن) */}
+        <section style={styles.newsTickerBar} className="ticker-wrapper">
+          <div style={styles.tickerTitleBadge}>
+            📢 آخر الأخبار:
+          </div>
+          <div style={styles.tickerContentOverflow}>
+            <div className="ticker-text-container">
+              {newsList.map((item, index) => (
+                <React.Fragment key={index}>
+                  <span style={styles.newsItemText}>{item}</span>
+                  <img src="/logo.png" alt="•" style={styles.newsSeparatorLogo} />
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* الكروت الثلاثة الرئيسية */}
         <section style={styles.cardsGrid}>
@@ -226,15 +272,14 @@ const styles = {
     backgroundColor: '#ecfdf5',
     borderBottom: '2px solid #a7f3d0',
     boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-    padding: '8px 16px',
+    padding: '8px 12px',
     maxWidth: '1200px',
     margin: '0 auto',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '10px',
-    flexWrap: 'nowrap',
-    overflowX: 'auto',
+    gap: '8px',
+    flexWrap: 'wrap',
   },
   logoContainer: {
     display: 'flex',
@@ -261,25 +306,67 @@ const styles = {
   singleLineStages: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: '4px',
     justifyContent: 'center',
-    flexShrink: 1,
-    overflow: 'hidden',
+    flexWrap: 'wrap',
   },
   stageChip: {
     backgroundColor: '#ffffff',
     color: '#065f46',
     border: '1px solid #a7f3d0',
-    padding: '3px 8px',
-    borderRadius: '12px',
-    fontSize: '11px',
+    padding: '2px 6px',
+    borderRadius: '10px',
+    fontSize: '10px',
     fontWeight: 'bold',
     whiteSpace: 'nowrap',
   },
   mainContent: {
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: '20px 16px 50px 16px',
+    padding: '16px 16px 50px 16px',
+  },
+  newsTickerBar: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #a7f3d0',
+    borderRadius: '10px',
+    padding: '6px 10px',
+    marginBottom: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    overflow: 'hidden',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+  },
+  tickerTitleBadge: {
+    backgroundColor: '#065f46',
+    color: '#ffffff',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    whiteSpace: 'nowrap',
+    zIndex: 2,
+    marginLeft: '10px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  tickerContentOverflow: {
+    overflow: 'hidden',
+    width: '100%',
+    position: 'relative',
+    direction: 'ltr',
+  },
+  newsItemText: {
+    fontSize: '13px',
+    color: '#1e293b',
+    fontWeight: '600',
+    padding: '0 10px',
+    direction: 'rtl',
+    display: 'inline-block',
+  },
+  newsSeparatorLogo: {
+    height: '18px',
+    width: 'auto',
+    margin: '0 15px',
+    verticalAlign: 'middle',
   },
   cardsGrid: {
     display: 'grid',
