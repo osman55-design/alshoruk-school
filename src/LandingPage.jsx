@@ -45,13 +45,10 @@ export default function LandingPage({ onGoToPortal }) {
 
   return (
     <div style={styles.container}>
-      {/* 1. الهيدر العلوي العصري */}
+      {/* 1. الهيدر العلوي */}
       <header style={styles.header}>
         <div style={styles.logoSection}>
-          <div style={styles.logoWrapper}>
-            <img src="/logo.png" alt="شعار المدرسة" style={styles.logo} onError={(e) => e.target.style.display = 'none'} />
-            <span style={styles.logoFallback}>ش</span>
-          </div>
+          <img src="/logo.png" alt="شعار المدرسة" style={styles.logo} onError={(e) => e.target.style.display = 'none'} />
           <h1 style={styles.schoolName}>مدرسة الشروق السودانية المتكاملة</h1>
         </div>
         <button type="button" onClick={onGoToPortal} style={styles.portalBtn}>
@@ -159,7 +156,7 @@ export default function LandingPage({ onGoToPortal }) {
         <p style={styles.designerCredit}>تم التصميم والتطوير بواسطة: <strong>أستاذ عثمان صديق</strong> 💻</p>
       </footer>
 
-      {/* تأثيرات الحركة والتصميم العصري الزجاجي */}
+      {/* التنسيقات والحركات */}
       <style>{`
         @keyframes scrollLeftToRight {
           0% { transform: translateX(-100%); }
@@ -170,15 +167,20 @@ export default function LandingPage({ onGoToPortal }) {
           white-space: nowrap;
           animation: scrollLeftToRight 30s linear infinite;
         }
-        ::-webkit-scrollbar {
-          width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-          background: #05130f;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: #065f46;
-          border-radius: 4px;
+        /* تحسين العرض الأفقى والتحكم بالبطاقات على الجوال */
+        @media (max-width: 768px) {
+          .cardGrid {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding-bottom: 10px;
+            scroll-snap-type: x mandatory;
+          }
+          .personCard {
+            min-width: 150px;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+          }
         }
       `}</style>
     </div>
@@ -188,78 +190,63 @@ export default function LandingPage({ onGoToPortal }) {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#05130f',
-    color: '#ffffff',
+    backgroundColor: '#0c0f0e', // خلفية داكنة وهادئة جداً ومريحة للعين
+    color: '#e2e8f0',
     direction: 'rtl',
     fontFamily: "'Cairo', 'Segoe UI', Tahoma, sans-serif",
     display: 'flex',
     flexDirection: 'column',
   },
   header: {
-    backgroundColor: 'rgba(7, 25, 19, 0.95)',
-    backdropFilter: 'blur(12px)',
-    padding: '15px 30px',
+    backgroundColor: '#121816',
+    padding: '12px 25px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid rgba(6, 95, 70, 0.5)',
+    borderBottom: '1px solid #1e2923',
     position: 'sticky',
     top: 0,
     zIndex: 100,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
   },
   logoSection: { display: 'flex', alignItems: 'center', gap: '12px' },
-  logoWrapper: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '12px',
-    background: 'linear-gradient(135deg, #f59e0b, #059669)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 10px rgba(245, 158, 11, 0.2)',
-  },
-  logo: { width: '100%', height: '100%', objectFit: 'contain', borderRadius: '12px' },
-  logoFallback: { fontSize: '18px', fontWeight: 'bold', color: '#05130f' },
-  schoolName: { fontSize: '18px', color: '#fbbf24', margin: 0, fontWeight: 'bold', letterSpacing: '0.5px' },
+  logo: { width: '42px', height: '42px', objectFit: 'contain' }, // تم إزالة الحواشي والخلفيات ليعرض الشعار صافياً
+  schoolName: { fontSize: '17px', color: '#fbbf24', margin: 0, fontWeight: 'bold' },
   portalBtn: {
-    background: 'linear-gradient(135deg, #059669, #047857)',
+    backgroundColor: '#047857',
     color: '#ffffff',
-    border: '1px solid rgba(251, 191, 36, 0.4)',
-    padding: '10px 22px',
-    borderRadius: '12px',
-    fontSize: '14px',
+    border: 'none',
+    padding: '8px 18px',
+    borderRadius: '8px',
+    fontSize: '13px',
     fontWeight: 'bold',
     cursor: 'pointer',
-    boxShadow: '0 4px 15px rgba(4, 120, 87, 0.4)',
-    transition: 'all 0.3s ease',
   },
   tickerContainer: {
-    backgroundColor: 'rgba(4, 47, 34, 0.9)',
-    color: '#ecfdf5',
+    backgroundColor: '#16221d',
+    color: '#d1fae5',
     display: 'flex',
     alignItems: 'center',
-    padding: '10px 20px',
-    fontSize: '14px',
+    padding: '8px 20px',
+    fontSize: '13px',
     overflow: 'hidden',
-    borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
+    borderBottom: '1px solid #1e2923',
   },
   tickerBadge: { 
     backgroundColor: '#fbbf24', 
-    color: '#05130f', 
-    padding: '3px 10px', 
-    borderRadius: '8px', 
+    color: '#0c0f0e', 
+    padding: '2px 8px', 
+    borderRadius: '6px', 
     fontWeight: 'bold', 
-    marginLeft: '15px', 
+    marginLeft: '12px', 
     whiteSpace: 'nowrap', 
     zIndex: 2,
-    fontSize: '12px'
+    fontSize: '11px'
   },
   tickerWrapper: { overflow: 'hidden', width: '100%', direction: 'ltr' },
   tickerContent: { whiteSpace: 'nowrap' },
   mainContent: {
     flex: 1,
-    padding: '35px 20px',
+    padding: '25px 15px',
     maxWidth: '1200px',
     margin: '0 auto',
     width: '100%',
@@ -267,17 +254,15 @@ const styles = {
   },
   gridTwoCols: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-    gap: '25px',
-    marginBottom: '35px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '20px',
+    marginBottom: '30px',
   },
   card: {
-    backgroundColor: 'rgba(11, 35, 28, 0.75)',
-    backdropFilter: 'blur(14px)',
-    padding: '28px',
-    borderRadius: '16px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-    border: '1px solid rgba(245, 158, 11, 0.2)',
+    backgroundColor: '#161d1a',
+    padding: '22px',
+    borderRadius: '12px',
+    border: '1px solid #1f2b25',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -297,51 +282,47 @@ const styles = {
     height: '100%',
     backgroundColor: '#10b981',
   },
-  cardTitle: { color: '#fbbf24', margin: '0 0 15px 0', fontSize: '18px', fontWeight: 'bold' },
-  cardTitleGreen: { color: '#34d399', margin: '0 0 15px 0', fontSize: '18px', fontWeight: 'bold' },
-  cardText: { color: '#cbd5e1', fontSize: '14px', lineHeight: '1.8', margin: 0 },
-  list: { color: '#cbd5e1', fontSize: '14px', lineHeight: '1.8', paddingRight: '20px', margin: 0 },
-  section: { marginBottom: '40px' },
-  sectionTitle: { color: '#fbbf24', fontSize: '19px', marginBottom: '20px', fontWeight: 'bold', borderBottom: '1px solid rgba(6, 95, 70, 0.6)', paddingBottom: '10px' },
+  cardTitle: { color: '#fbbf24', margin: '0 0 12px 0', fontSize: '17px', fontWeight: 'bold' },
+  cardTitleGreen: { color: '#34d399', margin: '0 0 12px 0', fontSize: '17px', fontWeight: 'bold' },
+  cardText: { color: '#94a3b8', fontSize: '13.5px', lineHeight: '1.7', margin: 0 },
+  list: { color: '#94a3b8', fontSize: '13.5px', lineHeight: '1.7', paddingRight: '18px', margin: 0 },
+  section: { marginBottom: '30px' },
+  sectionTitle: { color: '#fbbf24', fontSize: '17px', marginBottom: '15px', fontWeight: 'bold', borderBottom: '1px solid #1f2b25', paddingBottom: '8px' },
   cardGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '20px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+    gap: '15px',
   },
   personCard: {
-    backgroundColor: 'rgba(11, 35, 28, 0.75)',
-    backdropFilter: 'blur(10px)',
-    padding: '22px',
-    borderRadius: '16px',
+    backgroundColor: '#161d1a',
+    padding: '18px',
+    borderRadius: '12px',
     textAlign: 'center',
-    boxShadow: '0 8px 25px rgba(0,0,0,0.25)',
-    border: '1px solid rgba(6, 95, 70, 0.4)',
-    transition: 'transform 0.3s ease',
+    border: '1px solid #1f2b25',
   },
   avatarContainer: { 
-    fontSize: '32px', 
-    marginBottom: '10px',
-    width: '60px',
-    height: '60px',
+    fontSize: '28px', 
+    marginBottom: '8px',
+    width: '50px',
+    height: '50px',
     borderRadius: '50%',
-    background: 'rgba(6, 95, 70, 0.4)',
+    background: '#1f2b25',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 12px auto',
-    border: '1px solid rgba(245, 158, 11, 0.3)'
+    margin: '0 auto 10px auto',
   },
-  personName: { color: '#ffffff', margin: '0 0 6px 0', fontSize: '15px', fontWeight: 'bold' },
-  personRole: { color: '#fbbf24', fontSize: '12px', margin: 0, fontWeight: '600' },
-  emptyText: { color: '#94a3b8', fontSize: '13px', gridColumn: '1 / -1', textAlign: 'center', padding: '20px' },
+  personName: { color: '#ffffff', margin: '0 0 4px 0', fontSize: '14px', fontWeight: 'bold' },
+  personRole: { color: '#fbbf24', fontSize: '11px', margin: 0 },
+  emptyText: { color: '#64748b', fontSize: '12px', gridColumn: '1 / -1', textAlign: 'center', padding: '15px' },
   footer: {
-    backgroundColor: '#030d0a',
-    color: '#94a3b8',
+    backgroundColor: '#080a09',
+    color: '#64748b',
     textAlign: 'center',
-    padding: '25px',
-    fontSize: '13px',
+    padding: '20px',
+    fontSize: '12px',
     marginTop: 'auto',
-    borderTop: '1px solid rgba(6, 95, 70, 0.4)',
+    borderTop: '1px solid #161d1a',
   },
-  designerCredit: { marginTop: '8px', color: '#cbd5e1' },
+  designerCredit: { marginTop: '5px', color: '#94a3b8' },
 };
