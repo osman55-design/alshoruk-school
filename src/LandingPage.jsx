@@ -69,29 +69,31 @@ export default function LandingPage({ onGoToPortal }) {
       </div>
 
       <main style={styles.mainContent}>
-        {/* 3. من نحن وأهدافنا */}
-        <section style={styles.gridTwoCols}>
-          <div style={styles.card}>
-            <div style={styles.cardAccentGold}></div>
-            <h3 style={styles.cardTitle}>📖 من نحن؟</h3>
-            <p style={styles.cardText}>
-              {aboutUs || 'مدرسة الشروق السودانية المتكاملة صرح تعليمي متميز يهدف إلى تقديم المنهج السوداني المعتمد بأعلى معايير الجودة.'}
-            </p>
-          </div>
-          <div style={styles.card}>
-            <div style={styles.cardAccentGreen}></div>
-            <h3 style={styles.cardTitleGreen}>🎯 أهدافنا</h3>
-            <ul style={styles.list}>
-              {goals.length > 0 ? (
-                goals.map((goal, index) => <li key={index}>{goal}</li>)
-              ) : (
-                <>
-                  <li>تقديم تعليم متطور يواكب المعايير الحديثة.</li>
-                  <li>ترسيخ القيم الأخلاقية والوطنية لدى الطلاب.</li>
-                  <li>بناء بيئة تعليمية آمنة ومحفزة للابتكار.</li>
-                </>
-              )}
-            </ul>
+        {/* 3. من نحن وأهدافنا (القسم بالكامل بخلفية الأخضر الفاتح الزجاجي) */}
+        <section style={styles.glassSection}>
+          <div style={styles.gridTwoCols}>
+            <div style={styles.innerCard}>
+              <div style={styles.cardAccentGold}></div>
+              <h3 style={styles.cardTitle}>📖 من نحن؟</h3>
+              <p style={styles.cardText}>
+                {aboutUs || 'مدرسة الشروق السودانية المتكاملة صرح تعليمي متميز يهدف إلى تقديم المنهج السوداني المعتمد بأعلى معايير الجودة.'}
+              </p>
+            </div>
+            <div style={styles.innerCard}>
+              <div style={styles.cardAccentGreen}></div>
+              <h3 style={styles.cardTitleGreen}>🎯 أهدافنا</h3>
+              <ul style={styles.list}>
+                {goals.length > 0 ? (
+                  goals.map((goal, index) => <li key={index}>{goal}</li>)
+                ) : (
+                  <>
+                    <li>تقديم تعليم متطور يواكب المعايير الحديثة.</li>
+                    <li>ترسيخ القيم الأخلاقية والوطنية لدى الطلاب.</li>
+                    <li>بناء بيئة تعليمية آمنة ومحفزة للابتكار.</li>
+                  </>
+                )}
+              </ul>
+            </div>
           </div>
         </section>
 
@@ -167,7 +169,7 @@ export default function LandingPage({ onGoToPortal }) {
           white-space: nowrap;
           animation: scrollLeftToRight 30s linear infinite;
         }
-        /* تحسين العرض الأفقى والتحكم بالبطاقات على الجوال */
+        /* تحسين العرض الأفقي والتحكم بالبطاقات على الجوال */
         @media (max-width: 768px) {
           .cardGrid {
             display: flex;
@@ -190,7 +192,7 @@ export default function LandingPage({ onGoToPortal }) {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#0c0f0e', // خلفية داكنة وهادئة جداً ومريحة للعين
+    backgroundColor: '#0c0f0e',
     color: '#e2e8f0',
     direction: 'rtl',
     fontFamily: "'Cairo', 'Segoe UI', Tahoma, sans-serif",
@@ -209,7 +211,7 @@ const styles = {
     zIndex: 100,
   },
   logoSection: { display: 'flex', alignItems: 'center', gap: '12px' },
-  logo: { width: '42px', height: '42px', objectFit: 'contain' }, // تم إزالة الحواشي والخلفيات ليعرض الشعار صافياً
+  logo: { width: '42px', height: '42px', objectFit: 'contain' },
   schoolName: { fontSize: '17px', color: '#fbbf24', margin: 0, fontWeight: 'bold' },
   portalBtn: {
     backgroundColor: '#047857',
@@ -252,17 +254,26 @@ const styles = {
     width: '100%',
     boxSizing: 'border-box',
   },
+  glassSection: {
+    backgroundColor: 'rgba(16, 185, 129, 0.10)', // خلفية الأخضر الفاتح الزجاجي للحاوية الكبرى كاملة
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    padding: '25px',
+    borderRadius: '16px',
+    border: '1px solid rgba(16, 185, 129, 0.25)',
+    marginBottom: '30px',
+    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+  },
   gridTwoCols: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '20px',
-    marginBottom: '30px',
   },
-  card: {
-    backgroundColor: '#161d1a',
-    padding: '22px',
+  innerCard: {
+    backgroundColor: 'rgba(12, 18, 15, 0.45)', // بطاقات داخلية متناسقة بخلفية أغمق قليلاً للشفافية
+    padding: '20px',
     borderRadius: '12px',
-    border: '1px solid #1f2b25',
+    border: '1px solid rgba(16, 185, 129, 0.2)',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -284,8 +295,8 @@ const styles = {
   },
   cardTitle: { color: '#fbbf24', margin: '0 0 12px 0', fontSize: '17px', fontWeight: 'bold' },
   cardTitleGreen: { color: '#34d399', margin: '0 0 12px 0', fontSize: '17px', fontWeight: 'bold' },
-  cardText: { color: '#94a3b8', fontSize: '13.5px', lineHeight: '1.7', margin: 0 },
-  list: { color: '#94a3b8', fontSize: '13.5px', lineHeight: '1.7', paddingRight: '18px', margin: 0 },
+  cardText: { color: '#e2e8f0', fontSize: '13.5px', lineHeight: '1.7', margin: 0 },
+  list: { color: '#e2e8f0', fontSize: '13.5px', lineHeight: '1.7', paddingRight: '18px', margin: 0 },
   section: { marginBottom: '30px' },
   sectionTitle: { color: '#fbbf24', fontSize: '17px', marginBottom: '15px', fontWeight: 'bold', borderBottom: '1px solid #1f2b25', paddingBottom: '8px' },
   cardGrid: {
