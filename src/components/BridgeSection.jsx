@@ -73,7 +73,7 @@ export default function BridgeSection({ currentUser }) {
     }
   };
 
-  // 📤 تصدير البيانات إلى ملف Excel (مع دعم الجدول الفارغ لتنزيل نموذج الأعمدة)
+  // 📤 تصدير البيانات إلى ملف Excel (متوافق مع الكمبيوتر والهواتف)
   const exportToExcel = () => {
     const dataToExport = records.length > 0 ? records.map(r => ({
       'الاسم': r.name || '',
@@ -112,6 +112,12 @@ export default function BridgeSection({ currentUser }) {
     }];
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+
+    // تفعيل اتجاه اليمين لليسار وضبط الأعمدة لتظهر البيانات بشكل صحيح على الجوال
+    worksheet['!cols'] = Object.keys(dataToExport[0]).map(() => ({ wch: 20 }));
+    if (!worksheet['!views']) worksheet['!views'] = [];
+    worksheet['!views'].push({ rightToLeft: true });
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات الجسر");
     XLSX.writeFile(workbook, "Bridge_Records.xlsx");
@@ -188,14 +194,8 @@ export default function BridgeSection({ currentUser }) {
     <div style={{ direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
       <style>{`
-        @media (min-width: 900px) {
-          .bridge-table-view { display: block !important; }
-          .bridge-cards-view { display: none !important; }
-        }
-        @media (max-width: 899px) {
-          .bridge-table-view { display: none !important; }
-          .bridge-cards-view { display: grid !important; }
-        }
+        .bridge-table-view { display: block !important; width: 100%; overflow-x: auto; }
+        .bridge-cards-view { display: none !important; }
       `}</style>
 
       {/* الهيدر العلوي وأزرار التحكم */}
@@ -266,106 +266,69 @@ export default function BridgeSection({ currentUser }) {
           لا توجد سجلات مطابقة.
         </div>
       ) : (
-        <>
-          {/* 💻 جدول الكمبيوتر */}
-          <div className="bridge-table-view" style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '13px', minWidth: '1500px' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #cbd5e1', color: '#334155' }}>
-                  <th style={{ padding: '12px' }}>الاسم</th>
-                  <th style={{ padding: '12px' }}>الجسر</th>
-                  <th style={{ padding: '12px' }}>الترحيل</th>
-                  <th style={{ padding: '12px' }}>اسم الأم</th>
-                  <th style={{ padding: '12px' }}>رقم الهوية</th>
-                  <th style={{ padding: '12px' }}>تاريخ الدخول</th>
-                  <th style={{ padding: '12px' }}>تاريخ الميلاد</th>
-                  <th style={{ padding: '12px' }}>العمر</th>
-                  <th style={{ padding: '12px' }}>السكن</th>
-                  <th style={{ padding: '12px' }}>صفي</th>
-                  <th style={{ padding: '12px' }}>موقف التحصيل</th>
-                  <th style={{ padding: '12px' }}>ترحيل السبت</th>
-                  <th style={{ padding: '12px' }}>التحصيل</th>
-                  <th style={{ padding: '12px' }}>ترتيب الترحيل</th>
-                  <th style={{ padding: '12px' }}>ملاحظات</th>
-                  <th style={{ padding: '12px' }}>مكالمات الوالد/ة</th>
-                  <th style={{ padding: '12px' }}>واتساب الوالد/ة</th>
-                  <th style={{ padding: '12px' }}>رسوم التسجيل</th>
-                  <th style={{ padding: '12px' }}>الكتب</th>
-                  <th style={{ padding: '12px' }}>القسط الأول</th>
-                  <th style={{ padding: '12px' }}>اللبس</th>
-                  <th style={{ padding: '12px', textAlign: 'center' }}>إجراءات</th>
+        <div className="bridge-table-view" style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '13px', minWidth: '1500px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #cbd5e1', color: '#334155' }}>
+                <th style={{ padding: '12px' }}>الاسم</th>
+                <th style={{ padding: '12px' }}>الجسر</th>
+                <th style={{ padding: '12px' }}>الترحيل</th>
+                <th style={{ padding: '12px' }}>اسم الأم</th>
+                <th style={{ padding: '12px' }}>رقم الهوية</th>
+                <th style={{ padding: '12px' }}>تاريخ الدخول</th>
+                <th style={{ padding: '12px' }}>تاريخ الميلاد</th>
+                <th style={{ padding: '12px' }}>العمر</th>
+                <th style={{ padding: '12px' }}>السكن</th>
+                <th style={{ padding: '12px' }}>صفي</th>
+                <th style={{ padding: '12px' }}>موقف التحصيل</th>
+                <th style={{ padding: '12px' }}>ترحيل السبت</th>
+                <th style={{ padding: '12px' }}>التحصيل</th>
+                <th style={{ padding: '12px' }}>ترتيب الترحيل</th>
+                <th style={{ padding: '12px' }}>ملاحظات</th>
+                <th style={{ padding: '12px' }}>مكالمات الوالد/ة</th>
+                <th style={{ padding: '12px' }}>واتساب الوالد/ة</th>
+                <th style={{ padding: '12px' }}>رسوم التسجيل</th>
+                <th style={{ padding: '12px' }}>الكتب</th>
+                <th style={{ padding: '12px' }}>القسط الأول</th>
+                <th style={{ padding: '12px' }}>اللبس</th>
+                <th style={{ padding: '12px', textAlign: 'center' }}>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRecords.map((r, idx) => (
+                <tr key={r.id} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: idx % 2 === 0 ? '#fff' : '#fcfcfc' }}>
+                  <td style={{ padding: '12px', fontWeight: 'bold', color: '#0f172a' }}>{r.name || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.bridge || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.transport || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.mother_name || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.national_id || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.entry_date || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.birth_date || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.age || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.address || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.class_name || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.collection_status || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.saturday_transport || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.collection || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.transport_order || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.notes || '-'}</td>
+                  <td style={{ padding: '12px' }}>أب: {r.father_calls || '-'}<br/>أم: {r.mother_calls || '-'}</td>
+                  <td style={{ padding: '12px' }}>أب: {r.father_whatsapp || '-'}<br/>أم: {r.mother_whatsapp || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.registration_fees || '-'} (إيصال: {r.receipt_no_reg || '-'})</td>
+                  <td style={{ padding: '12px' }}>{r.books || '-'}</td>
+                  <td style={{ padding: '12px' }}>{r.first_installment || '-'} (إيصال: {r.receipt_no_installment || '-'})</td>
+                  <td style={{ padding: '12px' }}>{r.uniform || '-'}</td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                      <button onClick={() => { setEditingRecord(r); setFormData(r); setShowModal(true); }} style={{ backgroundColor: '#e0f2fe', color: '#0284c7', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>تعديل ✏️</button>
+                      <button onClick={() => handleDelete(r.id)} style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>حذف 🗑️</button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredRecords.map((r, idx) => (
-                  <tr key={r.id} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: idx % 2 === 0 ? '#fff' : '#fcfcfc' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold', color: '#0f172a' }}>{r.name || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.bridge || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.transport || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.mother_name || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.national_id || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.entry_date || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.birth_date || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.age || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.address || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.class_name || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.collection_status || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.saturday_transport || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.collection || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.transport_order || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.notes || '-'}</td>
-                    <td style={{ padding: '12px' }}>أب: {r.father_calls || '-'}<br/>أم: {r.mother_calls || '-'}</td>
-                    <td style={{ padding: '12px' }}>أب: {r.father_whatsapp || '-'}<br/>أم: {r.mother_whatsapp || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.registration_fees || '-'} (إيصال: {r.receipt_no_reg || '-'})</td>
-                    <td style={{ padding: '12px' }}>{r.books || '-'}</td>
-                    <td style={{ padding: '12px' }}>{r.first_installment || '-'} (إيصال: {r.receipt_no_installment || '-'})</td>
-                    <td style={{ padding: '12px' }}>{r.uniform || '-'}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                        <button onClick={() => { setEditingRecord(r); setFormData(r); setShowModal(true); }} style={{ backgroundColor: '#e0f2fe', color: '#0284c7', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>تعديل ✏️</button>
-                        <button onClick={() => handleDelete(r.id)} style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>حذف 🗑️</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* 📱 بطاقات الجوال */}
-          <div className="bridge-cards-view" style={{ gridTemplateColumns: '1fr', gap: '16px' }}>
-            {filteredRecords.map((r) => (
-              <div key={r.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px', marginBottom: '12px' }}>
-                  <h3 style={{ margin: 0, color: '#0d9488', fontSize: '16px', fontWeight: 'bold' }}>{r.name || 'بدون اسم'}</h3>
-                  <span style={{ backgroundColor: '#f1f5f9', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', color: '#475569' }}>الصف: {r.class_name || '---'}</span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px', color: '#334155', marginBottom: '12px' }}>
-                  <div><strong>الهوية:</strong> {r.national_id || '-'}</div>
-                  <div><strong>العمر:</strong> {r.age || '-'}</div>
-                  <div><strong>اسم الأم:</strong> {r.mother_name || '-'}</div>
-                  <div><strong>السكن:</strong> {r.address || '-'}</div>
-                  <div><strong>الجسر:</strong> {r.bridge || '-'}</div>
-                  <div><strong>الترحيل:</strong> {r.transport || '-'}</div>
-                  <div><strong>موقف التحصيل:</strong> {r.collection_status || '-'}</div>
-                  <div><strong>اللبس:</strong> {r.uniform || '-'}</div>
-                </div>
-
-                {r.notes && (
-                  <div style={{ backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
-                    <strong>ملاحظات:</strong> {r.notes}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
-                  <button onClick={() => { setEditingRecord(r); setFormData(r); setShowModal(true); }} style={{ backgroundColor: '#e0f2fe', color: '#0284c7', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>تعديل ✏️</button>
-                  <button onClick={() => handleDelete(r.id)} style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>حذف 🗑️</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* نافذة الإضافة والتعديل */}
