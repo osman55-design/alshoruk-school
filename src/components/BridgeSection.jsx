@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
+import * as XLSX from 'xlsx';
 
 export default function BridgeSection({ currentUser }) {
   const [records, setRecords] = useState([]);
@@ -7,6 +8,7 @@ export default function BridgeSection({ currentUser }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const fileInputRef = useRef(null);
 
   const initialFormState = {
     name: '', bridge: '', transport: '', mother_name: '', national_id: '',
@@ -71,6 +73,112 @@ export default function BridgeSection({ currentUser }) {
     }
   };
 
+  // 📤 تصدير البيانات إلى ملف Excel
+  const exportToExcel = () => {
+    if (records.length === 0) {
+      alert('لا توجد بيانات لتصديرها!');
+      return;
+    }
+
+    // تجهيز البيانات بأسماء أعمدة عربية واضحة
+    const dataToExport = records.map(r => ({
+      'الاسم': r.name || '',
+      'الجسر': r.bridge || '',
+      'الترحيل': r.transport || '',
+      'اسم الأم': r.mother_name || '',
+      'رقم الهوية': r.national_id || '',
+      'تاريخ الدخول': r.entry_date || '',
+      'تاريخ الميلاد': r.birth_date || '',
+      'العمر': r.age || '',
+      'السكن': r.address || '',
+      'صفي': r.class_name || '',
+      'موقف التحصيل': r.collection_status || '',
+      'ترحيل السبت': r.saturday_transport || '',
+      'التحصيل': r.collection || '',
+      'ترتيب الترحيل': r.transport_order || '',
+      'ملاحظات': r.notes || '',
+      'مكالمات الوالد': r.father_calls || '',
+      'مكالمات الوالدة': r.mother_calls || '',
+      'واتساب الوالد': r.father_whatsapp || '',
+      'واتساب الوالدة': r.mother_whatsapp || '',
+      'رسوم التسجيل': r.registration_fees || '',
+      'رقم الإيصال (تسجيل)': r.receipt_no_reg || '',
+      'التسجيل': r.registration || '',
+      'الكتب': r.books || '',
+      'القسط الأول': r.first_installment || '',
+      'رقم الإيصال (القسط)': r.receipt_no_installment || '',
+      'اللبس': r.uniform || ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات الجسر");
+    XLSX.writeFile(workbook, "Bridge_Records.xlsx");
+  };
+
+  // 📥 استيراد البيانات من ملف Excel
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const workbook = XLSX.read(bstr, { type: 'binary' });
+        const wsname = workbook.SheetNames[0];
+        const ws = workbook.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        if (data.length === 0) {
+          alert('الملف فارغ أو غير صالح!');
+          return;
+        }
+
+        // مطابقة الحقول العربية أو الإنجليزية مع قاعدة البيانات
+        const formattedData = data.map(row => ({
+          name: row['الاسم'] || row['name'] || '',
+          bridge: row['الجسر'] || row['bridge'] || '',
+          transport: row['الترحيل'] || row['transport'] || '',
+          mother_name: row['اسم الأم'] || row['mother_name'] || '',
+          national_id: String(row['رقم الهوية'] || row['national_id'] || ''),
+          entry_date: row['تاريخ الدخول'] || row['entry_date'] || null,
+          birth_date: row['تاريخ الميلاد'] || row['birth_date'] || null,
+          age: String(row['العمر'] || row['age'] || ''),
+          address: row['السكن'] || row['address'] || '',
+          class_name: row['صفي'] || row['class_name'] || '',
+          collection_status: row['موقف التحصيل'] || row['collection_status'] || '',
+          saturday_transport: row['ترحيل السبت'] || row['saturday_transport'] || '',
+          collection: row['التحصيل'] || row['collection'] || '',
+          transport_order: row['ترتيب الترحيل'] || row['transport_order'] || '',
+          notes: row['ملاحظات'] || row['notes'] || '',
+          father_calls: String(row['مكالمات الوالد'] || row['father_calls'] || ''),
+          mother_calls: String(row['مكالمات الوالدة'] || row['mother_calls'] || ''),
+          father_whatsapp: String(row['واتساب الوالد'] || row['father_whatsapp'] || ''),
+          mother_whatsapp: String(row['واتساب الوالدة'] || row['mother_whatsapp'] || ''),
+          registration_fees: String(row['رسوم التسجيل'] || row['registration_fees'] || ''),
+          receipt_no_reg: String(row['رقم الإيصال (تسجيل)'] || row['receipt_no_reg'] || ''),
+          registration: row['التسجيل'] || row['registration'] || '',
+          books: row['الكتب'] || row['books'] || '',
+          first_installment: String(row['القسط الأول'] || row['first_installment'] || ''),
+          receipt_no_installment: String(row['رقم الإيصال (القسط)'] || row['receipt_no_installment'] || ''),
+          uniform: row['اللبس'] || row['uniform'] || ''
+        }));
+
+        const { error } = await supabase.from('bridge_records').insert(formattedData);
+        if (error) throw error;
+
+        alert(`تم استيراد ${formattedData.length} سجل بنجاح! 🚀`);
+        fetchRecords();
+      } catch (err) {
+        alert('حدث خطأ أثناء قراءة أو رفع الملف: ' + err.message);
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   const filteredRecords = records.filter(r => 
     (r.name && r.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (r.national_id && r.national_id.includes(searchQuery))
@@ -79,7 +187,6 @@ export default function BridgeSection({ currentUser }) {
   return (
     <div style={{ direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
-      {/* تنسيقات متجاوبة لإظهار الجدول على الكمبيوتر والبطاقات على الجوال */}
       <style>{`
         @media (min-width: 900px) {
           .bridge-table-view { display: block !important; }
@@ -91,22 +198,57 @@ export default function BridgeSection({ currentUser }) {
         }
       `}</style>
 
-      {/* الهيدر العلوي للقسم */}
+      {/* الهيدر العلوي وأزرار التحكم */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h2 style={{ margin: 0, color: '#0f172a', fontSize: '22px', fontWeight: '800' }}>🌉 قسم الجسر</h2>
           <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>إدارة بيانات الطلاب، الترحيل، والرسوم المالية بكل سهولة</p>
         </div>
-        <button 
-          onClick={() => { setEditingRecord(null); setFormData(initialFormState); setShowModal(true); }}
-          style={{ 
-            background: 'linear-gradient(135deg, #0d9488, #0f766e)', 
-            color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', 
-            fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(13,148,136,0.25)' 
-          }}
-        >
-          ➕ إضافة سجل جديد
-        </button>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {/* زر تصدير إكسل */}
+          <button 
+            onClick={exportToExcel}
+            style={{ 
+              background: 'linear-gradient(135deg, #10b981, #059669)', 
+              color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '12px', 
+              fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' 
+            }}
+          >
+            📊 تصدير Excel
+          </button>
+
+          {/* زر استيراد إكسل مخفي */}
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            accept=".xlsx, .xls, .csv" 
+            style={{ display: 'none' }} 
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            style={{ 
+              background: 'linear-gradient(135deg, #0284c7, #0369a1)', 
+              color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '12px', 
+              fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(2,132,199,0.25)' 
+            }}
+          >
+            📥 استيراد Excel
+          </button>
+
+          {/* زر إضافة سجل جديد */}
+          <button 
+            onClick={() => { setEditingRecord(null); setFormData(initialFormState); setShowModal(true); }}
+            style={{ 
+              background: 'linear-gradient(135deg, #0d9488, #0f766e)', 
+              color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', 
+              fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(13,148,136,0.25)' 
+            }}
+          >
+            ➕ إضافة سجل
+          </button>
+        </div>
       </div>
 
       {/* شريط البحث */}
@@ -128,7 +270,7 @@ export default function BridgeSection({ currentUser }) {
         </div>
       ) : (
         <>
-          {/* 💻 جدول منظم وواسع يظهر على الكمبيوتر والشاشات الكبيرة */}
+          {/* 💻 جدول منظم للكمبيوتر */}
           <div className="bridge-table-view" style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '13px', minWidth: '1500px' }}>
               <thead>
@@ -193,7 +335,7 @@ export default function BridgeSection({ currentUser }) {
             </table>
           </div>
 
-          {/* 📱 بطاقات عرض منسقة ومرتبة تظهر على الجوال لتجنب الفوضى */}
+          {/* 📱 بطاقات عرض للجوال */}
           <div className="bridge-cards-view" style={{ gridTemplateColumns: '1fr', gap: '16px' }}>
             {filteredRecords.map((r) => (
               <div key={r.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
@@ -229,7 +371,7 @@ export default function BridgeSection({ currentUser }) {
         </>
       )}
 
-      {/* نافذة الإضافة والتعديل مرتبة في مجموعات واضحة */}
+      {/* نافذة الإضافة والتعديل */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' }}>
           <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
