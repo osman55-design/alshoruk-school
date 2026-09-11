@@ -10,10 +10,8 @@ import SupervisorsSection from './components/ClassSupervisorsSection';
 import HomeSettingsSection from './components/HomeSettingsSection';
 
 export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
-  // فتح النظام مباشرة على "إدارة الصفحة الرئيسية" عند تسجيل الدخول
   const [activeTab, setActiveTab] = useState('home_settings');
 
-  // التأكد التام أنكِ الأدمن الرئيسي ومديرة النظام
   const isAdmin = 
     currentUser?.role === 'admin' || 
     currentUser?.role === 'مدير' || 
@@ -21,9 +19,8 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
     currentUser?.can_manage_admin === true || 
     currentUser?.permissions?.admin === true;
 
-  // فحص الصلاحيات للموظفين العاديين
   const hasPermission = (key, canManageKey) => {
-    if (isAdmin) return true; // الأدمن يرى كل الأقسام دائماً
+    if (isAdmin) return true;
     if (currentUser?.permissions && currentUser.permissions[key]) return true;
     if (currentUser && currentUser[canManageKey] === true) return true;
     return false;
@@ -41,6 +38,19 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
     transition: 'all 0.2s ease',
     boxShadow: isActive ? '0 3px 10px rgba(0,0,0,0.12)' : 'none'
   });
+
+  // تجميع الأقسام المتاحة للمستخدم بناءً على الصلاحيات لتظهر في القائمة المنسدلة للجوال
+  const availableTabs = [
+    { id: 'home_settings', label: 'إدارة الصفحة الرئيسية 🌐', show: isAdmin },
+    { id: 'dashboard', label: 'إدارة المستخدمين والصلاحيات ⚙️', show: isAdmin },
+    { id: 'students', label: 'شؤون الطلاب 📚', show: hasPermission('students', 'can_manage_students') },
+    { id: 'classes', label: 'الفصول 🏛️', show: hasPermission('classes', 'can_manage_classes') },
+    { id: 'teachers', label: 'المعلمين 👨‍🏫', show: hasPermission('teachers', 'can_manage_teachers') },
+    { id: 'accounts', label: 'الحسابات والمالية 💰', show: hasPermission('finance', 'can_manage_finance') },
+    { id: 'results', label: 'النتائج والشهادات 📋', show: hasPermission('results', 'can_manage_results') },
+    { id: 'transport', label: 'التراحيل 🚌', show: hasPermission('transport', 'can_manage_transport') },
+    { id: 'supervisors', label: 'المشرفات 👩‍💼', show: hasPermission('supervisors', 'can_manage_supervisors') },
+  ].filter(tab => tab.show);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
@@ -62,7 +72,7 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
             </div>
           </div>
 
-          {/* زر الخروج فقط (تم حذف زر الواجهة الرئيسية نهائياً) */}
+          {/* زر الخروج */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <button 
               onClick={onLogout} 
@@ -73,8 +83,47 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
           </div>
         </div>
 
-        {/* أزرار التنقل بين الأقسام */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        {/* 📱 قائمة منسدلة خاصة بالهواتف المحمولة (تظهر فقط على الجوال وتختفي على الشاشات الكبيرة) */}
+        <div style={{ display: 'block' }} className="mobile-dropdown-container">
+          <style>{`
+            @media (min-width: 768px) {
+              .mobile-dropdown-wrapper { display: none !important; }
+              .desktop-tabs-wrapper { display: flex !important; }
+            }
+            @media (max-width: 767px) {
+              .mobile-dropdown-wrapper { display: block !important; }
+              .desktop-tabs-wrapper { display: none !important; }
+            }
+          `}</style>
+          
+          <div className="mobile-dropdown-wrapper" style={{ marginBottom: '4px' }}>
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255,255,255,0.3)',
+                backgroundColor: '#ffffff',
+                color: '#065f46',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                outline: 'none',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            >
+              {availableTabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 💻 أزرار التنقل العادية (تظهر فقط على أجهزة الكمبيوتر والشاشات الواسعة) */}
+        <div className="desktop-tabs-wrapper" style={{ flexWrap: 'wrap', gap: '8px', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           {isAdmin && (
             <button style={navBtnStyle(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>إدارة المستخدمين والصلاحيات ⚙️</button>
           )}
