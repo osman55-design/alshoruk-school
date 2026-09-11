@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from './supabase'; // استيراد العميل من ملفك الثابت
 
 export default function LandingPage() {
   const [news, setNews] = useState([]);
@@ -62,7 +58,6 @@ export default function LandingPage() {
       try {
         const { data } = await supabase.from('top_students').select('*');
         if (data) {
-          // الفلترة مطابقة تماماً لما يتم إدخاله في خانة stage (مثل primary, middle, kindergarten, high)
           setHonorKindergarten(data.filter(s => s.stage && s.stage.toLowerCase() === 'kindergarten'));
           setHonorPrimary(data.filter(s => s.stage && (s.stage.toLowerCase() === 'primary' || s.stage.toLowerCase() === 'الابتدائية')));
           setHonorMiddle(data.filter(s => s.stage && (s.stage.toLowerCase() === 'middle' || s.stage.toLowerCase() === 'المتوسطة')));
