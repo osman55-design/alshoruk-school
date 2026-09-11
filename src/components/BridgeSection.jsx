@@ -189,24 +189,19 @@ export default function BridgeSection({ currentUser }) {
   return (
     <div style={{ direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif", padding: '20px', background: '#f8fafc', minHeight: '100vh' }}>
       
-      {/* رأس الصفحة الفاخر */}
+      {/* رأس الصفحة */}
       <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', border: '1px solid #e2e8f0' }}>
         <div>
           <h2 style={{ margin: 0, color: '#0f172a', fontSize: '24px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span>🌉</span> قسم الجسر
           </h2>
-          <p style={{ margin: '6px 0 0 0', color: '#64748b', fontSize: '14px' }}>إدارة بيانات الطلاب، الترحيل، والرسوم المالية بكل احترافية وسهولة</p>
+          <p style={{ margin: '6px 0 0 0', color: '#64748b', fontSize: '14px' }}>إدارة بيانات الطلاب، الترحيل، والرسوم المالية ببطاقات عصرية ومنظمة</p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button 
             onClick={exportToExcel}
-            style={{ 
-              background: 'linear-gradient(135deg, #10b981, #059669)', 
-              color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', 
-              fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(16,185,129,0.2)',
-              display: 'flex', alignItems: 'center', gap: '6px'
-            }}
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}
           >
             📊 تصدير Excel
           </button>
@@ -220,24 +215,14 @@ export default function BridgeSection({ currentUser }) {
           />
           <button 
             onClick={() => fileInputRef.current?.click()}
-            style={{ 
-              background: 'linear-gradient(135deg, #0284c7, #0369a1)', 
-              color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', 
-              fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(2,132,199,0.2)',
-              display: 'flex', alignItems: 'center', gap: '6px'
-            }}
+            style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(2,132,199,0.2)' }}
           >
             📥 استيراد Excel
           </button>
 
           <button 
             onClick={() => { setEditingRecord(null); setFormData(initialFormState); setShowModal(true); }}
-            style={{ 
-              background: 'linear-gradient(135deg, #0d9488, #0f766e)', 
-              color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', 
-              fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(13,148,136,0.25)',
-              display: 'flex', alignItems: 'center', gap: '6px'
-            }}
+            style={{ background: 'linear-gradient(135deg, #0d9488, #0f766e)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(13,148,136,0.25)' }}
           >
             ➕ إضافة سجل
           </button>
@@ -262,91 +247,89 @@ export default function BridgeSection({ currentUser }) {
           لا توجد سجلات مطابقة.
         </div>
       ) : (
-        /* جدول منسق واحترافي مع تمرير أفقي سلس */
-        <div style={{ overflowX: 'auto', background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '13px', minWidth: '1600px' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #cbd5e1', color: '#334155' }}>
-                <th style={{ padding: '14px 12px' }}>الاسم</th>
-                <th style={{ padding: '14px 12px' }}>الجسر</th>
-                <th style={{ padding: '14px 12px' }}>الترحيل</th>
-                <th style={{ padding: '14px 12px' }}>اسم الأم</th>
-                <th style={{ padding: '14px 12px' }}>رقم الهوية</th>
-                <th style={{ padding: '14px 12px' }}>تاريخ الدخول</th>
-                <th style={{ padding: '14px 12px' }}>تاريخ الميلاد</th>
-                <th style={{ padding: '14px 12px' }}>العمر</th>
-                <th style={{ padding: '14px 12px' }}>السكن</th>
-                <th style={{ padding: '14px 12px' }}>صفي</th>
-                <th style={{ padding: '14px 12px' }}>موقف التحصيل</th>
-                <th style={{ padding: '14px 12px' }}>ترحيل السبت</th>
-                <th style={{ padding: '14px 12px' }}>التحصيل</th>
-                <th style={{ padding: '14px 12px' }}>ترتيب الترحيل</th>
-                <th style={{ padding: '14px 12px' }}>ملاحظات</th>
-                <th style={{ padding: '14px 12px' }}>مكالمات الوالد/ة</th>
-                <th style={{ padding: '14px 12px' }}>واتساب الوالد/ة</th>
-                <th style={{ padding: '14px 12px' }}>رسوم التسجيل</th>
-                <th style={{ padding: '14px 12px' }}>الكتب</th>
-                <th style={{ padding: '14px 12px' }}>القسط الأول</th>
-                <th style={{ padding: '14px 12px' }}>اللبس</th>
-                <th style={{ padding: '14px 12px', textAlign: 'center' }}>إجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRecords.map((r, idx) => (
-                <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: idx % 2 === 0 ? '#fff' : '#f8fafc', transition: 'background 0.2s' }}>
-                  <td style={{ padding: '14px 12px', fontWeight: 'bold', color: '#0f172a' }}>{r.name || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.bridge || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.transport || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.mother_name || '-'}</td>
-                  <td style={{ padding: '14px 12px', color: '#475569' }}>{r.national_id || '-'}</td>
-                  <td style={{ padding: '14px 12px', color: '#64748b' }}>{r.entry_date || '-'}</td>
-                  <td style={{ padding: '14px 12px', color: '#64748b' }}>{r.birth_date || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.age || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.address || '-'}</td>
-                  <td style={{ padding: '14px 12px', fontWeight: '600', color: '#0369a1' }}>{r.class_name || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.collection_status || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.saturday_transport || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.collection || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>{r.transport_order || '-'}</td>
-                  <td style={{ padding: '14px 12px', color: '#64748b' }}>{r.notes || '-'}</td>
-                  <td style={{ padding: '14px 12px', fontSize: '12px', lineHeight: '1.5' }}>
-                    <span style={{ color: '#0f766e' }}>أب: {r.father_calls || '-'}</span><br/>
-                    <span style={{ color: '#0369a1' }}>أم: {r.mother_calls || '-'}</span>
-                  </td>
-                  <td style={{ padding: '14px 12px', fontSize: '12px', lineHeight: '1.5' }}>
-                    <span style={{ color: '#0f766e' }}>أب: {r.father_whatsapp || '-'}</span><br/>
-                    <span style={{ color: '#0369a1' }}>أم: {r.mother_whatsapp || '-'}</span>
-                  </td>
-                  <td style={{ padding: '14px 12px' }}>
-                    {r.registration_fees || '-'}<br/>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>(إيصال: {r.receipt_no_reg || '-'})</span>
-                  </td>
-                  <td style={{ padding: '14px 12px' }}>{r.books || '-'}</td>
-                  <td style={{ padding: '14px 12px' }}>
-                    {r.first_installment || '-'}<br/>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>(إيصال: {r.receipt_no_installment || '-'})</span>
-                  </td>
-                  <td style={{ padding: '14px 12px' }}>{r.uniform || '-'}</td>
-                  <td style={{ padding: '14px 12px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      <button 
-                        onClick={() => { setEditingRecord(r); setFormData(r); setShowModal(true); }} 
-                        style={{ backgroundColor: '#e0f2fe', color: '#0284c7', border: '1px solid #bae6fd', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-                      >
-                        تعديل ✏️
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(r.id)} 
-                        style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-                      >
-                        حذف 🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        /* عرض البيانات على شكل كروت (Cards Grid) منظمة وجذابة جداً بدلاً من الجداول المتداخلة */
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+          {filteredRecords.map((r) => (
+            <div key={r.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative', overflow: 'hidden' }}>
+              
+              {/* شريط تلوين علوي للبطاقة */}
+              <div style={{ position: 'absolute', top: 0, right: 0, left: 0, height: '4px', background: 'linear-gradient(90deg, #0d9488, #0284c7)' }}></div>
+
+              {/* رأس الكارت (الاسم والصف) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h3 style={{ margin: '0 0 4px 0', color: '#0f172a', fontSize: '18px', fontWeight: '800' }}>{r.name || 'بدون اسم'}</h3>
+                  <span style={{ fontSize: '12px', color: '#64748b', background: '#f1f5f9', padding: '3px 8px', borderRadius: '6px', fontWeight: '600' }}>
+                    صفي: {r.class_name || '-'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button 
+                    onClick={() => { setEditingRecord(r); setFormData(r); setShowModal(true); }} 
+                    style={{ backgroundColor: '#e0f2fe', color: '#0284c7', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                  >
+                    تعديل ✏️
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(r.id)} 
+                    style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                  >
+                    حذف 🗑️
+                  </button>
+                </div>
+              </div>
+
+              <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
+
+              {/* معلومات أساسية */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px', color: '#334155' }}>
+                <div><strong>رقم الهوية:</strong> {r.national_id || '-'}</div>
+                <div><strong>اسم الأم:</strong> {r.mother_name || '-'}</div>
+                <div><strong>الجسر:</strong> {r.bridge || '-'}</div>
+                <div><strong>السكن:</strong> {r.address || '-'}</div>
+                <div><strong>تاريخ الميلاد:</strong> {r.birth_date || '-'}</div>
+                <div><strong>العمر:</strong> {r.age || '-'} سنة</div>
+              </div>
+
+              {/* قسم الترحيل والموقف */}
+              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '4px', border: '1px solid #f1f5f9' }}>
+                <div><strong>الترحيل:</strong> {r.transport || '-'} | <strong>ترحيل السبت:</strong> {r.saturday_transport || '-'}</div>
+                <div><strong>موقف التحصيل:</strong> {r.collection_status || '-'} | <strong>الترتيب:</strong> {r.transport_order || '-'}</div>
+              </div>
+
+              {/* تفاصيل التواصل */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px', background: '#f0fdf4', padding: '10px 12px', borderRadius: '10px', border: '1px solid #dcfce7' }}>
+                <div>
+                  <strong style={{ color: '#047857' }}>📞 المكالمات:</strong><br/>
+                  أب: {r.father_calls || '-'}<br/>أم: {r.mother_calls || '-'}
+                </div>
+                <div>
+                  <strong style={{ color: '#047857' }}>💬 الواتساب:</strong><br/>
+                  أب: {r.father_whatsapp || '-'}<br/>أم: {r.mother_whatsapp || '-'}
+                </div>
+              </div>
+
+              {/* تفاصيل الرسوم المالية */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px', background: '#eff6ff', padding: '10px 12px', borderRadius: '10px', border: '1px solid #dbeafe' }}>
+                <div>
+                  <strong style={{ color: '#1d4ed8' }}>💰 رسوم التسجيل:</strong> {r.registration_fees || '-'}<br/>
+                  <span style={{ color: '#64748b' }}>(إيصال: {r.receipt_no_reg || '-'})</span>
+                </div>
+                <div>
+                  <strong style={{ color: '#1d4ed8' }}>💳 القسط الأول:</strong> {r.first_installment || '-'}<br/>
+                  <span style={{ color: '#64748b' }}>(إيصال: {r.receipt_no_installment || '-'})</span>
+                </div>
+              </div>
+
+              {/* ملاحظات إضافية */}
+              {r.notes && (
+                <div style={{ fontSize: '12px', color: '#64748b', background: '#fffbeb', padding: '8px 10px', borderRadius: '8px', border: '1px solid #fef3c7' }}>
+                  <strong>ملاحظات:</strong> {r.notes}
+                </div>
+              )}
+
+            </div>
+          ))}
         </div>
       )}
 
