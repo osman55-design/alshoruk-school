@@ -45,10 +45,12 @@ export default function LandingPage({ onGoToPortal }) {
 
   return (
     <div style={styles.container}>
-      {/* 1. الهيدر العلوي */}
+      {/* 1. الهيدر العلوي العصري */}
       <header style={styles.header}>
         <div style={styles.logoSection}>
-          <img src="/logo.png" alt="شعار المدرسة" style={styles.logo} onError={(e) => e.target.style.display = 'none'} />
+          <div style={styles.logoBox}>
+            <img src="/logo.png" alt="شعار المدرسة" style={styles.logo} onError={(e) => e.target.style.display = 'none'} />
+          </div>
           <h1 style={styles.schoolName}>مدرسة الشروق السودانية المتكاملة</h1>
         </div>
         <button type="button" onClick={onGoToPortal} style={styles.portalBtn}>
@@ -69,7 +71,7 @@ export default function LandingPage({ onGoToPortal }) {
       </div>
 
       <main style={styles.mainContent}>
-        {/* 3. من نحن وأهدافنا (القسم بالكامل بخلفية الأخضر الفاتح الزجاجي) */}
+        {/* 3. من نحن وأهدافنا */}
         <section style={styles.glassSection}>
           <div style={styles.gridTwoCols}>
             <div style={styles.innerCard}>
@@ -100,10 +102,10 @@ export default function LandingPage({ onGoToPortal }) {
         {/* 4. إدارة المدرسة (5 أعضاء) */}
         <section style={styles.section}>
           <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة (5 أعضاء)</h3>
-          <div style={styles.cardGrid}>
+          <div className="cardGrid" style={styles.cardGrid}>
             {boardMembers.length > 0 ? (
               boardMembers.map((member) => (
-                <div key={member.id} style={styles.personCard}>
+                <div key={member.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>👤</div>
                   <h4 style={styles.personName}>{member.name || member.full_name}</h4>
                   <p style={styles.personRole}>{member.role || 'عضو مجلس الإدارة'}</p>
@@ -118,10 +120,10 @@ export default function LandingPage({ onGoToPortal }) {
         {/* 5. الكادر التعليمي (25 معلم) */}
         <section style={styles.section}>
           <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي (25 معلم)</h3>
-          <div style={styles.cardGrid}>
+          <div className="cardGrid" style={styles.cardGrid}>
             {teachers.length > 0 ? (
               teachers.map((teacher) => (
-                <div key={teacher.id} style={styles.personCard}>
+                <div key={teacher.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>🎓</div>
                   <h4 style={styles.personName}>{teacher.full_name || teacher.name}</h4>
                   <p style={styles.personRole}>{teacher.subject || 'معلم'}</p>
@@ -136,10 +138,10 @@ export default function LandingPage({ onGoToPortal }) {
         {/* 6. لوحة الشرف (10 طلاب) */}
         <section style={styles.section}>
           <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (10 طلاب متفوقين)</h3>
-          <div style={styles.cardGrid}>
+          <div className="cardGrid" style={styles.cardGrid}>
             {honors.length > 0 ? (
               honors.map((student) => (
-                <div key={student.id} style={styles.personCard}>
+                <div key={student.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>🏆</div>
                   <h4 style={styles.personName}>{student.full_name || student.name}</h4>
                   <p style={styles.personRole}>{student.class_name || 'طالب متفوق'}</p>
@@ -174,12 +176,12 @@ export default function LandingPage({ onGoToPortal }) {
           .cardGrid {
             display: flex;
             overflow-x: auto;
-            gap: 12px;
+            gap: 14px;
             padding-bottom: 10px;
             scroll-snap-type: x mandatory;
           }
           .personCard {
-            min-width: 150px;
+            min-width: 160px;
             flex: 0 0 auto;
             scroll-snap-align: start;
           }
@@ -192,77 +194,88 @@ export default function LandingPage({ onGoToPortal }) {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#0c0f0e',
-    color: '#e2e8f0',
+    backgroundColor: '#f8fafc', // خلفية نظيفة وفاتحة بنفس نمط المنصات الحديثة
+    color: '#1e293b',
     direction: 'rtl',
     fontFamily: "'Cairo', 'Segoe UI', Tahoma, sans-serif",
     display: 'flex',
     flexDirection: 'column',
   },
   header: {
-    backgroundColor: '#121816',
-    padding: '12px 25px',
+    backgroundColor: '#ffffff',
+    padding: '16px 30px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid #1e2923',
+    borderBottom: '1px solid #e2e8f0',
     position: 'sticky',
     top: 0,
     zIndex: 100,
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
   },
-  logoSection: { display: 'flex', alignItems: 'center', gap: '12px' },
-  logo: { width: '42px', height: '42px', objectFit: 'contain' },
-  schoolName: { fontSize: '17px', color: '#fbbf24', margin: 0, fontWeight: 'bold' },
-  portalBtn: {
-    backgroundColor: '#047857',
-    color: '#ffffff',
-    border: 'none',
-    padding: '8px 18px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-  },
-  tickerContainer: {
-    backgroundColor: '#16221d',
-    color: '#d1fae5',
+  logoSection: { display: 'flex', alignItems: 'center', gap: '14px' },
+  logoBox: {
+    width: '48px',
+    height: '48px',
+    backgroundColor: '#f1f5f9',
+    borderRadius: '12px',
     display: 'flex',
     alignItems: 'center',
-    padding: '8px 20px',
+    justifyContent: 'center',
+    border: '1px solid #e2e8f0',
+  },
+  logo: { width: '32px', height: '32px', objectFit: 'contain' },
+  schoolName: { fontSize: '18px', color: '#0f172a', margin: 0, fontWeight: 'bold' },
+  portalBtn: {
+    backgroundColor: '#0f766e',
+    color: '#ffffff',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '10px',
+    fontSize: '13.5px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    boxShadow: '0 2px 4px rgba(15, 118, 110, 0.2)',
+    transition: 'all 0.2s',
+  },
+  tickerContainer: {
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '10px 25px',
     fontSize: '13px',
     overflow: 'hidden',
-    borderBottom: '1px solid #1e2923',
+    borderBottom: '1px solid #e2e8f0',
   },
   tickerBadge: { 
-    backgroundColor: '#fbbf24', 
-    color: '#0c0f0e', 
-    padding: '2px 8px', 
+    backgroundColor: '#0f766e', 
+    color: '#ffffff', 
+    padding: '3px 10px', 
     borderRadius: '6px', 
     fontWeight: 'bold', 
-    marginLeft: '12px', 
+    marginLeft: '15px', 
     whiteSpace: 'nowrap', 
     zIndex: 2,
-    fontSize: '11px'
+    fontSize: '11.5px'
   },
   tickerWrapper: { overflow: 'hidden', width: '100%', direction: 'ltr' },
   tickerContent: { whiteSpace: 'nowrap' },
   mainContent: {
     flex: 1,
-    padding: '25px 15px',
+    padding: '30px 20px',
     maxWidth: '1200px',
     margin: '0 auto',
     width: '100%',
     boxSizing: 'border-box',
   },
   glassSection: {
-    backgroundColor: 'rgba(16, 185, 129, 0.10)', // خلفية الأخضر الفاتح الزجاجي للحاوية الكبرى كاملة
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    padding: '25px',
+    backgroundColor: '#ffffff',
+    padding: '28px',
     borderRadius: '16px',
-    border: '1px solid rgba(16, 185, 129, 0.25)',
-    marginBottom: '30px',
-    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+    border: '1px solid #e2e8f0',
+    marginBottom: '35px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
   },
   gridTwoCols: {
     display: 'grid',
@@ -270,10 +283,10 @@ const styles = {
     gap: '20px',
   },
   innerCard: {
-    backgroundColor: 'rgba(12, 18, 15, 0.45)', // بطاقات داخلية متناسقة بخلفية أغمق قليلاً للشفافية
-    padding: '20px',
+    backgroundColor: '#f8fafc',
+    padding: '22px',
     borderRadius: '12px',
-    border: '1px solid rgba(16, 185, 129, 0.2)',
+    border: '1px solid #e2e8f0',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -283,7 +296,7 @@ const styles = {
     right: 0,
     width: '4px',
     height: '100%',
-    backgroundColor: '#fbbf24',
+    backgroundColor: '#d97706',
   },
   cardAccentGreen: {
     position: 'absolute',
@@ -291,49 +304,52 @@ const styles = {
     right: 0,
     width: '4px',
     height: '100%',
-    backgroundColor: '#10b981',
+    backgroundColor: '#0f766e',
   },
-  cardTitle: { color: '#fbbf24', margin: '0 0 12px 0', fontSize: '17px', fontWeight: 'bold' },
-  cardTitleGreen: { color: '#34d399', margin: '0 0 12px 0', fontSize: '17px', fontWeight: 'bold' },
-  cardText: { color: '#e2e8f0', fontSize: '13.5px', lineHeight: '1.7', margin: 0 },
-  list: { color: '#e2e8f0', fontSize: '13.5px', lineHeight: '1.7', paddingRight: '18px', margin: 0 },
-  section: { marginBottom: '30px' },
-  sectionTitle: { color: '#fbbf24', fontSize: '17px', marginBottom: '15px', fontWeight: 'bold', borderBottom: '1px solid #1f2b25', paddingBottom: '8px' },
+  cardTitle: { color: '#b45309', margin: '0 0 12px 0', fontSize: '17px', fontWeight: 'bold' },
+  cardTitleGreen: { color: '#0f766e', margin: '0 0 12px 0', fontSize: '17px', fontWeight: 'bold' },
+  cardText: { color: '#475569', fontSize: '14px', lineHeight: '1.7', margin: 0 },
+  list: { color: '#475569', fontSize: '14px', lineHeight: '1.7', paddingRight: '18px', margin: 0 },
+  section: { marginBottom: '35px' },
+  sectionTitle: { color: '#0f172a', fontSize: '18px', marginBottom: '16px', fontWeight: 'bold', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' },
   cardGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-    gap: '15px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+    gap: '16px',
   },
   personCard: {
-    backgroundColor: '#161d1a',
-    padding: '18px',
-    borderRadius: '12px',
+    backgroundColor: '#ffffff',
+    padding: '20px',
+    borderRadius: '14px',
     textAlign: 'center',
-    border: '1px solid #1f2b25',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
   },
   avatarContainer: { 
-    fontSize: '28px', 
-    marginBottom: '8px',
-    width: '50px',
-    height: '50px',
+    fontSize: '26px', 
+    marginBottom: '10px',
+    width: '52px',
+    height: '52px',
     borderRadius: '50%',
-    background: '#1f2b25',
+    background: '#f1f5f9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 10px auto',
+    margin: '0 auto 12px auto',
+    border: '1px solid #e2e8f0',
   },
-  personName: { color: '#ffffff', margin: '0 0 4px 0', fontSize: '14px', fontWeight: 'bold' },
-  personRole: { color: '#fbbf24', fontSize: '11px', margin: 0 },
-  emptyText: { color: '#64748b', fontSize: '12px', gridColumn: '1 / -1', textAlign: 'center', padding: '15px' },
+  personName: { color: '#0f172a', margin: '0 0 4px 0', fontSize: '14.5px', fontWeight: 'bold' },
+  personRole: { color: '#0f766e', fontSize: '12px', margin: 0, fontWeight: '600' },
+  emptyText: { color: '#94a3b8', fontSize: '13px', gridColumn: '1 / -1', textAlign: 'center', padding: '20px' },
   footer: {
-    backgroundColor: '#080a09',
+    backgroundColor: '#ffffff',
     color: '#64748b',
     textAlign: 'center',
-    padding: '20px',
-    fontSize: '12px',
+    padding: '22px',
+    fontSize: '13px',
     marginTop: 'auto',
-    borderTop: '1px solid #161d1a',
+    borderTop: '1px solid #e2e8f0',
   },
-  designerCredit: { marginTop: '5px', color: '#94a3b8' },
+  designerCredit: { marginTop: '6px', color: '#475569' },
 };
