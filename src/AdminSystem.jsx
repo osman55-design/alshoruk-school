@@ -8,6 +8,7 @@ import ResultsSection from './components/ResultsSection';
 import TransportSection from './components/TransportSection';
 import SupervisorsSection from './components/ClassSupervisorsSection';
 import HomeSettingsSection from './components/HomeSettingsSection';
+import BridgeSection from './components/BridgeSection';
 
 export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
   const [activeTab, setActiveTab] = useState('home_settings');
@@ -26,16 +27,17 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
     return false;
   };
 
-  // قائمة الأقسام بمسميات مختصرة وعصرية وألوان جذابة
+  // قائمة الأقسام مع إضافة قسم "الجسر" باللون الفيروزي الجذاب
   const tabsList = [
     { id: 'home_settings', label: 'الرئيسية 🌐', color: 'linear-gradient(135deg, #059669, #10b981)', show: isAdmin },
+    { id: 'bridge', label: 'الجسر 🌉', color: 'linear-gradient(135deg, #0d9488, #14b8a6)', show: true }, // متاح للجميع أو حسب الرغبة
     { id: 'dashboard', label: 'الصلاحيات ⚙️', color: 'linear-gradient(135deg, #4f46e5, #6366f1)', show: isAdmin },
     { id: 'students', label: 'الطلاب 📚', color: 'linear-gradient(135deg, #0284c7, #38bdf8)', show: hasPermission('students', 'can_manage_students') },
     { id: 'classes', label: 'الفصول 🏛️', color: 'linear-gradient(135deg, #7c3aed, #a855f7)', show: hasPermission('classes', 'can_manage_classes') },
     { id: 'teachers', label: 'المعلمين 👨‍🏫', color: 'linear-gradient(135deg, #ea580c, #fb923c)', show: hasPermission('teachers', 'can_manage_teachers') },
     { id: 'accounts', label: 'الحسابات 💰', color: 'linear-gradient(135deg, #16a34a, #4ade80)', show: hasPermission('finance', 'can_manage_finance') },
     { id: 'results', label: 'النتائج 📋', color: 'linear-gradient(135deg, #9333ea, #c084fc)', show: hasPermission('results', 'can_manage_results') },
-    { id: 'transport', label: 'التراحيل 🚌', color: 'linear-gradient(135deg, #0d9488, #2dd4bf)', show: hasPermission('transport', 'can_manage_transport') },
+    { id: 'transport', label: 'التراحيل 🚌', color: 'linear-gradient(135deg, #0284c7, #2dd4bf)', show: hasPermission('transport', 'can_manage_transport') },
     { id: 'supervisors', label: 'المشرفات 👩‍💼', color: 'linear-gradient(135deg, #db2777, #f472b6)', show: hasPermission('supervisors', 'can_manage_supervisors') },
   ];
 
@@ -44,7 +46,6 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
-      {/* تنسيقات سي إس إس للتحكم في ظهور القائمة بحسب الشاشة */}
       <style>{`
         @media (min-width: 900px) {
           .desktop-nav-container { display: flex !important; }
@@ -56,13 +57,10 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
         }
       `}</style>
 
-      {/* هيدر شريط الإدارة العلوي بالخلفية الخضراء الفخمة */}
       <header style={{ padding: '16px 4%', background: 'linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)', boxShadow: '0 4px 20px rgba(4,120,87,0.2)' }}>
         
-        {/* الجزء العلوي: الشعار، اسم المستخدم، وزر الخروج العصري */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           
-          {/* الشعار واسم النظام */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{ width: '46px', height: '46px', borderRadius: '14px', backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.3)' }}>
               <img src="/logo.png" alt="logo" onError={(e) => { e.target.src = "https://placehold.co/100?text=Logo"; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -75,7 +73,6 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
             </div>
           </div>
 
-          {/* 🚪 زر خروج عصري وجذاب */}
           <button 
             onClick={onLogout} 
             style={{ 
@@ -93,15 +90,12 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
               boxShadow: '0 4px 15px rgba(239, 68, 68, 0.35)',
               transition: 'all 0.2s ease'
             }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <span>خروج آمن</span>
             <span style={{ fontSize: '15px' }}>🚪</span>
           </button>
         </div>
 
-        {/* 📱 قائمة منسدلة ذكية تظهر على الجوال بالمسميات المختصرة */}
         <div className="mobile-dropdown-container" style={{ paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.15)' }}>
           <select
             value={activeTab}
@@ -127,7 +121,6 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
           </select>
         </div>
 
-        {/* 💻 الأزرار الأفقية الملونة والمختصرة تظهر على الكمبيوتر */}
         <div className="desktop-nav-container" style={{ 
           flexWrap: 'wrap', 
           gap: '8px', 
@@ -163,7 +156,6 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
         </div>
       </header>
 
-      {/* محتوى القسم النشط */}
       <main style={{ padding: '24px 4%', flex: '1', boxSizing: 'border-box' }}>
         <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0', width: '100%', overflowX: 'auto' }}>
           {activeTab === 'students' && <StudentsSection currentUser={currentUser} />}
@@ -175,6 +167,7 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
           {activeTab === 'supervisors' && <SupervisorsSection currentUser={currentUser} />}
           {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('students')} />}
           {activeTab === 'home_settings' && <HomeSettingsSection />}
+          {activeTab === 'bridge' && <BridgeSection currentUser={currentUser} />}
         </div>
       </main>
 
