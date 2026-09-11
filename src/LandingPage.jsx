@@ -79,6 +79,11 @@ export default function LandingPage({ onGoToPortal }) {
     fetchAllData();
   }, []);
 
+  // دالة مساعدة للتحقق مما إذا كان النص رابط صورة صالح
+  const isValidImageUrl = (url) => {
+    return url && typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'));
+  };
+
   return (
     <div style={styles.container}>
       {/* الهيدر العلوي */}
@@ -143,7 +148,7 @@ export default function LandingPage({ onGoToPortal }) {
               boardMembers.map((member) => (
                 <div key={member.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>
-                    {member.image ? (
+                    {isValidImageUrl(member.image) ? (
                       <img src={member.image} alt={member.name} style={styles.personImage} />
                     ) : (
                       '👤'
@@ -167,7 +172,7 @@ export default function LandingPage({ onGoToPortal }) {
               teachers.map((teacher) => (
                 <div key={teacher.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>
-                    {teacher.image ? (
+                    {isValidImageUrl(teacher.image) ? (
                       <img src={teacher.image} alt={teacher.full_name} style={styles.personImage} />
                     ) : (
                       '🎓'
@@ -191,7 +196,7 @@ export default function LandingPage({ onGoToPortal }) {
               supervision.map((item) => (
                 <div key={item.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>
-                    {item.image ? (
+                    {isValidImageUrl(item.image) ? (
                       <img src={item.image} alt={item.name} style={styles.personImage} />
                     ) : (
                       '🔍'
@@ -215,7 +220,7 @@ export default function LandingPage({ onGoToPortal }) {
               honorKindergarten.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>
-                    {student.image ? (
+                    {isValidImageUrl(student.image) ? (
                       <img src={student.image} alt={student.name} style={styles.personImage} />
                     ) : (
                       '⭐'
@@ -239,7 +244,7 @@ export default function LandingPage({ onGoToPortal }) {
               honorPrimary.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>
-                    {student.image ? (
+                    {isValidImageUrl(student.image) ? (
                       <img src={student.image} alt={student.name} style={styles.personImage} />
                     ) : (
                       '🏆'
@@ -263,7 +268,7 @@ export default function LandingPage({ onGoToPortal }) {
               honorMiddle.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>
-                    {student.image ? (
+                    {isValidImageUrl(student.image) ? (
                       <img src={student.image} alt={student.name} style={styles.personImage} />
                     ) : (
                       '🏅'
@@ -287,7 +292,7 @@ export default function LandingPage({ onGoToPortal }) {
               honorHigh.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>
-                    {student.image ? (
+                    {isValidImageUrl(student.image) ? (
                       <img src={student.image} alt={student.name} style={styles.personImage} />
                     ) : (
                       '💡'
