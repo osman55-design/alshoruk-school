@@ -102,7 +102,7 @@ export default function LandingPage({ onGoToPortal }) {
         {/* 4. إدارة المدرسة (5 أعضاء) */}
         <section style={styles.section}>
           <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة (5 أعضاء)</h3>
-          <div className="cardGrid" style={styles.cardGrid}>
+          <div className="horizontalScrollGrid" style={styles.cardGrid}>
             {boardMembers.length > 0 ? (
               boardMembers.map((member) => (
                 <div key={member.id} style={styles.personCard} className="personCard">
@@ -120,7 +120,7 @@ export default function LandingPage({ onGoToPortal }) {
         {/* 5. الكادر التعليمي (25 معلم) */}
         <section style={styles.section}>
           <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي (25 معلم)</h3>
-          <div className="cardGrid" style={styles.cardGrid}>
+          <div className="horizontalScrollGrid" style={styles.cardGrid}>
             {teachers.length > 0 ? (
               teachers.map((teacher) => (
                 <div key={teacher.id} style={styles.personCard} className="personCard">
@@ -138,7 +138,7 @@ export default function LandingPage({ onGoToPortal }) {
         {/* 6. لوحة الشرف (10 طلاب) */}
         <section style={styles.section}>
           <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (10 طلاب متفوقين)</h3>
-          <div className="cardGrid" style={styles.cardGrid}>
+          <div className="horizontalScrollGrid" style={styles.cardGrid}>
             {honors.length > 0 ? (
               honors.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
@@ -171,18 +171,27 @@ export default function LandingPage({ onGoToPortal }) {
           white-space: nowrap;
           animation: scrollLeftToRight 30s linear infinite;
         }
-        /* تحسين العرض الأفقي والتحكم بالبطاقات على الجوال */
+        
+        /* تفعيل السحب الأفقي للبطاقات في الجوال فقط */
         @media (max-width: 768px) {
-          .cardGrid {
-            display: flex;
-            overflow-x: auto;
-            gap: 14px;
-            padding-bottom: 10px;
+          .horizontalScrollGrid {
+            display: flex !important;
+            overflow-x: auto !important;
+            gap: 12px !important;
+            padding-bottom: 12px !important;
             scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+          }
+          .horizontalScrollGrid::-webkit-scrollbar {
+            height: 6px;
+          }
+          .horizontalScrollGrid::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
           }
           .personCard {
-            min-width: 160px;
-            flex: 0 0 auto;
+            min-width: 150px !important;
+            flex: 0 0 auto !important;
             scroll-snap-align: start;
           }
         }
@@ -194,7 +203,7 @@ export default function LandingPage({ onGoToPortal }) {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f8fafc', // خلفية نظيفة وفاتحة بنفس نمط المنصات الحديثة
+    backgroundColor: '#f8fafc',
     color: '#1e293b',
     direction: 'rtl',
     fontFamily: "'Cairo', 'Segoe UI', Tahoma, sans-serif",
