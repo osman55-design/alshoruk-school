@@ -187,21 +187,19 @@ export default function BridgeSection({ currentUser }) {
   );
 
   return (
-    <div style={{ direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif", padding: '20px', background: '#f8fafc', minHeight: '100vh' }}>
+    <div style={{ direction: 'rtl', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: '20px', background: '#f1f5f9', minHeight: '100vh' }}>
       
       {/* رأس الصفحة */}
-      <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', border: '1px solid #e2e8f0' }}>
+      <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', border: '1px solid #cbd5e1' }}>
         <div>
-          <h2 style={{ margin: 0, color: '#0f172a', fontSize: '24px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span>🌉</span> قسم الجسر
-          </h2>
-          <p style={{ margin: '6px 0 0 0', color: '#64748b', fontSize: '14px' }}>إدارة بيانات الطلاب، الترحيل، والرسوم المالية ببطاقات عصرية ومنظمة</p>
+          <h2 style={{ margin: 0, color: '#1e293b', fontSize: '22px', fontWeight: '800' }}>🌉 قسم الجسر</h2>
+          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>إدارة سجلات الطلاب بأسلوب جداول إكسل التقليدية والمنظمة</p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button 
             onClick={exportToExcel}
-            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}
+            style={{ background: '#10b981', color: '#fff', border: 'none', padding: '9px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
           >
             📊 تصدير Excel
           </button>
@@ -215,14 +213,14 @@ export default function BridgeSection({ currentUser }) {
           />
           <button 
             onClick={() => fileInputRef.current?.click()}
-            style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(2,132,199,0.2)' }}
+            style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '9px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
           >
             📥 استيراد Excel
           </button>
 
           <button 
             onClick={() => { setEditingRecord(null); setFormData(initialFormState); setShowModal(true); }}
-            style={{ background: 'linear-gradient(135deg, #0d9488, #0f766e)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(13,148,136,0.25)' }}
+            style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
           >
             ➕ إضافة سجل
           </button>
@@ -230,119 +228,107 @@ export default function BridgeSection({ currentUser }) {
       </div>
 
       {/* شريط البحث */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '15px' }}>
         <input 
           type="text" 
           placeholder="🔍 ابحث باسم الطالب أو رقم الهوية..." 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ width: '100%', maxWidth: '450px', padding: '12px 18px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', backgroundColor: '#fff', boxShadow: '0 2px 5px rgba(0,0,0,0.01)' }}
+          style={{ width: '100%', maxWidth: '400px', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '13px', backgroundColor: '#fff' }}
         />
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', color: '#64748b', padding: '60px', background: '#fff', borderRadius: '16px' }}>جاري تحميل البيانات...</div>
+        <div style={{ textAlign: 'center', color: '#64748b', padding: '50px', background: '#fff', borderRadius: '8px' }}>جاري تحميل البيانات...</div>
       ) : filteredRecords.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '50px', color: '#94a3b8', background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', background: '#fff', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
           لا توجد سجلات مطابقة.
         </div>
       ) : (
-        /* عرض البيانات على شكل كروت (Cards Grid) منظمة وجذابة جداً بدلاً من الجداول المتداخلة */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-          {filteredRecords.map((r) => (
-            <div key={r.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative', overflow: 'hidden' }}>
-              
-              {/* شريط تلوين علوي للبطاقة */}
-              <div style={{ position: 'absolute', top: 0, right: 0, left: 0, height: '4px', background: 'linear-gradient(90deg, #0d9488, #0284c7)' }}></div>
-
-              {/* رأس الكارت (الاسم والصف) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h3 style={{ margin: '0 0 4px 0', color: '#0f172a', fontSize: '18px', fontWeight: '800' }}>{r.name || 'بدون اسم'}</h3>
-                  <span style={{ fontSize: '12px', color: '#64748b', background: '#f1f5f9', padding: '3px 8px', borderRadius: '6px', fontWeight: '600' }}>
-                    صفي: {r.class_name || '-'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button 
-                    onClick={() => { setEditingRecord(r); setFormData(r); setShowModal(true); }} 
-                    style={{ backgroundColor: '#e0f2fe', color: '#0284c7', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-                  >
-                    تعديل ✏️
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(r.id)} 
-                    style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-                  >
-                    حذف 🗑️
-                  </button>
-                </div>
-              </div>
-
-              <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
-
-              {/* معلومات أساسية */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px', color: '#334155' }}>
-                <div><strong>رقم الهوية:</strong> {r.national_id || '-'}</div>
-                <div><strong>اسم الأم:</strong> {r.mother_name || '-'}</div>
-                <div><strong>الجسر:</strong> {r.bridge || '-'}</div>
-                <div><strong>السكن:</strong> {r.address || '-'}</div>
-                <div><strong>تاريخ الميلاد:</strong> {r.birth_date || '-'}</div>
-                <div><strong>العمر:</strong> {r.age || '-'} سنة</div>
-              </div>
-
-              {/* قسم الترحيل والموقف */}
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '4px', border: '1px solid #f1f5f9' }}>
-                <div><strong>الترحيل:</strong> {r.transport || '-'} | <strong>ترحيل السبت:</strong> {r.saturday_transport || '-'}</div>
-                <div><strong>موقف التحصيل:</strong> {r.collection_status || '-'} | <strong>الترتيب:</strong> {r.transport_order || '-'}</div>
-              </div>
-
-              {/* تفاصيل التواصل */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px', background: '#f0fdf4', padding: '10px 12px', borderRadius: '10px', border: '1px solid #dcfce7' }}>
-                <div>
-                  <strong style={{ color: '#047857' }}>📞 المكالمات:</strong><br/>
-                  أب: {r.father_calls || '-'}<br/>أم: {r.mother_calls || '-'}
-                </div>
-                <div>
-                  <strong style={{ color: '#047857' }}>💬 الواتساب:</strong><br/>
-                  أب: {r.father_whatsapp || '-'}<br/>أم: {r.mother_whatsapp || '-'}
-                </div>
-              </div>
-
-              {/* تفاصيل الرسوم المالية */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px', background: '#eff6ff', padding: '10px 12px', borderRadius: '10px', border: '1px solid #dbeafe' }}>
-                <div>
-                  <strong style={{ color: '#1d4ed8' }}>💰 رسوم التسجيل:</strong> {r.registration_fees || '-'}<br/>
-                  <span style={{ color: '#64748b' }}>(إيصال: {r.receipt_no_reg || '-'})</span>
-                </div>
-                <div>
-                  <strong style={{ color: '#1d4ed8' }}>💳 القسط الأول:</strong> {r.first_installment || '-'}<br/>
-                  <span style={{ color: '#64748b' }}>(إيصال: {r.receipt_no_installment || '-'})</span>
-                </div>
-              </div>
-
-              {/* ملاحظات إضافية */}
-              {r.notes && (
-                <div style={{ fontSize: '12px', color: '#64748b', background: '#fffbeb', padding: '8px 10px', borderRadius: '8px', border: '1px solid #fef3c7' }}>
-                  <strong>ملاحظات:</strong> {r.notes}
-                </div>
-              )}
-
-            </div>
-          ))}
+        /* جدول أفقي تقليدي تماماً مثل إكسل (تنسيق شبكي وخطوط واضحة وهيدر بنفسجي) */
+        <div style={{ overflowX: 'auto', background: '#fff', borderRadius: '8px', border: '1px solid #94a3b8', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '12px', minWidth: '1700px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#581c87', color: '#fff', borderBottom: '2px solid #3b0764' }}>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>الاسم</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>الجسر</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>الترحيل</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>اسم الأم</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>رقم الهوية</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>تاريخ الدخول</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>تاريخ الميلاد</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>العمر</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>السكن</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>صفي</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>موقف التحصيل</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>ترحيل السبت</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>التحصيل</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>ترتيب الترحيل</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>ملاحظات</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>مكالمات الوالد/ة</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>واتساب الوالد/ة</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>رسوم التسجيل</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>الكتب</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>القسط الأول</th>
+                <th style={{ padding: '10px 8px', borderLeft: '1px solid #6b21a8' }}>اللبس</th>
+                <th style={{ padding: '10px 8px', textAlign: 'center' }}>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRecords.map((r, idx) => (
+                <tr key={r.id} style={{ borderBottom: '1px solid #cbd5e1', backgroundColor: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0', fontWeight: 'bold', color: '#0f172a' }}>{r.name || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.bridge || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.transport || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.mother_name || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.national_id || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.entry_date || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.birth_date || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.age || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.address || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.class_name || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.collection_status || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.saturday_transport || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.collection || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.transport_order || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.notes || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0', fontSize: '11px', lineHeight: '1.4' }}>
+                    أب: {r.father_calls || '-'}<br/>أم: {r.mother_calls || '-'}
+                  </td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0', fontSize: '11px', lineHeight: '1.4' }}>
+                    أب: {r.father_whatsapp || '-'}<br/>أم: {r.mother_whatsapp || '-'}
+                  </td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0', fontSize: '11px' }}>
+                    {r.registration_fees || '-'}<br/>(إيصال: {r.receipt_no_reg || '-'})
+                  </td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.books || '-'}</td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0', fontSize: '11px' }}>
+                    {r.first_installment || '-'}<br/>(إيصال: {r.receipt_no_installment || '-'})
+                  </td>
+                  <td style={{ padding: '8px', borderLeft: '1px solid #e2e8f0' }}>{r.uniform || '-'}</td>
+                  <td style={{ padding: '8px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                      <button onClick={() => { setEditingRecord(r); setFormData(r); setShowModal(true); }} style={{ backgroundColor: '#e0f2fe', color: '#0284c7', border: '1px solid #bae6fd', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' }}>تعديل</button>
+                      <button onClick={() => handleDelete(r.id)} style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' }}>حذف</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* نافذة الإضافة والتعديل */}
       {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' }}>
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', width: '100%', maxWidth: '850px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-            <h3 style={{ color: '#0d9488', marginTop: 0, marginBottom: '20px', fontSize: '18px', borderBottom: '2px solid #f1f5f9', paddingBottom: '12px', fontWeight: '800' }}>
-              {editingRecord ? '✏️ تعديل بيانات السجل' : '➕ إضافة سجل جديد لجسر'}
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' }}>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid #cbd5e1' }}>
+            <h3 style={{ color: '#581c87', marginTop: 0, marginBottom: '20px', fontSize: '16px', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', fontWeight: 'bold' }}>
+              {editingRecord ? '✏️ تعديل بيانات السجل' : '➕ إضافة سجل جديد'}
             </h3>
             
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                 {[
                   { label: 'الاسم', key: 'name' },
                   { label: 'الجسر', key: 'bridge' },
@@ -370,31 +356,31 @@ export default function BridgeSection({ currentUser }) {
                   { label: 'رقم الإيصال (القسط)', key: 'receipt_no_installment' },
                   { label: 'اللبس', key: 'uniform' },
                 ].map((field) => (
-                  <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>{field.label}:</label>
+                  <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#475569' }}>{field.label}:</label>
                     <input 
                       type={field.type || 'text'}
                       value={formData[field.key] || ''}
                       onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-                      style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', backgroundColor: '#f8fafc' }}
+                      style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none', backgroundColor: '#f8fafc' }}
                     />
                   </div>
                 ))}
 
-                <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>ملاحظات:</label>
+                <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#475569' }}>ملاحظات:</label>
                   <textarea 
                     value={formData.notes || ''}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows="3"
-                    style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', backgroundColor: '#f8fafc', resize: 'vertical' }}
+                    rows="2"
+                    style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none', backgroundColor: '#f8fafc', resize: 'vertical' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
-                <button type="button" onClick={() => setShowModal(false)} style={{ background: '#e2e8f0', color: '#334155', border: 'none', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>إلغاء</button>
-                <button type="submit" style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(13,148,136,0.3)' }}>حفظ البيانات 💾</button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ background: '#e2e8f0', color: '#334155', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>إلغاء</button>
+                <button type="submit" style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>حفظ البيانات 💾</button>
               </div>
             </form>
           </div>
