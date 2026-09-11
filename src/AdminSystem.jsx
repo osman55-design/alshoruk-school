@@ -26,31 +26,26 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
     return false;
   };
 
-  const navBtnStyle = (isActive) => ({
-    padding: '8px 16px',
-    borderRadius: '10px',
-    border: 'none',
+  // تصميم المربع الزجاجي الفاخر
+  const navCardStyle = (isActive) => ({
+    padding: '12px 16px',
+    borderRadius: '12px',
+    border: isActive ? '2px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.25)',
     cursor: 'pointer',
     fontWeight: 'bold',
     fontSize: '13px',
-    backgroundColor: isActive ? '#ffffff' : 'rgba(255,255,255,0.15)',
-    color: isActive ? '#065f46' : '#ffffff',
-    transition: 'all 0.2s ease',
-    boxShadow: isActive ? '0 3px 10px rgba(0,0,0,0.12)' : 'none'
+    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    color: '#ffffff',
+    transition: 'all 0.25s ease',
+    boxShadow: isActive ? '0 6px 20px rgba(0, 0, 0, 0.15)' : '0 2px 10px rgba(0, 0, 0, 0.05)',
+    display: 'flex',
+    alignItem: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    whiteSpace: 'nowrap'
   });
-
-  // تجميع الأقسام المتاحة للمستخدم بناءً على الصلاحيات لتظهر في القائمة المنسدلة للجوال
-  const availableTabs = [
-    { id: 'home_settings', label: 'إدارة الصفحة الرئيسية 🌐', show: isAdmin },
-    { id: 'dashboard', label: 'إدارة المستخدمين والصلاحيات ⚙️', show: isAdmin },
-    { id: 'students', label: 'شؤون الطلاب 📚', show: hasPermission('students', 'can_manage_students') },
-    { id: 'classes', label: 'الفصول 🏛️', show: hasPermission('classes', 'can_manage_classes') },
-    { id: 'teachers', label: 'المعلمين 👨‍🏫', show: hasPermission('teachers', 'can_manage_teachers') },
-    { id: 'accounts', label: 'الحسابات والمالية 💰', show: hasPermission('finance', 'can_manage_finance') },
-    { id: 'results', label: 'النتائج والشهادات 📋', show: hasPermission('results', 'can_manage_results') },
-    { id: 'transport', label: 'التراحيل 🚌', show: hasPermission('transport', 'can_manage_transport') },
-    { id: 'supervisors', label: 'المشرفات 👩‍💼', show: hasPermission('supervisors', 'can_manage_supervisors') },
-  ].filter(tab => tab.show);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
@@ -83,81 +78,48 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
           </div>
         </div>
 
-        {/* 📱 قائمة منسدلة خاصة بالهواتف المحمولة (تظهر فقط على الجوال وتختفي على الشاشات الكبيرة) */}
-        <div style={{ display: 'block' }} className="mobile-dropdown-container">
-          <style>{`
-            @media (min-width: 768px) {
-              .mobile-dropdown-wrapper { display: none !important; }
-              .desktop-tabs-wrapper { display: flex !important; }
-            }
-            @media (max-width: 767px) {
-              .mobile-dropdown-wrapper { display: block !important; }
-              .desktop-tabs-wrapper { display: none !important; }
-            }
-          `}</style>
-          
-          <div className="mobile-dropdown-wrapper" style={{ marginBottom: '4px' }}>
-            <select
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '10px',
-                border: '1px solid rgba(255,255,255,0.3)',
-                backgroundColor: '#ffffff',
-                color: '#065f46',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                outline: 'none',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-              }}
-            >
-              {availableTabs.map((tab) => (
-                <option key={tab.id} value={tab.id}>
-                  {tab.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* 💻 أزرار التنقل العادية (تظهر فقط على أجهزة الكمبيوتر والشاشات الواسعة) */}
-        <div className="desktop-tabs-wrapper" style={{ flexWrap: 'wrap', gap: '8px', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        {/* شبكة المربعات الزجاجية للأقسام */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', 
+          gap: '10px', 
+          paddingTop: '8px', 
+          borderTop: '1px solid rgba(255,255,255,0.15)' 
+        }}>
           {isAdmin && (
-            <button style={navBtnStyle(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>إدارة المستخدمين والصلاحيات ⚙️</button>
+            <button style={navCardStyle(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>إدارة المستخدمين والصلاحيات ⚙️</button>
           )}
 
           {isAdmin && (
-            <button style={navBtnStyle(activeTab === 'home_settings')} onClick={() => setActiveTab('home_settings')}>إدارة الصفحة الرئيسية 🌐</button>
+            <button style={navCardStyle(activeTab === 'home_settings')} onClick={() => setActiveTab('home_settings')}>إدارة الصفحة الرئيسية 🌐</button>
           )}
           
           {hasPermission('students', 'can_manage_students') && (
-            <button style={navBtnStyle(activeTab === 'students')} onClick={() => setActiveTab('students')}>شؤون الطلاب 📚</button>
+            <button style={navCardStyle(activeTab === 'students')} onClick={() => setActiveTab('students')}>شؤون الطلاب 📚</button>
           )}
           
           {hasPermission('classes', 'can_manage_classes') && (
-            <button style={navBtnStyle(activeTab === 'classes')} onClick={() => setActiveTab('classes')}>الفصول 🏛️</button>
+            <button style={navCardStyle(activeTab === 'classes')} onClick={() => setActiveTab('classes')}>الفصول 🏛️</button>
           )}
           
           {hasPermission('teachers', 'can_manage_teachers') && (
-            <button style={navBtnStyle(activeTab === 'teachers')} onClick={() => setActiveTab('teachers')}>المعلمين 👨‍🏫</button>
+            <button style={navCardStyle(activeTab === 'teachers')} onClick={() => setActiveTab('teachers')}>المعلمين 👨‍🏫</button>
           )}
           
           {hasPermission('finance', 'can_manage_finance') && (
-            <button style={navBtnStyle(activeTab === 'accounts')} onClick={() => setActiveTab('accounts')}>الحسابات والمالية 💰</button>
+            <button style={navCardStyle(activeTab === 'accounts')} onClick={() => setActiveTab('accounts')}>الحسابات والمالية 💰</button>
           )}
           
           {hasPermission('results', 'can_manage_results') && (
-            <button style={navBtnStyle(activeTab === 'results')} onClick={() => setActiveTab('results')}>النتائج والشهادات 📋</button>
+            <button style={navCardStyle(activeTab === 'results')} onClick={() => setActiveTab('results')}>النتائج والشهادات 📋</button>
           )}
           
           {hasPermission('transport', 'can_manage_transport') && (
-            <button style={navBtnStyle(activeTab === 'transport')} onClick={() => setActiveTab('transport')}>التراحيل 🚌</button>
+            <button style={navCardStyle(activeTab === 'transport')} onClick={() => setActiveTab('transport')}>التراحيل 🚌</button>
           )}
           
           {hasPermission('supervisors', 'can_manage_supervisors') && (
-            <button style={navBtnStyle(activeTab === 'supervisors')} onClick={() => setActiveTab('supervisors')}>المشرفات 👩‍💼</button>
+            <button style={navCardStyle(activeTab === 'supervisors')} onClick={() => setActiveTab('supervisors')}>المشرفات 👩‍💼</button>
           )}
         </div>
       </header>
