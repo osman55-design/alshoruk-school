@@ -45,8 +45,8 @@ export default function LandingPage({ onGoToPortal }) {
 
   return (
     <div style={styles.container}>
-      {/* 1. الهيدر العلوي المنسق مع شعار كبير وزر متناسق */}
-      <header style={styles.header}>
+      {/* 1. الهيدر العلوي المتجاوب (شعار كبير واسم كامل بدون اختفاء) */}
+      <header style={styles.header} className="headerResponsive">
         <div style={styles.logoSection}>
           <div style={styles.logoBox}>
             <img src="/logo.png" alt="شعار المدرسة" style={styles.logo} onError={(e) => e.target.style.display = 'none'} />
@@ -172,8 +172,34 @@ export default function LandingPage({ onGoToPortal }) {
           animation: scrollLeftToRight 30s linear infinite;
         }
         
-        /* تفعيل السحب الأفقي للبطاقات في الجوال */
+        /* تنسيقات الشاشات الصغيرة (الجوال) */
         @media (max-width: 768px) {
+          .headerResponsive {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            padding: 20px 16px !important;
+            gap: 16px !important;
+          }
+          
+          .headerResponsive > div {
+            flex-direction: column !important;
+            align-items: center !important;
+            width: 100% !important;
+          }
+
+          .headerResponsive h1 {
+            white-space: normal !important;
+            font-size: 19px !important;
+            text-align: center !important;
+          }
+
+          .headerResponsive button {
+            width: 100% !important;
+            max-width: 260px !important;
+            padding: 12px !important;
+          }
+
           .horizontalScrollGrid {
             display: flex !important;
             overflow-x: auto !important;
@@ -212,7 +238,7 @@ const styles = {
   },
   header: {
     backgroundColor: '#ffffff',
-    padding: '16px 24px',
+    padding: '16px 30px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -221,54 +247,47 @@ const styles = {
     top: 0,
     zIndex: 100,
     boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
-    gap: '12px',
   },
   logoSection: { 
     display: 'flex', 
     alignItems: 'center', 
     gap: '16px',
-    flex: 1,
-    minWidth: 0,
   },
   logoBox: {
-    width: '64px',       /* تم تكبير حاوية الشعار لتكون واضحة وكبيرة */
-    height: '64px',      /* تم تكبير حاوية الشعار لتكون واضحة وكبيرة */
+    width: '72px',       /* شعار بحجم كبير وبارز جداً */
+    height: '72px',      /* شعار بحجم كبير وبارز جداً */
     backgroundColor: '#f1f5f9',
     borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     border: '1px solid #e2e8f0',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.04)',
     flexShrink: 0,
   },
   logo: { 
-    width: '46px',       /* تم تكبير حجم الشعار الداخلي */
-    height: '46px',      /* تم تكبير حجم الشعار الداخلي */
+    width: '52px',       /* حجم الأيقونة داخل الحاوية */
+    height: '52px', 
     objectFit: 'contain' 
   },
   schoolName: { 
-    fontSize: '17px', 
+    fontSize: '20px', 
     color: '#0f172a', 
     margin: 0, 
     fontWeight: 'bold',
     lineHeight: '1.4',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
   },
   portalBtn: {
     backgroundColor: '#0f766e',
     color: '#ffffff',
     border: 'none',
-    padding: '10px 18px',
+    padding: '11px 22px',
     borderRadius: '12px',
-    fontSize: '13px',
+    fontSize: '14px',
     fontWeight: 'bold',
     cursor: 'pointer',
     boxShadow: '0 2px 4px rgba(15, 118, 110, 0.2)',
     transition: 'all 0.2s',
-    whiteSpace: 'nowrap',
     flexShrink: 0,
   },
   tickerContainer: {
@@ -372,7 +391,7 @@ const styles = {
     margin: '0 auto 12px auto',
     border: '1px solid #e2e8f0',
   },
-  personName: { color: '#0f172a', margin: '0 0 4px 0', fontSize: '14.5px', fontWeight: 'bold' },
+  personName: { color: '#0f172a', margin: '0 0 4px 0', fontSize: '14.0px', fontWeight: 'bold' },
   personRole: { color: '#0f766e', fontSize: '12px', margin: 0, fontWeight: '600' },
   emptyText: { color: '#94a3b8', fontSize: '13px', gridColumn: '1 / -1', textAlign: 'center', padding: '20px' },
   footer: {
