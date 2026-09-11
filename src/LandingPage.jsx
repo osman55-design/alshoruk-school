@@ -45,7 +45,7 @@ export default function LandingPage({ onGoToPortal }) {
 
   return (
     <div style={styles.container}>
-      {/* 1. الهيدر العلوي العصري */}
+      {/* 1. الهيدر العلوي المنسق مع شعار كبير وزر متناسق */}
       <header style={styles.header}>
         <div style={styles.logoSection}>
           <div style={styles.logoBox}>
@@ -172,7 +172,7 @@ export default function LandingPage({ onGoToPortal }) {
           animation: scrollLeftToRight 30s linear infinite;
         }
         
-        /* تفعيل السحب الأفقي للبطاقات في الجوال فقط */
+        /* تفعيل السحب الأفقي للبطاقات في الجوال */
         @media (max-width: 768px) {
           .horizontalScrollGrid {
             display: flex !important;
@@ -212,7 +212,7 @@ const styles = {
   },
   header: {
     backgroundColor: '#ffffff',
-    padding: '16px 30px',
+    padding: '16px 24px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -221,31 +221,55 @@ const styles = {
     top: 0,
     zIndex: 100,
     boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+    gap: '12px',
   },
-  logoSection: { display: 'flex', alignItems: 'center', gap: '14px' },
+  logoSection: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '16px',
+    flex: 1,
+    minWidth: 0,
+  },
   logoBox: {
-    width: '48px',
-    height: '48px',
+    width: '64px',       /* تم تكبير حاوية الشعار لتكون واضحة وكبيرة */
+    height: '64px',      /* تم تكبير حاوية الشعار لتكون واضحة وكبيرة */
     backgroundColor: '#f1f5f9',
-    borderRadius: '12px',
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     border: '1px solid #e2e8f0',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+    flexShrink: 0,
   },
-  logo: { width: '32px', height: '32px', objectFit: 'contain' },
-  schoolName: { fontSize: '18px', color: '#0f172a', margin: 0, fontWeight: 'bold' },
+  logo: { 
+    width: '46px',       /* تم تكبير حجم الشعار الداخلي */
+    height: '46px',      /* تم تكبير حجم الشعار الداخلي */
+    objectFit: 'contain' 
+  },
+  schoolName: { 
+    fontSize: '17px', 
+    color: '#0f172a', 
+    margin: 0, 
+    fontWeight: 'bold',
+    lineHeight: '1.4',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
   portalBtn: {
     backgroundColor: '#0f766e',
     color: '#ffffff',
     border: 'none',
-    padding: '10px 20px',
-    borderRadius: '10px',
-    fontSize: '13.5px',
+    padding: '10px 18px',
+    borderRadius: '12px',
+    fontSize: '13px',
     fontWeight: 'bold',
     cursor: 'pointer',
     boxShadow: '0 2px 4px rgba(15, 118, 110, 0.2)',
     transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
   tickerContainer: {
     backgroundColor: '#f1f5f9',
