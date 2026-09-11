@@ -25,7 +25,8 @@ export default function HomeSettingsSection() {
   // حقول الإدخال المشتركة للأشخاص
   const [personName, setPersonName] = useState('');
   const [personRole, setPersonRole] = useState(''); // الدور، المادة، أو المرحلة الدراسية
-  const [personImage, setPersonImage] = useState('');
+  const [personImageFile, setPersonImageFile] = useState(null); // ملف الصورة بدلاً من الرابط النصي
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // حقول الإدخال للأقسام والتواصل
   const [sectionTitle, setSectionTitle] = useState('');
@@ -60,7 +61,6 @@ export default function HomeSettingsSection() {
       const { data: teachersData } = await supabase.from('teachers').select('*');
       if (teachersData) setTeachersList(teachersData);
 
-      // تم التعديل هنا ليطابق جدول top_students الصحيح
       const { data: honorsData } = await supabase.from('top_students').select('*');
       if (honorsData) setHonorsList(honorsData);
 
@@ -75,6 +75,26 @@ export default function HomeSettingsSection() {
 
     } catch (err) {
       console.error('Error fetching data:', err);
+    }
+  };
+
+  // دالة مساعدة لرفع الصورة إلى Supabase Storage
+  const uploadImageToSupabase = async (file) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36.substring(2))}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('school-images') // تأكد أن لديك Bucket بهذا الاسم في سلة Supabase
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('school-images').getPublicUrl(filePath);
+      return data.publicUrl;
+    } catch (err) {
+      throw new Error('فشل رفع الصورة: ' + err.message);
     }
   };
 
@@ -139,48 +159,59 @@ export default function HomeSettingsSection() {
   const handleAddPerson = async (type) => {
     if (!personName.trim()) return;
     try {
+      setUploadingImage(true);
+      let imageUrl = null;
+
+      // إذا قام المستخدم باختيار ملف صورة، نقوم برفعه أولاً
+      if (personImageFile) {
+        imageUrl = await uploadImageToSupabase(personImageFile);
+      }
+
       if (type === 'board') {
         if (boardList.length >= 5) {
           alert('عذراً، الحد الأقصى لأعضاء الإدارة هو 5 أعضاء فقط.');
+          setUploadingImage(false);
           return;
         }
         await supabase.from('board_members').insert([{ 
           name: personName, 
           role: personRole || 'عضو مجلس الإدارة', 
-          image_url: personImage || null 
+          image_url: imageUrl 
         }]);
       } else if (type === 'teacher') {
         if (teachersList.length >= 25) {
           alert('عذراً، الحد الأقصى للمعلمين هو 25 معلماً.');
+          setUploadingImage(false);
           return;
         }
         await supabase.from('teachers').insert([{ 
           full_name: personName, 
           subject: personRole || 'معلم', 
-          image_url: personImage || null 
+          image_url: imageUrl 
         }]);
       } else if (type === 'supervision') {
         await supabase.from('supervision').insert([{ 
           full_name: personName, 
           role: personRole || 'مشرف تربوي', 
-          image_url: personImage || null 
+          image_url: imageUrl 
         }]);
       } else if (type === 'honor') {
-        // تم التعديل هنا ليطابق أعمدة جدول top_students (name, stage, image)
         await supabase.from('top_students').insert([{ 
           name: personName, 
           stage: personRole || 'primary', 
-          image: personImage || null 
+          image: imageUrl 
         }]);
       }
 
       setPersonName('');
       setPersonRole('');
-      setPersonImage('');
+      setPersonImageFile(null);
       fetchAllData();
       setMessage('تمت الإضافة بنجاح! ✅');
     } catch (err) {
       alert('خطأ: ' + err.message);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -287,8 +318,13 @@ export default function HomeSettingsSection() {
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم العضو..." style={styles.input} />
             <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المسمى (مثال: المدير العام)..." style={styles.input} />
-            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
-            <button type="button" onClick={() => handleAddPerson('board')} style={styles.actionBtn}>إضافة عضو</button>
+            <div style={styles.fileInputContainer}>
+              <label style={styles.fileLabel}>اختر صورة شخصية:</label>
+              <input type="file" accept="image/*" onChange={(e) => setPersonImageFile(e.target.files[0])} style={styles.fileInput} />
+            </div>
+            <button type="button" disabled={uploadingImage} onClick={() => handleAddPerson('board')} style={styles.actionBtn}>
+              {uploadingImage ? 'جاري الرفع...' : 'إضافة عضو'}
+            </button>
           </div>
           <div style={styles.tableList}>
             {boardList.map((m) => (
@@ -311,8 +347,13 @@ export default function HomeSettingsSection() {
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم المعلم..." style={styles.input} />
             <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المادة الدراسية..." style={styles.input} />
-            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
-            <button type="button" onClick={() => handleAddPerson('teacher')} style={styles.actionBtn}>إضافة معلم</button>
+            <div style={styles.fileInputContainer}>
+              <label style={styles.fileLabel}>اختر صورة شخصية:</label>
+              <input type="file" accept="image/*" onChange={(e) => setPersonImageFile(e.target.files[0])} style={styles.fileInput} />
+            </div>
+            <button type="button" disabled={uploadingImage} onClick={() => handleAddPerson('teacher')} style={styles.actionBtn}>
+              {uploadingImage ? 'جاري الرفع...' : 'إضافة معلم'}
+            </button>
           </div>
           <div style={styles.tableList}>
             {teachersList.map((t) => (
@@ -335,8 +376,13 @@ export default function HomeSettingsSection() {
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم المشرف..." style={styles.input} />
             <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="الدور أو التخصص..." style={styles.input} />
-            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
-            <button type="button" onClick={() => handleAddPerson('supervision')} style={styles.actionBtn}>إضافة مشرف</button>
+            <div style={styles.fileInputContainer}>
+              <label style={styles.fileLabel}>اختر صورة شخصية:</label>
+              <input type="file" accept="image/*" onChange={(e) => setPersonImageFile(e.target.files[0])} style={styles.fileInput} />
+            </div>
+            <button type="button" disabled={uploadingImage} onClick={() => handleAddPerson('supervision')} style={styles.actionBtn}>
+              {uploadingImage ? 'جاري الرفع...' : 'إضافة مشرف'}
+            </button>
           </div>
           <div style={styles.tableList}>
             {supervisionList.map((s) => (
@@ -359,8 +405,13 @@ export default function HomeSettingsSection() {
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم الطالب المتفوق..." style={styles.input} />
             <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المرحلة (primary, middle...)..." style={styles.input} />
-            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
-            <button type="button" onClick={() => handleAddPerson('honor')} style={styles.actionBtn}>إضافة للوحة الشرف</button>
+            <div style={styles.fileInputContainer}>
+              <label style={styles.fileLabel}>اختر صورة الطالب:</label>
+              <input type="file" accept="image/*" onChange={(e) => setPersonImageFile(e.target.files[0])} style={styles.fileInput} />
+            </div>
+            <button type="button" disabled={uploadingImage} onClick={() => handleAddPerson('honor')} style={styles.actionBtn}>
+              {uploadingImage ? 'جاري الرفع...' : 'إضافة للوحة الشرف'}
+            </button>
           </div>
           <div style={styles.tableList}>
             {honorsList.map((s) => (
@@ -433,6 +484,9 @@ const styles = {
   textarea: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' },
   row: { display: 'flex', gap: '10px', marginBottom: '12px' },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '15px', alignItems: 'center' },
+  fileInputContainer: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  fileLabel: { fontSize: '12px', color: '#64748b', fontWeight: 'bold' },
+  fileInput: { fontSize: '13px', color: '#334155' },
   actionBtn: { backgroundColor: '#0ea5e9', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' },
   saveBtn: { backgroundColor: '#047857', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', width: '100%' },
   list: { paddingRight: '20px', margin: 0, color: '#475569' },
