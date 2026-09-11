@@ -17,6 +17,7 @@ export default function AddUserForm({ onClose, onUserAdded }) {
   const [canSupervisors, setCanSupervisors] = useState(false);
   const [canAdmin, setCanAdmin] = useState(false);
   const [canLanding, setCanLanding] = useState(false); // صلاحية الصفحة الرئيسية
+  const [canBridge, setCanBridge] = useState(false); // 🌉 صلاحية قسم الجسر الجديدة
 
   // المرحلة التعليمية المصرح بها
   const [stageKindergarten, setStageKindergarten] = useState(true);
@@ -51,7 +52,8 @@ export default function AddUserForm({ onClose, onUserAdded }) {
             can_manage_transport: canTransport,
             can_manage_supervisors: canSupervisors,
             can_manage_admin: canAdmin,
-            can_manage_landing: canLanding, // حفظ صلاحية تعديل الصفحة الرئيسية
+            can_manage_landing: canLanding,
+            can_manage_bridge: canBridge, // 🌉 حفظ صلاحية قسم الجسر في قاعدة البيانات
             stage_kindergarten: stageKindergarten,
             stage_primary: stagePrimary,
             stage_middle: stageMiddle,
@@ -110,7 +112,7 @@ export default function AddUserForm({ onClose, onUserAdded }) {
         {/* بيانات المستخدم */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', mb: '4px' }}>اسم الموظف الثلاثي:</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>اسم الموظف الثلاثي:</label>
             <input 
               type="text" 
               placeholder="مثال: أحمد محمد علي" 
@@ -120,7 +122,7 @@ export default function AddUserForm({ onClose, onUserAdded }) {
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', mb: '4px' }}>اسم الدخول البرمجي:</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>اسم الدخول البرمجي:</label>
             <input 
               type="text" 
               placeholder="مثال: ahmed_m" 
@@ -133,7 +135,7 @@ export default function AddUserForm({ onClose, onUserAdded }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', mb: '4px' }}>كلمة المرور / الرمز:</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>كلمة المرور / الرمز:</label>
             <input 
               type="text" 
               placeholder="****" 
@@ -143,11 +145,10 @@ export default function AddUserForm({ onClose, onUserAdded }) {
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', mb: '4px' }}>الرتبة / الدور:</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>الرتبة / الدور:</label>
             <select value={role} onChange={(e) => setRole(e.target.value)} style={inputStyle}>
               <option value="معلم">👨‍🏫 معلم</option>
               <option value="محاسب">💰 محاسب</option>
-
               <option value="مشرف">👩‍💼 مشرف</option>
               <option value="إداري">🏫 إداري</option>
               <option value="مدير">👑 مدير / أدمن</option>
@@ -167,6 +168,7 @@ export default function AddUserForm({ onClose, onUserAdded }) {
             <label><input type="checkbox" checked={canTransport} onChange={(e) => setCanTransport(e.target.checked)} /> 🚌 التراحيل</label>
             <label><input type="checkbox" checked={canSupervisors} onChange={(e) => setCanSupervisors(e.target.checked)} /> 👩‍💼 المشرفات</label>
             <label><input type="checkbox" checked={canLanding} onChange={(e) => setCanLanding(e.target.checked)} /> 🏠 الصفحة الرئيسية</label>
+            <label><input type="checkbox" checked={canBridge} onChange={(e) => setCanBridge(e.target.checked)} /> 🌉 الجسر</label>
             <label><input type="checkbox" checked={canAdmin} onChange={(e) => setCanAdmin(e.target.checked)} /> 👑 الإدارة</label>
           </div>
         </div>
@@ -211,5 +213,5 @@ const inputStyle = {
   borderRadius: '8px',
   border: '1px solid #cbd5e1',
   fontSize: '13px',
-  boxSizing: 'border-box'
+  boxSizing: 'box-sizing'
 };
