@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
 export default function HomeSettingsSection() {
-  const [activeTab, setActiveTab] = useState('settings'); // settings, news, board, teachers, honors
+  const [activeTab, setActiveTab] = useState('settings'); // settings, news, board, teachers, honors, supervision, sections, contacts
 
   // إعدادات من نحن والأهداف
   const [aboutUs, setAboutUs] = useState('');
@@ -14,14 +14,25 @@ export default function HomeSettingsSection() {
   const [newsTitle, setNewsTitle] = useState('');
   const [newsContent, setNewsContent] = useState('');
 
-  // الأشخاص (إدارة، معلمين، طلاب)
+  // الأشخاص والبيانات
   const [boardList, setBoardList] = useState([]);
   const [teachersList, setTeachersList] = useState([]);
   const [honorsList, setHonorsList] = useState([]);
+  const [supervisionList, setSupervisionList] = useState([]);
+  const [sectionsList, setSectionsList] = useState([]);
+  const [contactsList, setContactsList] = useState([]);
 
+  // حقول الإدخال المشتركة للأشخاص
   const [personName, setPersonName] = useState('');
-  const [personRole, setPersonRole] = useState(''); // الدور للإدارة أو المادة للمعلمين أو الفصل للطلاب
-  const [personImage, setPersonImage] = useState(''); // رابط أو مسار الصورة
+  const [personRole, setPersonRole] = useState(''); // الدور، المادة، أو المرحلة الدراسية
+  const [personImage, setPersonImage] = useState('');
+
+  // حقول الإدخال للأقسام والتواصل
+  const [sectionTitle, setSectionTitle] = useState('');
+  const [sectionDesc, setSectionDesc] = useState('');
+  const [contactTitle, setContactTitle] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -51,6 +62,16 @@ export default function HomeSettingsSection() {
 
       const { data: honorsData } = await supabase.from('students').select('*').eq('is_honor', true);
       if (honorsData) setHonorsList(honorsData);
+
+      const { data: supervisionData } = await supabase.from('supervision').select('*');
+      if (supervisionData) setSupervisionList(supervisionData);
+
+      const { data: sectionsData } = await supabase.from('site_sections').select('*');
+      if (sectionsData) setSectionsList(sectionsData);
+
+      const { data: contactsData } = await supabase.from('contacts').select('*');
+      if (contactsData) setContactsList(contactsData);
+
     } catch (err) {
       console.error('Error fetching data:', err);
     }
@@ -105,6 +126,7 @@ export default function HomeSettingsSection() {
       setMessage('خطأ في نشر الخبر: ' + err.message);
     }
   };
+
   const handleDeleteNews = async (id) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا الخبر؟')) return;
     try {
@@ -136,6 +158,12 @@ export default function HomeSettingsSection() {
           subject: personRole || 'معلم', 
           image_url: personImage || null 
         }]);
+      } else if (type === 'supervision') {
+        await supabase.from('supervision').insert([{ 
+          full_name: personName, 
+          role: personRole || 'مشرف تربوي', 
+          image_url: personImage || null 
+        }]);
       } else if (type === 'honor') {
         if (honorsList.length >= 10) {
           alert('عذراً، الحد الأقصى للطلاب المتفوقين في لوحة الشرف هو 10 طلاب.');
@@ -143,6 +171,7 @@ export default function HomeSettingsSection() {
         }
         await supabase.from('students').insert([{ 
           full_name: personName, 
+          stage: personRole || 'primary', 
           class_name: personRole || 'طالب متفوق', 
           is_honor: true, 
           image_url: personImage || null 
@@ -153,13 +182,41 @@ export default function HomeSettingsSection() {
       setPersonRole('');
       setPersonImage('');
       fetchAllData();
-      setMessage('تمت الإضافة بنجاح مع الصورة! ✅');
+      setMessage('تمت الإضافة بنجاح! ✅');
     } catch (err) {
       alert('خطأ: ' + err.message);
     }
   };
 
-  const handleDeletePerson = async (table, id) => {
+  const handleAddCustomSection = async (e) => {
+    e.preventDefault();
+    if (!sectionTitle.trim()) return;
+    try {
+      await supabase.from('site_sections').insert([{ title: sectionTitle, description: sectionDesc }]);
+      setSectionTitle('');
+      setSectionDesc('');
+      fetchAllData();
+      setMessage('تم إضافة القسم بنجاح! 📂');
+    } catch (err) {
+      alert('خطأ: ' + err.message);
+    }
+  };
+
+  const handleAddContact = async (e) => {
+    e.preventDefault();
+    if (!contactTitle.trim() || !contactPhone.trim()) return;
+    try {
+      await supabase.from('contacts').insert([{ title: contactTitle, phone: contactPhone }]);
+      setContactTitle('');
+      setContactPhone('');
+      fetchAllData();
+      setMessage('تم إضافة جهة الاتصال بنجاح! 📞');
+    } catch (err) {
+      alert('خطأ: ' + err.message);
+    }
+  };
+
+  const handleDeleteItem = async (table, id) => {
     if (!window.confirm('هل أنت متأكد من الحذف؟')) return;
     try {
       await supabase.from(table).delete().eq('id', id);
@@ -169,7 +226,7 @@ export default function HomeSettingsSection() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.mainTitle}>🛠️ إدارة محتوى الصفحة الرئيسية بالكامل</h2>
+      <h2 style={styles.mainTitle}>🛠️ لوحة تحكم محتوى المدرسة بالكامل</h2>
       {message && <div style={styles.alert}>{message}</div>}
 
       <div style={styles.subTabs}>
@@ -177,9 +234,13 @@ export default function HomeSettingsSection() {
         <button onClick={() => setActiveTab('news')} style={{...styles.tabBtn, backgroundColor: activeTab === 'news' ? '#047857' : '#e2e8f0', color: activeTab === 'news' ? '#fff' : '#334155'}}>الشريط الإخباري</button>
         <button onClick={() => setActiveTab('board')} style={{...styles.tabBtn, backgroundColor: activeTab === 'board' ? '#047857' : '#e2e8f0', color: activeTab === 'board' ? '#fff' : '#334155'}}>إدارة المدرسة ({boardList.length}/5)</button>
         <button onClick={() => setActiveTab('teachers')} style={{...styles.tabBtn, backgroundColor: activeTab === 'teachers' ? '#047857' : '#e2e8f0', color: activeTab === 'teachers' ? '#fff' : '#334155'}}>الكادر التعليمي ({teachersList.length}/25)</button>
+        <button onClick={() => setActiveTab('supervision')} style={{...styles.tabBtn, backgroundColor: activeTab === 'supervision' ? '#047857' : '#e2e8f0', color: activeTab === 'supervision' ? '#fff' : '#334155'}}>الإشراف التربوي</button>
         <button onClick={() => setActiveTab('honors')} style={{...styles.tabBtn, backgroundColor: activeTab === 'honors' ? '#047857' : '#e2e8f0', color: activeTab === 'honors' ? '#fff' : '#334155'}}>لوحة الشرف ({honorsList.length}/10)</button>
+        <button onClick={() => setActiveTab('sections')} style={{...styles.tabBtn, backgroundColor: activeTab === 'sections' ? '#047857' : '#e2e8f0', color: activeTab === 'sections' ? '#fff' : '#334155'}}>أقسام ومرافق المدرسة</button>
+        <button onClick={() => setActiveTab('contacts')} style={{...styles.tabBtn, backgroundColor: activeTab === 'contacts' ? '#047857' : '#e2e8f0', color: activeTab === 'contacts' ? '#fff' : '#334155'}}>أرقام التواصل</button>
       </div>
 
+      {/* 1. من نحن والأهداف */}
       {activeTab === 'settings' && (
         <form onSubmit={handleSaveSettings} style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>📖 تعديل "من نحن" وأهداف المدرسة</h3>
@@ -191,7 +252,7 @@ export default function HomeSettingsSection() {
             <label style={styles.label}>أهداف المدرسة:</label>
             <div style={styles.row}>
               <input type="text" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} placeholder="أضف هدفاً..." style={styles.input} />
-              <button type="button" onClick={handleAddGoal} style={styles.actionBtn}>إضافة</button>
+              <button type="button" onClick={handleAddGoal} style={styles.actionBtn}>إضافة هدف</button>
             </div>
             <ul style={styles.list}>
               {goals.map((g, i) => (
@@ -203,6 +264,7 @@ export default function HomeSettingsSection() {
         </form>
       )}
 
+      {/* 2. الأخبار */}
       {activeTab === 'news' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>📢 إدارة الشريط الإخباري</h3>
@@ -222,6 +284,7 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
+      {/* 3. الإدارة */}
       {activeTab === 'board' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة (الحد الأقصى 5 أعضاء)</h3>
@@ -236,15 +299,16 @@ export default function HomeSettingsSection() {
               <div key={m.id} style={styles.rowItem}>
                 <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                   {m.image_url && <img src={m.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
-                  <span><strong>{m.name || m.full_name}</strong> - <span style={{color:'#64748b'}}>{m.role}</span></span>
+                  <span><strong>{m.name}</strong> - <span style={{color:'#64748b'}}>{m.role}</span></span>
                 </div>
-                <button onClick={() => handleDeletePerson('board_members', m.id)} style={styles.delSmBtn}>حذف</button>
+                <button onClick={() => handleDeleteItem('board_members', m.id)} style={styles.delSmBtn}>حذف</button>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* 4. المعلمين */}
       {activeTab === 'teachers' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي (الحد الأقصى 25 معلماً)</h3>
@@ -259,21 +323,46 @@ export default function HomeSettingsSection() {
               <div key={t.id} style={styles.rowItem}>
                 <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                   {t.image_url && <img src={t.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
-                  <span><strong>{t.full_name || t.name}</strong> - <span style={{color:'#64748b'}}>{t.subject}</span></span>
+                  <span><strong>{t.full_name}</strong> - <span style={{color:'#64748b'}}>{t.subject}</span></span>
                 </div>
-                <button onClick={() => handleDeletePerson('teachers', t.id)} style={styles.delSmBtn}>حذف</button>
+                <button onClick={() => handleDeleteItem('teachers', t.id)} style={styles.delSmBtn}>حذف</button>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* 5. الإشراف التربوي */}
+      {activeTab === 'supervision' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>📋 الإشراف التربوي</h3>
+          <div style={styles.formGrid}>
+            <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم المشرف..." style={styles.input} />
+            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="الدور أو التخصص..." style={styles.input} />
+            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
+            <button type="button" onClick={() => handleAddPerson('supervision')} style={styles.actionBtn}>إضافة مشرف</button>
+          </div>
+          <div style={styles.tableList}>
+            {supervisionList.map((s) => (
+              <div key={s.id} style={styles.rowItem}>
+                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                  {s.image_url && <img src={s.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
+                  <span><strong>{s.full_name}</strong> - <span style={{color:'#64748b'}}>{s.role}</span></span>
+                </div>
+                <button onClick={() => handleDeleteItem('supervision', s.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 6. لوحة الشرف */}
       {activeTab === 'honors' && (
         <div style={styles.sectionCard}>
-          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (الحد الأقصى 10 طلاب متفوقين)</h3>
+          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (الحد الأقصى 10 طلاب)</h3>
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم الطالب المتفوق..." style={styles.input} />
-            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="الصف الدراسي..." style={styles.input} />
+            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="الصف أو المرحلة..." style={styles.input} />
             <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
             <button type="button" onClick={() => handleAddPerson('honor')} style={styles.actionBtn}>إضافة للوحة الشرف</button>
           </div>
@@ -282,9 +371,49 @@ export default function HomeSettingsSection() {
               <div key={s.id} style={styles.rowItem}>
                 <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                   {s.image_url && <img src={s.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
-                  <span><strong>{s.full_name || s.name}</strong> - <span style={{color:'#64748b'}}>{s.class_name}</span></span>
+                  <span><strong>{s.full_name}</strong> - <span style={{color:'#64748b'}}>{s.class_name}</span></span>
                 </div>
-                <button onClick={() => handleDeletePerson('students', s.id)} style={styles.delSmBtn}>حذف</button>
+                <button onClick={() => handleDeleteItem('students', s.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 7. أقسام ومرافق المدرسة */}
+      {activeTab === 'sections' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>🏫 أقسام ومرافق المدرسة</h3>
+          <form onSubmit={handleAddCustomSection} style={styles.newsForm}>
+            <input type="text" value={sectionTitle} onChange={(e) => setSectionTitle(e.target.value)} placeholder="عنوان القسم أو المرفق..." style={styles.input} required />
+            <textarea value={sectionDesc} onChange={(e) => setSectionDesc(e.target.value)} placeholder="وصف القسم..." rows={2} style={styles.textarea} />
+            <button type="submit" style={styles.saveBtn}>إضافة قسم جديد 📁</button>
+          </form>
+          <div style={styles.tableList}>
+            {sectionsList.map((sec) => (
+              <div key={sec.id} style={styles.rowItem}>
+                <div><strong>{sec.title}</strong><p style={{margin:0, color:'#64748b', fontSize:'13px'}}>{sec.description}</p></div>
+                <button onClick={() => handleDeleteItem('site_sections', sec.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 8. أرقام التواصل */}
+      {activeTab === 'contacts' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>📞 أرقام التواصل والجهات</h3>
+          <form onSubmit={handleAddContact} style={styles.newsForm}>
+            <input type="text" value={contactTitle} onChange={(e) => setContactTitle(e.target.value)} placeholder="الجهة (مثال: الإدارة، الاستقبال)..." style={styles.input} required />
+            <input type="text" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="رقم الهاتف..." style={styles.input} required />
+            <button type="submit" style={styles.saveBtn}>إضافة رقم تواصل ☎️</button>
+          </form>
+          <div style={styles.tableList}>
+            {contactsList.map((con) => (
+              <div key={con.id} style={styles.rowItem}>
+                <div><strong>{con.title}</strong>: <span style={{color:'#047857'}}>{con.phone}</span></div>
+                <button onClick={() => handleDeleteItem('contacts', con.id)} style={styles.delSmBtn}>حذف</button>
               </div>
             ))}
           </div>
