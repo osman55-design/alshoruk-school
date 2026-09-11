@@ -26,101 +26,102 @@ export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
     return false;
   };
 
-  // تصميم المربع الزجاجي الفاخر
-  const navCardStyle = (isActive) => ({
-    padding: '12px 16px',
-    borderRadius: '12px',
-    border: isActive ? '2px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.25)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    fontSize: '13px',
-    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
-    color: '#ffffff',
-    transition: 'all 0.25s ease',
-    boxShadow: isActive ? '0 6px 20px rgba(0, 0, 0, 0.15)' : '0 2px 10px rgba(0, 0, 0, 0.05)',
-    display: 'flex',
-    alignItem: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-    whiteSpace: 'nowrap'
-  });
+  // قائمة الأقسام مع تخصيص لون مميز وعصري لكل زر
+  const tabsList = [
+    { id: 'home_settings', label: 'إدارة الصفحة الرئيسية 🌐', color: 'linear-gradient(135deg, #059669, #10b981)', show: isAdmin },
+    { id: 'dashboard', label: 'المستخدمين والصلاحيات ⚙️', color: 'linear-gradient(135deg, #4f46e5, #6366f1)', show: isAdmin },
+    { id: 'students', label: 'شؤون الطلاب 📚', color: 'linear-gradient(135deg, #0284c7, #38bdf8)', show: hasPermission('students', 'can_manage_students') },
+    { id: 'classes', label: 'الفصول 🏛️', color: 'linear-gradient(135deg, #7c3aed, #a855f7)', show: hasPermission('classes', 'can_manage_classes') },
+    { id: 'teachers', label: 'المعلمين 👨‍🏫', color: 'linear-gradient(135deg, #ea580c, #fb923c)', show: hasPermission('teachers', 'can_manage_teachers') },
+    { id: 'accounts', label: 'الحسابات والمالية 💰', color: 'linear-gradient(135deg, #16a34a, #4ade80)', show: hasPermission('finance', 'can_manage_finance') },
+    { id: 'results', label: 'النتائج والشهادات 📋', color: 'linear-gradient(135deg, #9333ea, #c084fc)', show: hasPermission('results', 'can_manage_results') },
+    { id: 'transport', label: 'التراحيل 🚌', color: 'linear-gradient(135deg, #0d9488, #2dd4bf)', show: hasPermission('transport', 'can_manage_transport') },
+    { id: 'supervisors', label: 'المشرفات 👩‍💼', color: 'linear-gradient(135deg, #db2777, #f472b6)', show: hasPermission('supervisors', 'can_manage_supervisors') },
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
       
       {/* هيدر شريط الإدارة العلوي */}
-      <header style={{ padding: '16px 4%', background: 'linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)', boxShadow: '0 4px 20px rgba(4,120,87,0.2)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <header style={{ padding: '16px 4%', background: 'linear-gradient(135deg, #0f172a 1e-3%, #1e293b 100%)', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        
+        {/* الجزء العلوي: الشعار، بيانات المستخدم، وزر الخروج العصري */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           
           {/* الشعار واسم النظام */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '46px', height: '46px', borderRadius: '12px', backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.3)' }}>
+            <div style={{ width: '46px', height: '46px', borderRadius: '14px', backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)' }}>
               <img src="/logo.png" alt="logo" onError={(e) => { e.target.src = "https://placehold.co/100?text=Logo"; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div>
               <h3 style={{ color: '#fff', margin: 0, fontSize: '18px', fontWeight: '800', letterSpacing: '-0.3px' }}>لوحة التحكم والإدارة</h3>
-              <span style={{ color: '#a7f3d0', fontSize: '12px', fontWeight: '600' }}>
-                المستخدم: {currentUser?.full_name || currentUser?.username || 'مستخدم'} ({currentUser?.role || 'إداري'})
+              <span style={{ color: '#94a3b8', fontSize: '12px', fontWeight: '600' }}>
+                المستخدم: <strong style={{ color: '#e2e8f0' }}>{currentUser?.full_name || currentUser?.username || 'مستخدم'}</strong> ({currentUser?.role || 'إداري'})
               </span>
             </div>
           </div>
 
-          {/* زر الخروج */}
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              onClick={onLogout} 
-              style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              خروج 🚪
-            </button>
-          </div>
+          {/* 🚪 زر خروج عصري وجذاب بتصميم تفاعلي */}
+          <button 
+            onClick={onLogout} 
+            style={{ 
+              background: 'linear-gradient(135deg, #ef4444, #dc2626)', 
+              color: '#ffffff', 
+              border: 'none', 
+              padding: '10px 20px', 
+              borderRadius: '12px', 
+              fontWeight: 'bold', 
+              cursor: 'pointer', 
+              fontSize: '13px', 
+              display: 'flex', 
+              alignItem: 'center', 
+              gap: '8px', 
+              boxShadow: '0 4px 15px rgba(239, 68, 68, 0.35)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <span>خروج آمن</span>
+            <span style={{ fontSize: '15px' }}>🚪</span>
+          </button>
         </div>
 
-        {/* شبكة المربعات الزجاجية للأقسام */}
+        {/* أزرار الأقسام الأفقية الملونة والعصرية (بنفس نمط الأزرار المجاورة وبحجم مدمج ومرتب) */}
         <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', 
-          gap: '10px', 
-          paddingTop: '8px', 
-          borderTop: '1px solid rgba(255,255,255,0.15)' 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: '8px', 
+          alignItems: 'center', 
+          paddingTop: '12px', 
+          borderTop: '1px solid rgba(255,255,255,0.1)' 
         }}>
-          {isAdmin && (
-            <button style={navCardStyle(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>إدارة المستخدمين والصلاحيات ⚙️</button>
-          )}
-
-          {isAdmin && (
-            <button style={navCardStyle(activeTab === 'home_settings')} onClick={() => setActiveTab('home_settings')}>إدارة الصفحة الرئيسية 🌐</button>
-          )}
-          
-          {hasPermission('students', 'can_manage_students') && (
-            <button style={navCardStyle(activeTab === 'students')} onClick={() => setActiveTab('students')}>شؤون الطلاب 📚</button>
-          )}
-          
-          {hasPermission('classes', 'can_manage_classes') && (
-            <button style={navCardStyle(activeTab === 'classes')} onClick={() => setActiveTab('classes')}>الفصول 🏛️</button>
-          )}
-          
-          {hasPermission('teachers', 'can_manage_teachers') && (
-            <button style={navCardStyle(activeTab === 'teachers')} onClick={() => setActiveTab('teachers')}>المعلمين 👨‍🏫</button>
-          )}
-          
-          {hasPermission('finance', 'can_manage_finance') && (
-            <button style={navCardStyle(activeTab === 'accounts')} onClick={() => setActiveTab('accounts')}>الحسابات والمالية 💰</button>
-          )}
-          
-          {hasPermission('results', 'can_manage_results') && (
-            <button style={navCardStyle(activeTab === 'results')} onClick={() => setActiveTab('results')}>النتائج والشهادات 📋</button>
-          )}
-          
-          {hasPermission('transport', 'can_manage_transport') && (
-            <button style={navCardStyle(activeTab === 'transport')} onClick={() => setActiveTab('transport')}>التراحيل 🚌</button>
-          )}
-          
-          {hasPermission('supervisors', 'can_manage_supervisors') && (
-            <button style={navCardStyle(activeTab === 'supervisors')} onClick={() => setActiveTab('supervisors')}>المشرفات 👩‍💼</button>
-          )}
+          {tabsList.map((tab) => {
+            if (!tab.show) return null;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  background: tab.color,
+                  color: '#ffffff',
+                  border: isActive ? '2px solid #ffffff' : '1px solid rgba(255,255,255,0.2)',
+                  padding: '9px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 'bold',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  boxShadow: isActive ? '0 6px 20px rgba(0,0,0,0.3)' : '0 3px 10px rgba(0,0,0,0.15)',
+                  transform: isActive ? 'scale(1.03)' : 'scale(1)',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </header>
 
