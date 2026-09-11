@@ -60,7 +60,8 @@ export default function HomeSettingsSection() {
       const { data: teachersData } = await supabase.from('teachers').select('*');
       if (teachersData) setTeachersList(teachersData);
 
-      const { data: honorsData } = await supabase.from('students').select('*').eq('is_honor', true);
+      // تم التعديل هنا ليطابق جدول top_students الصحيح
+      const { data: honorsData } = await supabase.from('top_students').select('*');
       if (honorsData) setHonorsList(honorsData);
 
       const { data: supervisionData } = await supabase.from('supervision').select('*');
@@ -165,16 +166,11 @@ export default function HomeSettingsSection() {
           image_url: personImage || null 
         }]);
       } else if (type === 'honor') {
-        if (honorsList.length >= 10) {
-          alert('عذراً، الحد الأقصى للطلاب المتفوقين في لوحة الشرف هو 10 طلاب.');
-          return;
-        }
-        await supabase.from('students').insert([{ 
-          full_name: personName, 
+        // تم التعديل هنا ليطابق أعمدة جدول top_students (name, stage, image)
+        await supabase.from('top_students').insert([{ 
+          name: personName, 
           stage: personRole || 'primary', 
-          class_name: personRole || 'طالب متفوق', 
-          is_honor: true, 
-          image_url: personImage || null 
+          image: personImage || null 
         }]);
       }
 
@@ -235,7 +231,7 @@ export default function HomeSettingsSection() {
         <button onClick={() => setActiveTab('board')} style={{...styles.tabBtn, backgroundColor: activeTab === 'board' ? '#047857' : '#e2e8f0', color: activeTab === 'board' ? '#fff' : '#334155'}}>إدارة المدرسة ({boardList.length}/5)</button>
         <button onClick={() => setActiveTab('teachers')} style={{...styles.tabBtn, backgroundColor: activeTab === 'teachers' ? '#047857' : '#e2e8f0', color: activeTab === 'teachers' ? '#fff' : '#334155'}}>الكادر التعليمي ({teachersList.length}/25)</button>
         <button onClick={() => setActiveTab('supervision')} style={{...styles.tabBtn, backgroundColor: activeTab === 'supervision' ? '#047857' : '#e2e8f0', color: activeTab === 'supervision' ? '#fff' : '#334155'}}>الإشراف التربوي</button>
-        <button onClick={() => setActiveTab('honors')} style={{...styles.tabBtn, backgroundColor: activeTab === 'honors' ? '#047857' : '#e2e8f0', color: activeTab === 'honors' ? '#fff' : '#334155'}}>لوحة الشرف ({honorsList.length}/10)</button>
+        <button onClick={() => setActiveTab('honors')} style={{...styles.tabBtn, backgroundColor: activeTab === 'honors' ? '#047857' : '#e2e8f0', color: activeTab === 'honors' ? '#fff' : '#334155'}}>لوحة الشرف ({honorsList.length})</button>
         <button onClick={() => setActiveTab('sections')} style={{...styles.tabBtn, backgroundColor: activeTab === 'sections' ? '#047857' : '#e2e8f0', color: activeTab === 'sections' ? '#fff' : '#334155'}}>أقسام ومرافق المدرسة</button>
         <button onClick={() => setActiveTab('contacts')} style={{...styles.tabBtn, backgroundColor: activeTab === 'contacts' ? '#047857' : '#e2e8f0', color: activeTab === 'contacts' ? '#fff' : '#334155'}}>أرقام التواصل</button>
       </div>
@@ -347,7 +343,7 @@ export default function HomeSettingsSection() {
               <div key={s.id} style={styles.rowItem}>
                 <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                   {s.image_url && <img src={s.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
-                  <span><strong>{s.full_name}</strong> - <span style={{color:'#64748b'}}>{s.role}</span></span>
+                  <span><strong>{s.full_name || s.name}</strong> - <span style={{color:'#64748b'}}>{s.role}</span></span>
                 </div>
                 <button onClick={() => handleDeleteItem('supervision', s.id)} style={styles.delSmBtn}>حذف</button>
               </div>
@@ -359,10 +355,10 @@ export default function HomeSettingsSection() {
       {/* 6. لوحة الشرف */}
       {activeTab === 'honors' && (
         <div style={styles.sectionCard}>
-          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (الحد الأقصى 10 طلاب)</h3>
+          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف</h3>
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم الطالب المتفوق..." style={styles.input} />
-            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="الصف أو المرحلة..." style={styles.input} />
+            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المرحلة (primary, middle...)..." style={styles.input} />
             <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
             <button type="button" onClick={() => handleAddPerson('honor')} style={styles.actionBtn}>إضافة للوحة الشرف</button>
           </div>
@@ -370,10 +366,10 @@ export default function HomeSettingsSection() {
             {honorsList.map((s) => (
               <div key={s.id} style={styles.rowItem}>
                 <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                  {s.image_url && <img src={s.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
-                  <span><strong>{s.full_name}</strong> - <span style={{color:'#64748b'}}>{s.class_name}</span></span>
+                  {s.image && <img src={s.image} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
+                  <span><strong>{s.name}</strong> - <span style={{color:'#64748b'}}>{s.stage}</span></span>
                 </div>
-                <button onClick={() => handleDeleteItem('students', s.id)} style={styles.delSmBtn}>حذف</button>
+                <button onClick={() => handleDeleteItem('top_students', s.id)} style={styles.delSmBtn}>حذف</button>
               </div>
             ))}
           </div>
