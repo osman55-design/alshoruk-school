@@ -3,34 +3,27 @@ import { supabase } from './supabaseClient';
 
 export default function LandingPage({ onGoToPortal }) {
   const [news, setNews] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [boardMembers, setBoardMembers] = useState([]);
-  const [honors, setHonors] = useState([]);
   const [aboutUs, setAboutUs] = useState('');
   const [goals, setGoals] = useState([]);
+  const [boardMembers, setBoardMembers] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [supervision, setSupervision] = useState([]);
+  const [honorKindergarten, setHonorKindergarten] = useState([]);
+  const [honorPrimary, setHonorPrimary] = useState([]);
+  const [honorMiddle, setHonorMiddle] = useState([]);
+  const [honorHigh, setHonorHigh] = useState([]);
+  const [siteSections, setSiteSections] = useState([]);
+  const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
     const fetchAllData = async () => {
+      // 1. الشريط الإخباري
       try {
         const { data } = await supabase.from('news').select('*');
         if (data) setNews(data);
       } catch (e) { console.warn("تنبيه: لم يتم جلب الأخبار"); }
 
-      try {
-        const { data } = await supabase.from('board_members').select('*').limit(5);
-        if (data) setBoardMembers(data);
-      } catch (e) { console.warn("تنبيه: لم يتم جلب أعضاء الإدارة"); }
-
-      try {
-        const { data } = await supabase.from('teachers').select('*').limit(25);
-        if (data) setTeachers(data);
-      } catch (e) { console.warn("تنبيه: لم يتم جلب المعلمين"); }
-
-      try {
-        const { data } = await supabase.from('students').select('*').eq('is_honor', true).limit(10);
-        if (data) setHonors(data);
-      } catch (e) { console.warn("تنبيه: لم يتم جلب لوحة الشرف"); }
-
+      // 2. من نحن والأهداف
       try {
         const { data } = await supabase.from('settings').select('*').maybeSingle();
         if (data) {
@@ -38,6 +31,60 @@ export default function LandingPage({ onGoToPortal }) {
           if (data.goals) setGoals(Array.isArray(data.goals) ? data.goals : JSON.parse(data.goals));
         }
       } catch (e) { console.warn("تنبيه: لم يتم جلب بيانات الإعدادات"); }
+
+      // 3. الإدارة
+      try {
+        const { data } = await supabase.from('board_members').select('*');
+        if (data) setBoardMembers(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب أعضاء الإدارة"); }
+
+      // 4. الكادر التعليمي
+      try {
+        const { data } = await supabase.from('teachers').select('*');
+        if (data) setTeachers(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب المعلمين"); }
+
+      // 5. الإشراف
+      try {
+        const { data } = await supabase.from('supervision').select('*');
+        if (data) setSupervision(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب قسم الإشراف"); }
+
+      // 6. لوحة الشرف للروضة
+      try {
+        const { data } = await supabase.from('students').select('*').eq('stage', 'kindergarten').eq('is_honor', true);
+        if (data) setHonorKindergarten(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب لوحة شرف الروضة"); }
+
+      // 7. لوحة الشرف المرحلة الابتدائية
+      try {
+        const { data } = await supabase.from('students').select('*').eq('stage', 'primary').eq('is_honor', true);
+        if (data) setHonorPrimary(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب لوحة شرف الابتدائية"); }
+
+      // 8. المرحلة المتوسطة
+      try {
+        const { data } = await supabase.from('students').select('*').eq('stage', 'middle').eq('is_honor', true);
+        if (data) setHonorMiddle(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب لوحة شرف المتوسطة"); }
+
+      // 9. المرحلة الثانوية
+      try {
+        const { data } = await supabase.from('students').select('*').eq('stage', 'high').eq('is_honor', true);
+        if (data) setHonorHigh(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب لوحة شرف الثانوية"); }
+
+      // 10. قسم الموقع
+      try {
+        const { data } = await supabase.from('site_sections').select('*');
+        if (data) setSiteSections(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب أقسام الموقع"); }
+
+      // 11. أرقام التواصل
+      try {
+        const { data } = await supabase.from('contacts').select('*');
+        if (data) setContacts(data);
+      } catch (e) { console.warn("تنبيه: لم يتم جلب أرقام التواصل"); }
     };
 
     fetchAllData();
@@ -45,7 +92,7 @@ export default function LandingPage({ onGoToPortal }) {
 
   return (
     <div style={styles.container}>
-      {/* 1. الهيدر العلوي المتجاوب (شعار كبير واسم كامل بدون اختفاء) */}
+      {/* الهيدر العلوي */}
       <header style={styles.header} className="headerResponsive">
         <div style={styles.logoSection}>
           <div style={styles.logoBox}>
@@ -58,7 +105,7 @@ export default function LandingPage({ onGoToPortal }) {
         </button>
       </header>
 
-      {/* 2. الشريط المتحرك للأخبار */}
+      {/* الشريط المتحرك للأخبار */}
       <div style={styles.tickerContainer}>
         <span style={styles.tickerBadge}>📢 آخر الأخبار:</span>
         <div style={styles.tickerWrapper}>
@@ -71,7 +118,7 @@ export default function LandingPage({ onGoToPortal }) {
       </div>
 
       <main style={styles.mainContent}>
-        {/* 3. من نحن وأهدافنا */}
+        {/* 1. من نحن وأهدافنا */}
         <section style={styles.glassSection}>
           <div style={styles.gridTwoCols}>
             <div style={styles.innerCard}>
@@ -99,9 +146,9 @@ export default function LandingPage({ onGoToPortal }) {
           </div>
         </section>
 
-        {/* 4. إدارة المدرسة (5 أعضاء) */}
+        {/* 2. الإدارة */}
         <section style={styles.section}>
-          <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة (5 أعضاء)</h3>
+          <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة</h3>
           <div className="horizontalScrollGrid" style={styles.cardGrid}>
             {boardMembers.length > 0 ? (
               boardMembers.map((member) => (
@@ -117,9 +164,9 @@ export default function LandingPage({ onGoToPortal }) {
           </div>
         </section>
 
-        {/* 5. الكادر التعليمي (25 معلم) */}
+        {/* 3. الكادر التعليمي */}
         <section style={styles.section}>
-          <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي (25 معلم)</h3>
+          <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي</h3>
           <div className="horizontalScrollGrid" style={styles.cardGrid}>
             {teachers.length > 0 ? (
               teachers.map((teacher) => (
@@ -135,12 +182,48 @@ export default function LandingPage({ onGoToPortal }) {
           </div>
         </section>
 
-        {/* 6. لوحة الشرف (10 طلاب) */}
+        {/* 4. الإشراف */}
         <section style={styles.section}>
-          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (10 طلاب متفوقين)</h3>
+          <h3 style={styles.sectionTitle}>📋 قسم الإشراف</h3>
           <div className="horizontalScrollGrid" style={styles.cardGrid}>
-            {honors.length > 0 ? (
-              honors.map((student) => (
+            {supervision.length > 0 ? (
+              supervision.map((item) => (
+                <div key={item.id} style={styles.personCard} className="personCard">
+                  <div style={styles.avatarContainer}>🔍</div>
+                  <h4 style={styles.personName}>{item.name || item.full_name}</h4>
+                  <p style={styles.personRole}>{item.role || 'مشرف تربوي'}</p>
+                </div>
+              ))
+            ) : (
+              <p style={styles.emptyText}>لا توجد بيانات مضافة لقسم الإشراف حالياً.</p>
+            )}
+          </div>
+        </section>
+
+        {/* 5. لوحة الشرف للروضة */}
+        <section style={styles.section}>
+          <h3 style={styles.sectionTitle}>🧸 لوحة الشرف - الروضة</h3>
+          <div className="horizontalScrollGrid" style={styles.cardGrid}>
+            {honorKindergarten.length > 0 ? (
+              honorKindergarten.map((student) => (
+                <div key={student.id} style={styles.personCard} className="personCard">
+                  <div style={styles.avatarContainer}>⭐</div>
+                  <h4 style={styles.personName}>{student.full_name || student.name}</h4>
+                  <p style={styles.personRole}>{student.class_name || 'طالب متميز'}</p>
+                </div>
+              ))
+            ) : (
+              <p style={styles.emptyText}>لا توجد أسامي مضافة في لوحة شرف الروضة.</p>
+            )}
+          </div>
+        </section>
+
+        {/* 6. لوحة الشرف المرحلة الابتدائية */}
+        <section style={styles.section}>
+          <h3 style={styles.sectionTitle}>🎒 لوحة الشرف - المرحلة الابتدائية</h3>
+          <div className="horizontalScrollGrid" style={styles.cardGrid}>
+            {honorPrimary.length > 0 ? (
+              honorPrimary.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
                   <div style={styles.avatarContainer}>🏆</div>
                   <h4 style={styles.personName}>{student.full_name || student.name}</h4>
@@ -148,13 +231,86 @@ export default function LandingPage({ onGoToPortal }) {
                 </div>
               ))
             ) : (
-              <p style={styles.emptyText}>يمكنك تحديد الطلاب المتفوقين من لوحة التحكم بعد تسجيل الدخول.</p>
+              <p style={styles.emptyText}>لا توجد أسامي مضافة في لوحة شرف الابتدائية.</p>
+            )}
+          </div>
+        </section>
+
+        {/* 7. المرحلة المتوسطة */}
+        <section style={styles.section}>
+          <h3 style={styles.sectionTitle}>🎖️ لوحة الشرف - المرحلة المتوسطة</h3>
+          <div className="horizontalScrollGrid" style={styles.cardGrid}>
+            {honorMiddle.length > 0 ? (
+              honorMiddle.map((student) => (
+                <div key={student.id} style={styles.personCard} className="personCard">
+                  <div style={styles.avatarContainer}>🏅</div>
+                  <h4 style={styles.personName}>{student.full_name || student.name}</h4>
+                  <p style={styles.personRole}>{student.class_name || 'طالب متفوق'}</p>
+                </div>
+              ))
+            ) : (
+              <p style={styles.emptyText}>لا توجد أسامي مضافة في لوحة شرف المتوسطة.</p>
+            )}
+          </div>
+        </section>
+
+        {/* 8. الثانوية */}
+        <section style={styles.section}>
+          <h3 style={styles.sectionTitle}>🎓 لوحة الشرف - المرحلة الثانوية</h3>
+          <div className="horizontalScrollGrid" style={styles.cardGrid}>
+            {honorHigh.length > 0 ? (
+              honorHigh.map((student) => (
+                <div key={student.id} style={styles.personCard} className="personCard">
+                  <div style={styles.avatarContainer}>💡</div>
+                  <h4 style={styles.personName}>{student.full_name || student.name}</h4>
+                  <p style={styles.personRole}>{student.class_name || 'طالب متفوق'}</p>
+                </div>
+              ))
+            ) : (
+              <p style={styles.emptyText}>لا توجد أسامي مضافة في لوحة شرف الثانوية.</p>
+            )}
+          </div>
+        </section>
+
+        {/* 9. قسم الموقع */}
+        <section style={styles.section}>
+          <h3 style={styles.sectionTitle}>🌐 أقسام ومرافق الموقع</h3>
+          <div style={styles.gridTwoCols}>
+            {siteSections.length > 0 ? (
+              siteSections.map((sec) => (
+                <div key={sec.id} style={styles.innerCard}>
+                  <h4 style={styles.cardTitleGreen}>{sec.title}</h4>
+                  <p style={styles.cardText}>{sec.description}</p>
+                </div>
+              ))
+            ) : (
+              <p style={styles.emptyText}>يمكنك تخصيص وتعديل أقسام الموقع من لوحة التحكم.</p>
+            )}
+          </div>
+        </section>
+
+        {/* 10. أرقام التواصل */}
+        <section style={styles.section}>
+          <h3 style={styles.sectionTitle}>📞 أرقام التواصل</h3>
+          <div className="horizontalScrollGrid" style={styles.cardGrid}>
+            {contacts.length > 0 ? (
+              contacts.map((contact) => (
+                <div key={contact.id} style={styles.personCard} className="personCard">
+                  <div style={styles.avatarContainer}>📱</div>
+                  <h4 style={styles.personName}>{contact.title || contact.name}</h4>
+                  <p style={styles.personRole}>{contact.phone || contact.number}</p>
+                </div>
+              ))
+            ) : (
+              <p style={styles.emptyText}>
+                المدير / الإدارة: يرجى إضافة أرقام التواصل من إعدادات الموقع.
+              </p>
             )}
           </div>
         </section>
       </main>
 
-      {/* 7. التذييل والحقوق */}
+      {/* التذييل والحقوق */}
       <footer style={styles.footer}>
         <p>© 2026 مدرسة الشروق السودانية المتكاملة - جميع الحقوق محفوظة</p>
         <p style={styles.designerCredit}>تم التصميم والتطوير بواسطة: <strong>أستاذ عثمان صديق</strong> 💻</p>
@@ -172,7 +328,6 @@ export default function LandingPage({ onGoToPortal }) {
           animation: scrollLeftToRight 30s linear infinite;
         }
         
-        /* تنسيقات الشاشات الصغيرة (الجوال) */
         @media (max-width: 768px) {
           .headerResponsive {
             flex-direction: column !important;
@@ -181,25 +336,21 @@ export default function LandingPage({ onGoToPortal }) {
             padding: 20px 16px !important;
             gap: 16px !important;
           }
-          
           .headerResponsive > div {
             flex-direction: column !important;
             align-items: center !important;
             width: 100% !important;
           }
-
           .headerResponsive h1 {
             white-space: normal !important;
             font-size: 19px !important;
             text-align: center !important;
           }
-
           .headerResponsive button {
             width: 100% !important;
             max-width: 260px !important;
             padding: 12px !important;
           }
-
           .horizontalScrollGrid {
             display: flex !important;
             overflow-x: auto !important;
@@ -254,8 +405,8 @@ const styles = {
     gap: '16px',
   },
   logoBox: {
-    width: '72px',       /* شعار بحجم كبير وبارز جداً */
-    height: '72px',      /* شعار بحجم كبير وبارز جداً */
+    width: '72px',
+    height: '72px',
     backgroundColor: '#f1f5f9',
     borderRadius: '16px',
     display: 'flex',
@@ -266,7 +417,7 @@ const styles = {
     flexShrink: 0,
   },
   logo: { 
-    width: '52px',       /* حجم الأيقونة داخل الحاوية */
+    width: '52px', 
     height: '52px', 
     objectFit: 'contain' 
   },
