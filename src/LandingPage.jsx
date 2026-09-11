@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-// الاتصال المباشر بثبات لمنع أخطاء الـ Environment
-const supabaseUrl = 'https://jtmmtmwdmcxjfshjddaq.supabase.co';
-const supabaseAnonKey = 'sb_publishable_wnS38tUCR8vS2bUGixFdpA_1hC62xEz';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from './supabase'; // أو حسب اسم ملف الإعدادات لديكِ
 
 export default function LandingPage() {
   const [news, setNews] = useState([]);
@@ -14,12 +9,12 @@ export default function LandingPage() {
   const [teachers, setTeachers] = useState([]);
   const [supervision, setSupervision] = useState([]);
   
-  // حالات لوحة الشرف الموزعة حسب المراحل الأربع
+  // حالات لوحة الشرف الموزعة حسب المراحل الأربع بشكل دقيق
   const [honorKindergarten, setHonorKindergarten] = useState([]);
   const [honorPrimary, setHonorPrimary] = useState([]);
   const [honorMiddle, setHonorMiddle] = useState([]);
   const [honorHigh, setHonorHigh] = useState([]);
-  const [activeTab, setActiveTab] = useState('primary');
+  const [activeTab, setActiveTab] = useState('primary'); // البدء بالابتدائية لتوافر بياناتها
 
   const [siteSections, setSiteSections] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -59,7 +54,7 @@ export default function LandingPage() {
         if (data) setSupervision(data);
       } catch (e) { console.warn("تنبيه: لم يتم جلب قسم الإشراف"); }
 
-      // 6. جلب لوحة الشرف وتوزيعها بدقة
+      // 6. جلب لوحة الشرف من جدول top_students وفلترتها بدقة لكل مرحلة على حدة
       try {
         const { data } = await supabase.from('top_students').select('*');
         if (data) {
@@ -98,6 +93,7 @@ export default function LandingPage() {
 
   return (
     <div style={styles.pageContainer} dir="rtl">
+      {/* شريط الإخبار العاجل */}
       {news.length > 0 && (
         <div style={styles.newsTicker}>
           <span style={styles.newsLabel}>أخبار عاجلة:</span>
@@ -109,11 +105,13 @@ export default function LandingPage() {
         </div>
       )}
 
+      {/* العنوان الرئيسي */}
       <header style={styles.header}>
         <h1 style={styles.mainTitle}>مدرسة الشروق السودانية المتكاملة</h1>
         <p style={styles.subTitle}>بناء الجيل القادم بالعلم والمعرفة</p>
       </header>
 
+      {/* من نحن والأهداف */}
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>من نحن</h2>
         <p style={styles.aboutText}>{aboutUs || 'نعمل جاهدين لتوفير بيئة تعليمية مثالية ومتقدمة لأبنائنا الطلاب.'}</p>
@@ -130,9 +128,11 @@ export default function LandingPage() {
         )}
       </section>
 
+      {/* لوحة الشرف والتميز */}
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>لوحة الشرف والتميز</h2>
         
+        {/* أزرار التبديل بين الأربع مراحل */}
         <div style={styles.tabsContainer}>
           <button 
             style={{...styles.tabButton, ...(activeTab === 'primary' ? styles.activeTab : {})}} 
@@ -160,6 +160,7 @@ export default function LandingPage() {
           </button>
         </div>
 
+        {/* عرض الطلاب المتفوقين للمرحلة النشطة فقط */}
         <div style={styles.gridContainer}>
           {getActiveHonorStudents().length > 0 ? (
             getActiveHonorStudents().map((student, idx) => (
@@ -179,6 +180,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* الكادر التعليمي */}
       {teachers.length > 0 && (
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>الكادر التعليمي</h2>
@@ -194,6 +196,7 @@ export default function LandingPage() {
         </section>
       )}
 
+      {/* إدارة المدرسة */}
       {boardMembers.length > 0 && (
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>إدارة المدرسة</h2>
@@ -209,6 +212,7 @@ export default function LandingPage() {
         </section>
       )}
 
+      {/* تواصل معنا */}
       <footer style={styles.footer}>
         <h3 style={styles.footerTitle}>تواصل معنا</h3>
         <div style={styles.contactsContainer}>
@@ -255,6 +259,7 @@ const styles = {
   },
   newsContent: {
     display: 'inline-block',
+    animation: 'marquee 25s linear infinite',
   },
   newsItem: {
     marginLeft: '20px',
