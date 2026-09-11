@@ -1,176 +1,468 @@
-import React, { useState } from 'react';
-import StudentsSection from './components/StudentsSection';
-import ClassesSection from './components/ClassesSection';
-import TeachersSection from './components/TeachersSection';
-import AccountsSection from './components/AccountsSection';
-import DashboardSection from './components/DashboardSection';
-import ResultsSection from './components/ResultsSection';
-import TransportSection from './components/TransportSection';
-import SupervisorsSection from './components/ClassSupervisorsSection';
-import HomeSettingsSection from './components/HomeSettingsSection';
-import BridgeSection from './components/BridgeSection';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
+import ImageUploader from './ImageUploader';
 
-export default function AdminSystem({ currentUser, onLogout, goToLanding }) {
-  const [activeTab, setActiveTab] = useState('home_settings');
+export default function HomeSettingsSection() {
+  const [activeTab, setActiveTab] = useState('settings'); // settings, news, board, teachers, honors, supervision, sections, contacts
 
-  const isAdmin = 
-    currentUser?.role === 'admin' || 
-    currentUser?.role === 'مدير' || 
-    currentUser?.role === 'أدمن' || 
-    currentUser?.can_manage_admin === true || 
-    currentUser?.permissions?.admin === true;
+  // إعدادات من نحن والأهداف
+  const [aboutUs, setAboutUs] = useState('');
+  const [goalInput, setGoalInput] = useState('');
+  const [goals, setGoals] = useState([]);
 
-  const hasPermission = (key, canManageKey) => {
-    if (isAdmin) return true;
-    if (currentUser?.permissions && currentUser.permissions[key]) return true;
-    if (currentUser && currentUser[canManageKey] === true) return true;
-    return false;
+  // الأخبار
+  const [newsList, setNewsList] = useState([]);
+  const [newsTitle, setNewsTitle] = useState('');
+  const [newsContent, setNewsContent] = useState('');
+
+  // الأشخاص والبيانات
+  const [boardList, setBoardList] = useState([]);
+  const [teachersList, setTeachersList] = useState([]);
+  const [honorsList, setHonorsList] = useState([]);
+  const [supervisionList, setSupervisionList] = useState([]);
+  const [sectionsList, setSectionsList] = useState([]);
+  const [contactsList, setContactsList] = useState([]);
+
+  // حقول الإدخال المشتركة للأشخاص
+  const [personName, setPersonName] = useState('');
+  const [personRole, setPersonRole] = useState(''); // الدور، المادة، أو المرحلة الدراسية
+  const [personImage, setPersonImage] = useState('');
+
+  // حقول الإدخال للأقسام والتواصل
+  const [sectionTitle, setSectionTitle] = useState('');
+  const [sectionDesc, setSectionDesc] = useState('');
+  const [contactTitle, setContactTitle] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    try {
+      const { data: settingsData } = await supabase.from('settings').select('*').maybeSingle();
+      if (settingsData) {
+        if (settingsData.about_us) setAboutUs(settingsData.about_us);
+        if (settingsData.goals) {
+          const parsedGoals = Array.isArray(settingsData.goals) ? settingsData.goals : JSON.parse(settingsData.goals || '[]');
+          setGoals(parsedGoals);
+        }
+      }
+
+      const { data: newsData } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+      if (newsData) setNewsList(newsData);
+
+      const { data: boardData } = await supabase.from('board_members').select('*');
+      if (boardData) setBoardList(boardData);
+
+      const { data: teachersData } = await supabase.from('teachers').select('*');
+      if (teachersData) setTeachersList(teachersData);
+
+      const { data: honorsData } = await supabase.from('top_students').select('*');
+      if (honorsData) setHonorsList(honorsData);
+
+      const { data: supervisionData } = await supabase.from('supervision').select('*');
+      if (supervisionData) setSupervisionList(supervisionData);
+
+      const { data: sectionsData } = await supabase.from('site_sections').select('*');
+      if (sectionsData) setSectionsList(sectionsData);
+
+      const { data: contactsData } = await supabase.from('contacts').select('*');
+      if (contactsData) setContactsList(contactsData);
+
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    }
   };
 
-  // قائمة الأقسام مع إضافة قسم "الجسر" باللون الفيروزي الجذاب
-  const tabsList = [
-    { id: 'home_settings', label: 'الرئيسية 🌐', color: 'linear-gradient(135deg, #059669, #10b981)', show: isAdmin },
-    { id: 'bridge', label: 'الجسر 🌉', color: 'linear-gradient(135deg, #0d9488, #14b8a6)', show: true }, // متاح للجميع أو حسب الرغبة
-    { id: 'dashboard', label: 'الصلاحيات ⚙️', color: 'linear-gradient(135deg, #4f46e5, #6366f1)', show: isAdmin },
-    { id: 'students', label: 'الطلاب 📚', color: 'linear-gradient(135deg, #0284c7, #38bdf8)', show: hasPermission('students', 'can_manage_students') },
-    { id: 'classes', label: 'الفصول 🏛️', color: 'linear-gradient(135deg, #7c3aed, #a855f7)', show: hasPermission('classes', 'can_manage_classes') },
-    { id: 'teachers', label: 'المعلمين 👨‍🏫', color: 'linear-gradient(135deg, #ea580c, #fb923c)', show: hasPermission('teachers', 'can_manage_teachers') },
-    { id: 'accounts', label: 'الحسابات 💰', color: 'linear-gradient(135deg, #16a34a, #4ade80)', show: hasPermission('finance', 'can_manage_finance') },
-    { id: 'results', label: 'النتائج 📋', color: 'linear-gradient(135deg, #9333ea, #c084fc)', show: hasPermission('results', 'can_manage_results') },
-    { id: 'transport', label: 'التراحيل 🚌', color: 'linear-gradient(135deg, #0284c7, #2dd4bf)', show: hasPermission('transport', 'can_manage_transport') },
-    { id: 'supervisors', label: 'المشرفات 👩‍💼', color: 'linear-gradient(135deg, #db2777, #f472b6)', show: hasPermission('supervisors', 'can_manage_supervisors') },
-  ];
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+    try {
+      const { data: existing } = await supabase.from('settings').select('id').maybeSingle();
+      const payload = { about_us: aboutUs, goals: goals };
 
-  const availableTabs = tabsList.filter(tab => tab.show);
+      let error;
+      if (existing) {
+        const res = await supabase.from('settings').update(payload).eq('id', existing.id);
+        error = res.error;
+      } else {
+        const res = await supabase.from('settings').insert([payload]);
+        error = res.error;
+      }
+
+      if (error) throw error;
+      setMessage('تم حفظ إعدادات الصفحة الرئيسية بنجاح! ✅');
+    } catch (err) {
+      setMessage('خطأ أثناء الحفظ: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddGoal = () => {
+    if (!goalInput.trim()) return;
+    setGoals([...goals, goalInput.trim()]);
+    setGoalInput('');
+  };
+  const handleRemoveGoal = (index) => {
+    setGoals(goals.filter((_, i) => i !== index));
+  };
+
+  const handleAddNews = async (e) => {
+    e.preventDefault();
+    if (!newsTitle.trim()) return;
+    try {
+      const { error } = await supabase.from('news').insert([{ title: newsTitle, content: newsContent }]);
+      if (error) throw error;
+      setNewsTitle('');
+      setNewsContent('');
+      fetchAllData();
+      setMessage('تم نشر الخبر بنجاح! 📢');
+    } catch (err) {
+      setMessage('خطأ في نشر الخبر: ' + err.message);
+    }
+  };
+
+  const handleDeleteNews = async (id) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الخبر؟')) return;
+    try {
+      await supabase.from('news').delete().eq('id', id);
+      fetchAllData();
+    } catch (err) { alert(err.message); }
+  };
+
+  const handleAddPerson = async (type) => {
+    if (!personName.trim()) return;
+    try {
+      if (type === 'board') {
+        if (boardList.length >= 5) {
+          alert('عذراً، الحد الأقصى لأعضاء الإدارة هو 5 أعضاء فقط.');
+          return;
+        }
+        await supabase.from('board_members').insert([{ 
+          name: personName, 
+          role: personRole || 'عضو مجلس الإدارة', 
+          image_url: personImage || null 
+        }]);
+      } else if (type === 'teacher') {
+        if (teachersList.length >= 25) {
+          alert('عذراً، الحد الأقصى للمعلمين هو 25 معلماً.');
+          return;
+        }
+        await supabase.from('teachers').insert([{ 
+          full_name: personName, 
+          subject: personRole || 'معلم', 
+          image_url: personImage || null 
+        }]);
+      } else if (type === 'supervision') {
+        await supabase.from('supervision').insert([{ 
+          full_name: personName, 
+          role: personRole || 'مشرف تربوي', 
+          image_url: personImage || null 
+        }]);
+      } else if (type === 'honor') {
+        await supabase.from('top_students').insert([{ 
+          name: personName, 
+          stage: personRole || 'primary', 
+          image: personImage || null 
+        }]);
+      }
+
+      setPersonName('');
+      setPersonRole('');
+      setPersonImage('');
+      fetchAllData();
+      setMessage('تمت الإضافة بنجاح! ✅');
+    } catch (err) {
+      alert('خطأ: ' + err.message);
+    }
+  };
+
+  const handleAddCustomSection = async (e) => {
+    e.preventDefault();
+    if (!sectionTitle.trim()) return;
+    try {
+      await supabase.from('site_sections').insert([{ title: sectionTitle, description: sectionDesc }]);
+      setSectionTitle('');
+      setSectionDesc('');
+      fetchAllData();
+      setMessage('تم إضافة القسم بنجاح! 📂');
+    } catch (err) {
+      alert('خطأ: ' + err.message);
+    }
+  };
+
+  const handleAddContact = async (e) => {
+    e.preventDefault();
+    if (!contactTitle.trim() || !contactPhone.trim()) return;
+    try {
+      await supabase.from('contacts').insert([{ title: contactTitle, phone: contactPhone }]);
+      setContactTitle('');
+      setContactPhone('');
+      fetchAllData();
+      setMessage('تم إضافة جهة الاتصال بنجاح! 📞');
+    } catch (err) {
+      alert('خطأ: ' + err.message);
+    }
+  };
+
+  const handleDeleteItem = async (table, id) => {
+    if (!window.confirm('هل أنت متأكد من الحذف؟')) return;
+    try {
+      await supabase.from(table).delete().eq('id', id);
+      fetchAllData();
+    } catch (err) { alert(err.message); }
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
-      
-      <style>{`
-        @media (min-width: 900px) {
-          .desktop-nav-container { display: flex !important; }
-          .mobile-dropdown-container { display: none !important; }
-        }
-        @media (max-width: 899px) {
-          .desktop-nav-container { display: none !important; }
-          .mobile-dropdown-container { display: block !important; }
-        }
-      `}</style>
+    <div style={styles.container}>
+      <h2 style={styles.mainTitle}>🛠️ لوحة تحكم محتوى المدرسة بالكامل</h2>
+      {message && <div style={styles.alert}>{message}</div>}
 
-      <header style={{ padding: '16px 4%', background: 'linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)', boxShadow: '0 4px 20px rgba(4,120,87,0.2)' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '46px', height: '46px', borderRadius: '14px', backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.3)' }}>
-              <img src="/logo.png" alt="logo" onError={(e) => { e.target.src = "https://placehold.co/100?text=Logo"; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-            <div>
-              <h3 style={{ color: '#fff', margin: 0, fontSize: '18px', fontWeight: '800', letterSpacing: '-0.3px' }}>لوحة التحكم والإدارة</h3>
-              <span style={{ color: '#a7f3d0', fontSize: '12px', fontWeight: '600' }}>
-                المستخدم: <strong style={{ color: '#ffffff' }}>{currentUser?.full_name || currentUser?.username || 'مستخدم'}</strong> ({currentUser?.role || 'إداري'})
-              </span>
-            </div>
+      <div style={styles.subTabs}>
+        <button onClick={() => setActiveTab('settings')} style={{...styles.tabBtn, backgroundColor: activeTab === 'settings' ? '#047857' : '#e2e8f0', color: activeTab === 'settings' ? '#fff' : '#334155'}}>من نحن والأهداف</button>
+        <button onClick={() => setActiveTab('news')} style={{...styles.tabBtn, backgroundColor: activeTab === 'news' ? '#047857' : '#e2e8f0', color: activeTab === 'news' ? '#fff' : '#334155'}}>الشريط الإخباري</button>
+        <button onClick={() => setActiveTab('board')} style={{...styles.tabBtn, backgroundColor: activeTab === 'board' ? '#047857' : '#e2e8f0', color: activeTab === 'board' ? '#fff' : '#334155'}}>إدارة المدرسة ({boardList.length}/5)</button>
+        <button onClick={() => setActiveTab('teachers')} style={{...styles.tabBtn, backgroundColor: activeTab === 'teachers' ? '#047857' : '#e2e8f0', color: activeTab === 'teachers' ? '#fff' : '#334155'}}>الكادر التعليمي ({teachersList.length}/25)</button>
+        <button onClick={() => setActiveTab('supervision')} style={{...styles.tabBtn, backgroundColor: activeTab === 'supervision' ? '#047857' : '#e2e8f0', color: activeTab === 'supervision' ? '#fff' : '#334155'}}>الإشراف التربوي</button>
+        <button onClick={() => setActiveTab('honors')} style={{...styles.tabBtn, backgroundColor: activeTab === 'honors' ? '#047857' : '#e2e8f0', color: activeTab === 'honors' ? '#fff' : '#334155'}}>لوحة الشرف ({honorsList.length})</button>
+        <button onClick={() => setActiveTab('sections')} style={{...styles.tabBtn, backgroundColor: activeTab === 'sections' ? '#047857' : '#e2e8f0', color: activeTab === 'sections' ? '#fff' : '#334155'}}>أقسام ومرافق المدرسة</button>
+        <button onClick={() => setActiveTab('contacts')} style={{...styles.tabBtn, backgroundColor: activeTab === 'contacts' ? '#047857' : '#e2e8f0', color: activeTab === 'contacts' ? '#fff' : '#334155'}}>أرقام التواصل</button>
+      </div>
+
+      {/* 1. من نحن والأهداف */}
+      {activeTab === 'settings' && (
+        <form onSubmit={handleSaveSettings} style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>📖 تعديل "من نحن" وأهداف المدرسة</h3>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>محتوى "من نحن":</label>
+            <textarea value={aboutUs} onChange={(e) => setAboutUs(e.target.value)} rows={3} style={styles.textarea} />
           </div>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>أهداف المدرسة:</label>
+            <div style={styles.row}>
+              <input type="text" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} placeholder="أضف هدفاً..." style={styles.input} />
+              <button type="button" onClick={handleAddGoal} style={styles.actionBtn}>إضافة هدف</button>
+            </div>
+            <ul style={styles.list}>
+              {goals.map((g, i) => (
+                <li key={i} style={styles.listItem}><span>{g}</span> <button type="button" onClick={() => handleRemoveGoal(i)} style={styles.delSmBtn}>حذف</button></li>
+              ))}
+            </ul>
+          </div>
+          <button type="submit" disabled={loading} style={styles.saveBtn}>حفظ التغييرات 💾</button>
+        </form>
+      )}
 
-          <button 
-            onClick={onLogout} 
-            style={{ 
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)', 
-              color: '#ffffff', 
-              border: 'none', 
-              padding: '10px 18px', 
-              borderRadius: '12px', 
-              fontWeight: 'bold', 
-              cursor: 'pointer', 
-              fontSize: '13px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              boxShadow: '0 4px 15px rgba(239, 68, 68, 0.35)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <span>خروج آمن</span>
-            <span style={{ fontSize: '15px' }}>🚪</span>
-          </button>
-        </div>
-
-        <div className="mobile-dropdown-container" style={{ paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.15)' }}>
-          <select
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              borderRadius: '12px',
-              border: '2px solid rgba(255,255,255,0.4)',
-              backgroundColor: '#ffffff',
-              color: '#065f46',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              outline: 'none',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-            }}
-          >
-            {availableTabs.map((tab) => (
-              <option key={tab.id} value={tab.id}>
-                {tab.label}
-              </option>
+      {/* 2. الأخبار */}
+      {activeTab === 'news' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>📢 إدارة الشريط الإخباري</h3>
+          <form onSubmit={handleAddNews} style={styles.newsForm}>
+            <input type="text" value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} placeholder="عنوان الخبر..." style={styles.input} required />
+            <textarea value={newsContent} onChange={(e) => setNewsContent(e.target.value)} placeholder="تفاصيل الخبر..." rows={2} style={styles.textarea} />
+            <button type="submit" style={styles.saveBtn}>نشر خبر جديد 🚀</button>
+          </form>
+          <div style={styles.tableList}>
+            {newsList.map((item) => (
+              <div key={item.id} style={styles.rowItem}>
+                <div><strong>{item.title}</strong><p style={{margin:0, color:'#64748b', fontSize:'13px'}}>{item.content}</p></div>
+                <button onClick={() => handleDeleteNews(item.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
             ))}
-          </select>
+          </div>
         </div>
+      )}
 
-        <div className="desktop-nav-container" style={{ 
-          flexWrap: 'wrap', 
-          gap: '8px', 
-          alignItems: 'center', 
-          paddingTop: '12px', 
-          borderTop: '1px solid rgba(255,255,255,0.15)' 
-        }}>
-          {availableTabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  background: tab.color,
-                  color: '#ffffff',
-                  border: isActive ? '2px solid #ffffff' : '1px solid rgba(255,255,255,0.2)',
-                  padding: '9px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 'bold',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  boxShadow: isActive ? '0 6px 20px rgba(0,0,0,0.25)' : '0 3px 10px rgba(0,0,0,0.1)',
-                  transform: isActive ? 'scale(1.03)' : 'scale(1)',
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+      {/* 3. الإدارة */}
+      {activeTab === 'board' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة (الحد الأقصى 5 أعضاء)</h3>
+          <div style={styles.formGrid}>
+            <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم العضو..." style={styles.input} />
+            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المسمى (مثال: المدير العام)..." style={styles.input} />
+            
+            {/* استخدام زر الرفع المباشر بدلاً من كتابة الرابط */}
+            <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+              <label style={styles.label}>صورة العضو:</label>
+              <ImageUploader folderName="board" onImageUploaded={(url) => setPersonImage(url)} />
+              {personImage && <span style={{fontSize: '11px', color: '#047857'}}>تم رفع الصورة ✓</span>}
+            </div>
+
+            <button type="button" onClick={() => handleAddPerson('board')} style={styles.actionBtn}>إضافة عضو</button>
+          </div>
+          <div style={styles.tableList}>
+            {boardList.map((m) => (
+              <div key={m.id} style={styles.rowItem}>
+                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                  {m.image_url && <img src={m.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
+                  <span><strong>{m.name}</strong> - <span style={{color:'#64748b'}}>{m.role}</span></span>
+                </div>
+                <button onClick={() => handleDeleteItem('board_members', m.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
         </div>
-      </header>
+      )}
 
-      <main style={{ padding: '24px 4%', flex: '1', boxSizing: 'border-box' }}>
-        <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0', width: '100%', overflowX: 'auto' }}>
-          {activeTab === 'students' && <StudentsSection currentUser={currentUser} />}
-          {activeTab === 'classes' && <ClassesSection currentUser={currentUser} />}
-          {activeTab === 'teachers' && <TeachersSection currentUser={currentUser} />}
-          {activeTab === 'accounts' && <AccountsSection currentUser={currentUser} />}
-          {activeTab === 'results' && <ResultsSection currentUser={currentUser} />}
-          {activeTab === 'transport' && <TransportSection currentUser={currentUser} />}
-          {activeTab === 'supervisors' && <SupervisorsSection currentUser={currentUser} />}
-          {activeTab === 'dashboard' && <DashboardSection onBack={() => setActiveTab('students')} />}
-          {activeTab === 'home_settings' && <HomeSettingsSection />}
-          {activeTab === 'bridge' && <BridgeSection currentUser={currentUser} />}
+      {/* 4. المعلمين */}
+      {activeTab === 'teachers' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي (الحد الأقصى 25 معلماً)</h3>
+          <div style={styles.formGrid}>
+            <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم المعلم..." style={styles.input} />
+            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المادة الدراسية..." style={styles.input} />
+            
+            <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+              <label style={styles.label}>صورة المعلم:</label>
+              <ImageUploader folderName="teachers" onImageUploaded={(url) => setPersonImage(url)} />
+              {personImage && <span style={{fontSize: '11px', color: '#047857'}}>تم رفع الصورة ✓</span>}
+            </div>
+
+            <button type="button" onClick={() => handleAddPerson('teacher')} style={styles.actionBtn}>إضافة معلم</button>
+          </div>
+          <div style={styles.tableList}>
+            {teachersList.map((t) => (
+              <div key={t.id} style={styles.rowItem}>
+                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                  {t.image_url && <img src={t.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
+                  <span><strong>{t.full_name}</strong> - <span style={{color:'#64748b'}}>{t.subject}</span></span>
+                </div>
+                <button onClick={() => handleDeleteItem('teachers', t.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
+      )}
 
+      {/* 5. الإشراف التربوي */}
+      {activeTab === 'supervision' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>📋 الإشراف التربوي</h3>
+          <div style={styles.formGrid}>
+            <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم المشرف..." style={styles.input} />
+            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="الدور أو التخصص..." style={styles.input} />
+            
+            <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+              <label style={styles.label}>صورة المشرف:</label>
+              <ImageUploader folderName="supervision" onImageUploaded={(url) => setPersonImage(url)} />
+              {personImage && <span style={{fontSize: '11px', color: '#047857'}}>تم رفع الصورة ✓</span>}
+            </div>
+
+            <button type="button" onClick={() => handleAddPerson('supervision')} style={styles.actionBtn}>إضافة مشرف</button>
+          </div>
+          <div style={styles.tableList}>
+            {supervisionList.map((s) => (
+              <div key={s.id} style={styles.rowItem}>
+                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                  {s.image_url && <img src={s.image_url} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
+                  <span><strong>{s.full_name || s.name}</strong> - <span style={{color:'#64748b'}}>{s.role}</span></span>
+                </div>
+                <button onClick={() => handleDeleteItem('supervision', s.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 6. لوحة الشرف */}
+      {activeTab === 'honors' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف</h3>
+          <div style={styles.formGrid}>
+            <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم الطالب المتفوق..." style={styles.input} />
+            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المرحلة (primary, middle...)..." style={styles.input} />
+            
+            <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+              <label style={styles.label}>صورة الطالب:</label>
+              <ImageUploader folderName="students" onImageUploaded={(url) => setPersonImage(url)} />
+              {personImage && <span style={{fontSize: '11px', color: '#047857'}}>تم رفع الصورة ✓</span>}
+            </div>
+
+            <button type="button" onClick={() => handleAddPerson('honor')} style={styles.actionBtn}>إضافة للوحة الشرف</button>
+          </div>
+          <div style={styles.tableList}>
+            {honorsList.map((s) => (
+              <div key={s.id} style={styles.rowItem}>
+                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                  {s.image && <img src={s.image} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
+                  <span><strong>{s.name}</strong> - <span style={{color:'#64748b'}}>{s.stage}</span></span>
+                </div>
+                <button onClick={() => handleDeleteItem('top_students', s.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 7. أقسام ومرافق المدرسة */}
+      {activeTab === 'sections' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>🏫 أقسام ومرافق المدرسة</h3>
+          <form onSubmit={handleAddCustomSection} style={styles.newsForm}>
+            <input type="text" value={sectionTitle} onChange={(e) => setSectionTitle(e.target.value)} placeholder="عنوان القسم أو المرفق..." style={styles.input} required />
+            <textarea value={sectionDesc} onChange={(e) => setSectionDesc(e.target.value)} placeholder="وصف القسم..." rows={2} style={styles.textarea} />
+            <button type="submit" style={styles.saveBtn}>إضافة قسم جديد 📁</button>
+          </form>
+          <div style={styles.tableList}>
+            {sectionsList.map((sec) => (
+              <div key={sec.id} style={styles.rowItem}>
+                <div><strong>{sec.title}</strong><p style={{margin:0, color:'#64748b', fontSize:'13px'}}>{sec.description}</p></div>
+                <button onClick={() => handleDeleteItem('site_sections', sec.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 8. أرقام التواصل */}
+      {activeTab === 'contacts' && (
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>📞 أرقام التواصل والجهات</h3>
+          <form onSubmit={handleAddContact} style={styles.newsForm}>
+            <input type="text" value={contactTitle} onChange={(e) => setContactTitle(e.target.value)} placeholder="الجهة (مثال: الإدارة، الاستقبال)..." style={styles.input} required />
+            <input type="text" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="رقم الهاتف..." style={styles.input} required />
+            <button type="submit" style={styles.saveBtn}>إضافة رقم تواصل ☎️</button>
+          </form>
+          <div style={styles.tableList}>
+            {contactsList.map((con) => (
+              <div key={con.id} style={styles.rowItem}>
+                <div><strong>{con.title}</strong>: <span style={{color:'#047857'}}>{con.phone}</span></div>
+                <button onClick={() => handleDeleteItem('contacts', con.id)} style={styles.delSmBtn}>حذف</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+const styles = {
+  container: { padding: '20px', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" },
+  mainTitle: { color: '#047857', marginBottom: '15px', fontSize: '20px' },
+  alert: { backgroundColor: '#f0fdf4', color: '#15803d', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontWeight: 'bold' },
+  subTabs: { display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' },
+  tabBtn: { padding: '10px 15px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  sectionCard: { backgroundColor: '#ffffff', padding: '25px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderTop: '4px solid #047857' },
+  sectionTitle: { color: '#1e293b', fontSize: '16px', marginBottom: '15px', fontWeight: 'bold' },
+  inputGroup: { marginBottom: '15px' },
+  label: { display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: 'bold' },
+  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' },
+  textarea: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' },
+  row: { display: 'flex', gap: '10px', marginBottom: '12px' },
+  formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '15px', alignItems: 'center' },
+  actionBtn: { backgroundColor: '#0ea5e9', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' },
+  saveBtn: { backgroundColor: '#047857', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', width: '100%' },
+  list: { paddingRight: '20px', margin: 0, color: '#475569' },
+  listItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
+  tableList: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '15px' },
+  rowItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '10px 15px', borderRadius: '8px', border: '1px solid #e2e8f0' },
+  delSmBtn: { backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
+  newsForm: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '15px' }
+};
