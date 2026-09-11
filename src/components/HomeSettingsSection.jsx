@@ -78,11 +78,11 @@ export default function HomeSettingsSection() {
     }
   };
 
-  // دالة مساعدة لرفع الصورة إلى Supabase Storage
+  // دالة مساعدة لرفع الصورة إلى Supabase Storage (تم تصحيحها)
   const uploadImageToSupabase = async (file) => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36.substring(2))}.${fileExt}`;
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
