@@ -73,15 +73,9 @@ export default function BridgeSection({ currentUser }) {
     }
   };
 
-  // 📤 تصدير البيانات إلى ملف Excel
+  // 📤 تصدير البيانات إلى ملف Excel (مع دعم الجدول الفارغ لتنزيل نموذج الأعمدة)
   const exportToExcel = () => {
-    if (records.length === 0) {
-      alert('لا توجد بيانات لتصديرها!');
-      return;
-    }
-
-    // تجهيز البيانات بأسماء أعمدة عربية واضحة
-    const dataToExport = records.map(r => ({
+    const dataToExport = records.length > 0 ? records.map(r => ({
       'الاسم': r.name || '',
       'الجسر': r.bridge || '',
       'الترحيل': r.transport || '',
@@ -108,7 +102,14 @@ export default function BridgeSection({ currentUser }) {
       'القسط الأول': r.first_installment || '',
       'رقم الإيصال (القسط)': r.receipt_no_installment || '',
       'اللبس': r.uniform || ''
-    }));
+    })) : [{
+      'الاسم': 'مثال: أحمد محمد', 'الجسر': '', 'الترحيل': '', 'اسم الأم': '', 'رقم الهوية': '',
+      'تاريخ الدخول': '', 'تاريخ الميلاد': '', 'العمر': '', 'السكن': '', 'صفي': '',
+      'موقف التحصيل': '', 'ترحيل السبت': '', 'التحصيل': '', 'ترتيب الترحيل': '', 'ملاحظات': '',
+      'مكالمات الوالد': '', 'مكالمات الوالدة': '', 'واتساب الوالد': '', 'واتساب الوالدة': '',
+      'رسوم التسجيل': '', 'رقم الإيصال (تسجيل)': '', 'التسجيل': '', 'الكتب': '',
+      'القسط الأول': '', 'رقم الإيصال (القسط)': '', 'اللبس': ''
+    }];
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
@@ -135,7 +136,6 @@ export default function BridgeSection({ currentUser }) {
           return;
         }
 
-        // مطابقة الحقول العربية أو الإنجليزية مع قاعدة البيانات
         const formattedData = data.map(row => ({
           name: row['الاسم'] || row['name'] || '',
           bridge: row['الجسر'] || row['bridge'] || '',
@@ -206,7 +206,6 @@ export default function BridgeSection({ currentUser }) {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {/* زر تصدير إكسل */}
           <button 
             onClick={exportToExcel}
             style={{ 
@@ -218,7 +217,6 @@ export default function BridgeSection({ currentUser }) {
             📊 تصدير Excel
           </button>
 
-          {/* زر استيراد إكسل مخفي */}
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -237,7 +235,6 @@ export default function BridgeSection({ currentUser }) {
             📥 استيراد Excel
           </button>
 
-          {/* زر إضافة سجل جديد */}
           <button 
             onClick={() => { setEditingRecord(null); setFormData(initialFormState); setShowModal(true); }}
             style={{ 
@@ -270,7 +267,7 @@ export default function BridgeSection({ currentUser }) {
         </div>
       ) : (
         <>
-          {/* 💻 جدول منظم للكمبيوتر */}
+          {/* 💻 جدول الكمبيوتر */}
           <div className="bridge-table-view" style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '13px', minWidth: '1500px' }}>
               <thead>
@@ -335,7 +332,7 @@ export default function BridgeSection({ currentUser }) {
             </table>
           </div>
 
-          {/* 📱 بطاقات عرض للجوال */}
+          {/* 📱 بطاقات الجوال */}
           <div className="bridge-cards-view" style={{ gridTemplateColumns: '1fr', gap: '16px' }}>
             {filteredRecords.map((r) => (
               <div key={r.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
