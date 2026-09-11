@@ -50,7 +50,7 @@ export default function LandingPage({ onGoToPortal }) {
         if (data) setSupervision(data);
       } catch (e) { console.warn("تنبيه: لم يتم جلب قسم الإشراف"); }
 
-      // 6. لوحة الشرف (جلب موحد من جدول top_students وتوزيعها على المراحل الأربع)
+      // 6. لوحة الشرف (جلب من جدول top_students وتوزيعها حسب المرحلة)
       try {
         const { data, error } = await supabase.from('top_students').select('*');
         if (data && !error) {
@@ -142,7 +142,13 @@ export default function LandingPage({ onGoToPortal }) {
             {boardMembers.length > 0 ? (
               boardMembers.map((member) => (
                 <div key={member.id} style={styles.personCard} className="personCard">
-                  <div style={styles.avatarContainer}>👤</div>
+                  <div style={styles.avatarContainer}>
+                    {member.image ? (
+                      <img src={member.image} alt={member.name} style={styles.personImage} />
+                    ) : (
+                      '👤'
+                    )}
+                  </div>
                   <h4 style={styles.personName}>{member.name || member.full_name}</h4>
                   <p style={styles.personRole}>{member.role || 'عضو مجلس الإدارة'}</p>
                 </div>
@@ -160,7 +166,13 @@ export default function LandingPage({ onGoToPortal }) {
             {teachers.length > 0 ? (
               teachers.map((teacher) => (
                 <div key={teacher.id} style={styles.personCard} className="personCard">
-                  <div style={styles.avatarContainer}>🎓</div>
+                  <div style={styles.avatarContainer}>
+                    {teacher.image ? (
+                      <img src={teacher.image} alt={teacher.full_name} style={styles.personImage} />
+                    ) : (
+                      '🎓'
+                    )}
+                  </div>
                   <h4 style={styles.personName}>{teacher.full_name || teacher.name}</h4>
                   <p style={styles.personRole}>{teacher.subject || 'معلم'}</p>
                 </div>
@@ -178,7 +190,13 @@ export default function LandingPage({ onGoToPortal }) {
             {supervision.length > 0 ? (
               supervision.map((item) => (
                 <div key={item.id} style={styles.personCard} className="personCard">
-                  <div style={styles.avatarContainer}>🔍</div>
+                  <div style={styles.avatarContainer}>
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} style={styles.personImage} />
+                    ) : (
+                      '🔍'
+                    )}
+                  </div>
                   <h4 style={styles.personName}>{item.name || item.full_name}</h4>
                   <p style={styles.personRole}>{item.role || 'مشرف تربوي'}</p>
                 </div>
@@ -196,7 +214,13 @@ export default function LandingPage({ onGoToPortal }) {
             {honorKindergarten.length > 0 ? (
               honorKindergarten.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
-                  <div style={styles.avatarContainer}>⭐</div>
+                  <div style={styles.avatarContainer}>
+                    {student.image ? (
+                      <img src={student.image} alt={student.name} style={styles.personImage} />
+                    ) : (
+                      '⭐'
+                    )}
+                  </div>
                   <h4 style={styles.personName}>{student.name}</h4>
                   <p style={styles.personRole}>{student.score ? `الدرجة: ${student.score}` : 'طالب متميز'}</p>
                 </div>
@@ -214,7 +238,13 @@ export default function LandingPage({ onGoToPortal }) {
             {honorPrimary.length > 0 ? (
               honorPrimary.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
-                  <div style={styles.avatarContainer}>🏆</div>
+                  <div style={styles.avatarContainer}>
+                    {student.image ? (
+                      <img src={student.image} alt={student.name} style={styles.personImage} />
+                    ) : (
+                      '🏆'
+                    )}
+                  </div>
                   <h4 style={styles.personName}>{student.name}</h4>
                   <p style={styles.personRole}>{student.score ? `الدرجة: ${student.score}` : 'طالب متفوق'}</p>
                 </div>
@@ -232,7 +262,13 @@ export default function LandingPage({ onGoToPortal }) {
             {honorMiddle.length > 0 ? (
               honorMiddle.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
-                  <div style={styles.avatarContainer}>🏅</div>
+                  <div style={styles.avatarContainer}>
+                    {student.image ? (
+                      <img src={student.image} alt={student.name} style={styles.personImage} />
+                    ) : (
+                      '🏅'
+                    )}
+                  </div>
                   <h4 style={styles.personName}>{student.name}</h4>
                   <p style={styles.personRole}>{student.score ? `الدرجة: ${student.score}` : 'طالب متفوق'}</p>
                 </div>
@@ -250,7 +286,13 @@ export default function LandingPage({ onGoToPortal }) {
             {honorHigh.length > 0 ? (
               honorHigh.map((student) => (
                 <div key={student.id} style={styles.personCard} className="personCard">
-                  <div style={styles.avatarContainer}>💡</div>
+                  <div style={styles.avatarContainer}>
+                    {student.image ? (
+                      <img src={student.image} alt={student.name} style={styles.personImage} />
+                    ) : (
+                      '💡'
+                    )}
+                  </div>
                   <h4 style={styles.personName}>{student.name}</h4>
                   <p style={styles.personRole}>{student.score ? `الدرجة: ${student.score}` : 'طالب متفوق'}</p>
                 </div>
@@ -519,10 +561,8 @@ const styles = {
     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
   },
   avatarContainer: { 
-    fontSize: '26px', 
-    marginBottom: '10px',
-    width: '52px',
-    height: '52px',
+    width: '56px',
+    height: '56px',
     borderRadius: '50%',
     background: '#f1f5f9',
     display: 'flex',
@@ -530,6 +570,13 @@ const styles = {
     justifyContent: 'center',
     margin: '0 auto 12px auto',
     border: '1px solid #e2e8f0',
+    overflow: 'hidden',
+    fontSize: '22px',
+  },
+  personImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
   },
   personName: { color: '#0f172a', margin: '0 0 4px 0', fontSize: '14.0px', fontWeight: 'bold' },
   personRole: { color: '#0f766e', fontSize: '12px', margin: 0, fontWeight: '600' },
