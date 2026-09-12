@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import LandingPage from './LandingPage';
 import Login from './Login';
-import HomeSettingsSection from './components/HomeSettingsSection';
+import AdminSystem from './AdminSystem';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing');
@@ -31,7 +31,7 @@ export default function App() {
       )}
 
       {currentView === 'admin' && (
-        <HomeSettingsSection
+        <AdminSystem
           currentUser={currentUser}
           onLogout={handleLogout}
           goToLanding={() => setCurrentView('landing')}
