@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
+// استبدلي هذا الرابط برابط مشروعك الفعلي في Supabase (تجدينه في إعدادات المشروع API)
+const SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co"; 
+const BUCKET_NAME = "school-images";
+
+// دالة لجلب الرابط الكامل للصورة سواء كانت مخزنة باسم الملف أو برابط كامل
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return '';
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/${imagePath}`;
+};
+
 export default function LandingPage({ onGoToPortal }) {
   const [news, setNews] = useState([]);
   const [aboutUs, setAboutUs] = useState('');
@@ -50,7 +63,7 @@ export default function LandingPage({ onGoToPortal }) {
         if (data) setSupervision(data);
       } catch (e) { console.warn("تنبيه: لم يتم جلب قسم الإشراف"); }
 
-      // 6. لوحة الشرف (جلب من جدول top_students وتوزيعها حسب المرحلة)
+      // 6. لوحة الشرف
       try {
         const { data, error } = await supabase.from('top_students').select('*');
         if (data && !error) {
@@ -79,9 +92,8 @@ export default function LandingPage({ onGoToPortal }) {
     fetchAllData();
   }, []);
 
-  // دالة مساعدة للتحقق من رابط الصورة
   const isValidImageUrl = (url) => {
-    return url && typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'));
+    return url && typeof url === 'string' && url.trim() !== '';
   };
 
   return (
@@ -150,7 +162,7 @@ export default function LandingPage({ onGoToPortal }) {
                   <div style={styles.avatarContainer}>
                     {isValidImageUrl(member.image) ? (
                       <img 
-                        src={member.image} 
+                        src={getFullImageUrl(member.image)} 
                         alt={member.name} 
                         style={styles.personImage} 
                         onError={(e) => { e.target.style.display = 'none'; }}
@@ -178,7 +190,7 @@ export default function LandingPage({ onGoToPortal }) {
                   <div style={styles.avatarContainer}>
                     {isValidImageUrl(teacher.image) ? (
                       <img 
-                        src={teacher.image} 
+                        src={getFullImageUrl(teacher.image)} 
                         alt={teacher.full_name} 
                         style={styles.personImage} 
                         onError={(e) => { e.target.style.display = 'none'; }}
@@ -206,7 +218,7 @@ export default function LandingPage({ onGoToPortal }) {
                   <div style={styles.avatarContainer}>
                     {isValidImageUrl(item.image) ? (
                       <img 
-                        src={item.image} 
+                        src={getFullImageUrl(item.image)} 
                         alt={item.name} 
                         style={styles.personImage} 
                         onError={(e) => { e.target.style.display = 'none'; }}
@@ -234,7 +246,7 @@ export default function LandingPage({ onGoToPortal }) {
                   <div style={styles.avatarContainer}>
                     {isValidImageUrl(student.image) ? (
                       <img 
-                        src={student.image} 
+                        src={getFullImageUrl(student.image)} 
                         alt={student.name} 
                         style={styles.personImage} 
                         onError={(e) => { e.target.style.display = 'none'; }}
@@ -262,7 +274,7 @@ export default function LandingPage({ onGoToPortal }) {
                   <div style={styles.avatarContainer}>
                     {isValidImageUrl(student.image) ? (
                       <img 
-                        src={student.image} 
+                        src={getFullImageUrl(student.image)} 
                         alt={student.name} 
                         style={styles.personImage} 
                         onError={(e) => { e.target.style.display = 'none'; }}
@@ -290,7 +302,7 @@ export default function LandingPage({ onGoToPortal }) {
                   <div style={styles.avatarContainer}>
                     {isValidImageUrl(student.image) ? (
                       <img 
-                        src={student.image} 
+                        src={getFullImageUrl(student.image)} 
                         alt={student.name} 
                         style={styles.personImage} 
                         onError={(e) => { e.target.style.display = 'none'; }}
@@ -318,7 +330,7 @@ export default function LandingPage({ onGoToPortal }) {
                   <div style={styles.avatarContainer}>
                     {isValidImageUrl(student.image) ? (
                       <img 
-                        src={student.image} 
+                        src={getFullImageUrl(student.image)} 
                         alt={student.name} 
                         style={styles.personImage} 
                         onError={(e) => { e.target.style.display = 'none'; }}
