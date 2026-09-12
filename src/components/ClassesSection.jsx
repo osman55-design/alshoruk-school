@@ -30,13 +30,17 @@ const tdStyle = { padding: '10px' };
 export default function ClassesSection() {
   const [activeStage, setActiveStage] = useState('kindergarten');
   const [selectedClass, setSelectedClass] = useState(null);
+  
+  // 🌟 حالة تصفية الطلاب (الجميع / بنين / بنات)
+  const [genderFilter, setGenderFilter] = useState('all');
+
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   // 🌟 حالات التعديل
   const [editingStudentId, setEditingStudentId] = useState(null);
-  const [editFormData, setEditFormData] = useState({ student_name: '', phone: '', fees: '', address: '', is_honor: false });
+  const [editFormData, setEditFormData] = useState({ student_name: '', phone: '', fees: '', address: '', is_honor: false, gender: 'بنين' });
 
   // 🌟 هيكلية الفصول والمراحل
   const stagesStructure = {
@@ -81,18 +85,24 @@ export default function ClassesSection() {
 
   useEffect(() => {
     if (selectedClass) {
-      fetchClassStudents(selectedClass.name);
+      fetchClassStudents(selectedClass.name, genderFilter);
     }
-  }, [selectedClass]);
+  }, [selectedClass, genderFilter]);
 
-  const fetchClassStudents = async (className) => {
+  const fetchClassStudents = async (className, currentGenderFilter) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('students')
         .select('*')
-        .eq('grade', className)
-        .order('student_name', { ascending: true });
+        .eq('grade', className);
+
+      // تصفية حسب الجنس إذا لم يتم اختيار "الجميع"
+      if (currentGenderFilter !== 'all') {
+        query = query.eq('gender', currentGenderFilter);
+      }
+
+      const { data, error } = await query.order('student_name', { ascending: true });
 
       if (error) throw error;
       setStudents(data || []);
@@ -112,7 +122,8 @@ export default function ClassesSection() {
       phone: student.phone || '',
       fees: student.fees || '',
       address: student.address || '',
-      is_honor: student.is_honor || false
+      is_honor: student.is_honor || false,
+      gender: student.gender || 'بنين'
     });
   };
 
@@ -126,7 +137,8 @@ export default function ClassesSection() {
           phone: editFormData.phone,
           fees: editFormData.fees,
           address: editFormData.address,
-          is_honor: editFormData.is_honor
+          is_honor: editFormData.is_honor,
+          gender: editFormData.gender
         })
         .eq('id', id);
 
@@ -156,6 +168,7 @@ export default function ClassesSection() {
     const dataToExport = students.map((s, index) => ({
       'م': index + 1,
       'اسم الطالب': s.student_name || '',
+      'الجنس': s.gender || '',
       'رقم الهاتف': s.phone || '',
       'الرسوم': s.fees || '',
       'العنوان': s.address || '',
@@ -165,7 +178,7 @@ export default function ClassesSection() {
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'الطلاب');
-    XLSX.writeFile(workbook, `قائمة_طلاب_${selectedClass.name}.xlsx`);
+    XLSX.writeFile(workbook, `قائمة_طلاب_${selectedClass.name}_${genderFilter}.xlsx`);
   };
 
   // 🌟 استيراد من Excel
@@ -194,6 +207,7 @@ export default function ClassesSection() {
           phone: String(row['رقم الهاتف'] || row['phone'] || row['الهاتف'] || '').trim(),
           fees: String(row['الرسوم'] || row['fees'] || '').trim(),
           address: String(row['العنوان'] || row['address'] || '').trim(),
+          gender: String(row['الجنس'] || row['gender'] || (genderFilter !== 'all' ? genderFilter : 'بنين')).trim(),
           is_honor: row['لوحة الشرف'] === 'نعم' || row['is_honor'] === true,
           grade: selectedClass.name // الربط التلقائي بالفصل المختار
         })).filter(item => item.student_name !== '');
@@ -208,7 +222,7 @@ export default function ClassesSection() {
         if (error) throw error;
 
         alert(`تم استيراد وإضافة ${formattedData.length} طالب للفصل بنجاح 🚀`);
-        fetchClassStudents(selectedClass.name);
+        fetchClassStudents(selectedClass.name, genderFilter);
       } catch (err) {
         console.error(err);
         alert('حدث خطأ أثناء رفع ملف الإكسيل!');
@@ -271,6 +285,28 @@ export default function ClassesSection() {
               📋 طلاب: <span style={{ color: '#d97706' }}>{selectedClass.name}</span>
             </h4>
 
+            {/* 🌟 خيارات التصفية (الجميع / بنين / بنات) */}
+            <div style={{ display: 'flex', gap: '6px', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
+              <button 
+                onClick={() => setGenderFilter('all')} 
+                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', backgroundColor: genderFilter === 'all' ? '#047857' : 'transparent', color: genderFilter === 'all' ? '#fff' : '#475569' }}
+              >
+                👥 الجميع
+              </button>
+              <button 
+                onClick={() => setGenderFilter('بنين')} 
+                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', backgroundColor: genderFilter === 'بنين' ? '#0284c7' : 'transparent', color: genderFilter === 'بنين' ? '#fff' : '#475569' }}
+              >
+                👦 بنين
+              </button>
+              <button 
+                onClick={() => setGenderFilter('بنات')} 
+                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', backgroundColor: genderFilter === 'بنات' ? '#be123c' : 'transparent', color: genderFilter === 'بنات' ? '#fff' : '#475569' }}
+              >
+                👧 بنات
+              </button>
+            </div>
+
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <button onClick={handlePrintPDF} style={{ padding: '7px 12px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>🖨️ طباعة</button>
               <button onClick={handleExportExcel} style={{ padding: '7px 12px', backgroundColor: '#059669', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>📤 تصدير Excel</button>
@@ -290,6 +326,7 @@ export default function ClassesSection() {
                   <tr style={{ background: '#f1f5f9', color: '#334155' }}>
                     <th style={thStyle}>#</th>
                     <th style={thStyle}>اسم الطالب</th>
+                    <th style={thStyle}>الجنس</th>
                     <th style={thStyle}>رقم الهاتف</th>
                     <th style={thStyle}>الرسوم</th>
                     <th style={thStyle}>العنوان</th>
@@ -309,6 +346,19 @@ export default function ClassesSection() {
                             <input type="text" value={editFormData.student_name} onChange={e => setEditFormData({ ...editFormData, student_name: e.target.value })} style={inputInlineStyle} />
                           ) : (
                             <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{student.student_name}</span>
+                          )}
+                        </td>
+
+                        <td style={tdStyle}>
+                          {isEditing ? (
+                            <select value={editFormData.gender} onChange={e => setEditFormData({ ...editFormData, gender: e.target.value })} style={inputInlineStyle}>
+                              <option value="بنين">بنين</option>
+                              <option value="بنات">بنات</option>
+                            </select>
+                          ) : (
+                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', backgroundColor: student.gender === 'بنات' ? '#ffe4e6' : '#e0f2fe', color: student.gender === 'بنات' ? '#be123c' : '#0369a1' }}>
+                              {student.gender || 'غير محدد'}
+                            </span>
                           )}
                         </td>
 
@@ -361,7 +411,7 @@ export default function ClassesSection() {
               </table>
             </div>
           ) : (
-            <p style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>لا يوجد طلاب مسجلين في هذا الفصل حتى الآن.</p>
+            <p style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>لا يوجد طلاب مسجلين في هذا الفصل بالتصنيف المختار حتى الآن.</p>
           )}
         </div>
       ) : (
