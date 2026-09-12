@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import * as XLSX from 'xlsx';
 
 // 🎨 أنماط التصميم (مُعرفة في البداية لضمان الوضوح وإعادة الاستخدام)
 const stageBtnStyle = (isActive, activeColor, activeBg) => ({
@@ -42,6 +43,7 @@ export default function ClassesSection() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // 🌟 حالات الفلترة والتعديل
   const [genderFilter, setGenderFilter] = useState('all');
@@ -108,11 +110,8 @@ export default function ClassesSection() {
         .eq('student_class', className)
         .order('name', { ascending: true });
 
-      if (!error && data) {
-        setStudents(data);
-      } else {
-        setStudents([]);
-      }
+      if (error) throw error;
+      setStudents(data || []);
     } catch (err) {
       console.error('Error fetching students:', err);
       setStudents([]);
@@ -168,27 +167,65 @@ export default function ClassesSection() {
     window.print();
   };
 
-  // 🌟 تصدير ملف Excel (CSV)
-  const handleExportExcel = () => {
-    if (filteredStudents.length === 0) {
-      alert('لا توجد بيانات للتصدير!');
-      return;
-    }
+  // 🌟 استيراد ملف Excel وإدخال الطلاب للفصل الحالي تلقائياً
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file || !selectedClass) return;
 
-    let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
-    csvContent += 'الاسم,رقم ولي الأمر,الجنس,حالة السداد,ملاحظات\n';
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const workbook = XLSX.read(bstr, { type: 'binary' });
+        const wsname = workbook.SheetNames[0];
+        const ws = workbook.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
 
-    filteredStudents.forEach(s => {
-      csvContent += `"${s.name || ''}","${s.parent_phone || ''}","${s.gender || ''}","${s.payment_status || ''}","${s.notes || ''}"\n`;
-    });
+        if (!data || data.length === 0) {
+          alert('ملف الإكسيل فارغ أو غير صالح!');
+          setUploading(false);
+          return;
+        }
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `قائمة_طلاب_${selectedClass.name}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        // تجهيز بيانات الطلاب للإدخال لقاعدة البيانات مع ربطهم بالفصل الحالي
+        const formattedData = data.map(row => {
+          const studentName = row['الاسم'] || row['اسم الطالب'] || row['Name'] || '';
+          const parentPhone = row['رقم ولي الأمر'] || row['الهاتف'] || row['الجوال'] || row['Phone'] || '';
+          const studentGender = row['الجنس'] || row['النوع'] || (String(studentName).includes('بنت') ? 'أنثى' : 'ذكر');
+          const paymentStatus = row['حالة السداد'] || row['السداد'] || 'غير مكتمل';
+          const studentNotes = row['ملاحظات'] || row['Notes'] || '';
+
+          return {
+            name: String(studentName).trim(),
+            parent_phone: String(parentPhone).trim(),
+            gender: String(studentGender).trim(),
+            payment_status: String(paymentStatus).trim(),
+            notes: String(studentNotes).trim(),
+            student_class: selectedClass.name // ربطه بالفصل المختار حالياً
+          };
+        }).filter(item => item.name !== '');
+
+        if (formattedData.length === 0) {
+          alert('لم يتم العثور على أسماء طلاب مطابقة في الملف.');
+          setUploading(false);
+          return;
+        }
+
+        const { error } = await supabase.from('students').insert(formattedData);
+        if (error) throw error;
+
+        alert(`تم استيراد وإضافة ${formattedData.length} طالب للفصل (${selectedClass.name}) بنجاح 🚀`);
+        fetchClassStudents(selectedClass.name);
+      } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء رفع أو قراءة ملف الإكسيل!');
+      } finally {
+        setUploading(false);
+        e.target.value = null;
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
   return (
@@ -231,7 +268,7 @@ export default function ClassesSection() {
                   backgroundColor: isSelected ? '#ecfdf5' : '#f8fafc',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyInContent: 'space-between'
+                  justifyContent: 'space-between'
                 }}
               >
                 <span style={{ fontWeight: '800', fontSize: '13px', color: isSelected ? '#047857' : '#334155' }}>
@@ -248,7 +285,7 @@ export default function ClassesSection() {
       {selectedClass ? (
         <div style={{ background: '#ffffff', borderRadius: '12px', padding: '18px', border: '1px solid #e2e8f0' }}>
           
-          {/* شريط الأدوات والفلترة والطباعة */}
+          {/* شريط الأدوات والفلترة والطباعة والاستيراد */}
           <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <h4 style={{ margin: 0, color: '#047857', fontSize: '16px', fontWeight: '900' }}>
               📋 قوائم طلاب: <span style={{ color: '#d97706' }}>{selectedClass.name}</span>
@@ -261,14 +298,19 @@ export default function ClassesSection() {
               <button onClick={() => setGenderFilter('female')} style={filterBtnStyle(genderFilter === 'female')}>👧 بنات</button>
             </div>
 
-            {/* أزرار الطباعة والتصدير */}
-            <div style={{ display: 'flex', gap: '8px' }}>
+            {/* أزرار الطباعة والاستيراد من الإكسيل */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button onClick={handlePrintPDF} style={{ padding: '7px 14px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>
                 🖨️ طباعة / PDF
               </button>
-              <button onClick={handleExportExcel} style={{ padding: '7px 14px', backgroundColor: '#15803d', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>
-                📊 تصدير Excel
-              </button>
+
+              <label style={{ 
+                backgroundColor: '#15803d', color: '#fff', padding: '7px 14px', borderRadius: '6px', 
+                cursor: uploading ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px'
+              }}>
+                {uploading ? '⏳ جاري الرفع...' : '📥 استيراد طلاب Excel'}
+                <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploading} />
+              </label>
             </div>
           </div>
 
@@ -363,7 +405,7 @@ export default function ClassesSection() {
           )}
         </div>
       ) : (
-        <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>💡 اختر فضلاً لعرض الطلاب والبدء بالإدارة.</p>
+        <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>💡 اختر فضلاً فصلأ لعرض الطلاب والبدء بالإدارة.</p>
       )}
 
       {/* 🎨 تنسيق إخفاء الأزرار عند الطباعة */}
