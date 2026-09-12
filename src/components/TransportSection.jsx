@@ -28,8 +28,8 @@ export default function TransportsSection({ onBack }) {
       if (transError) throw transError;
       if (transData) setTransports(transData);
 
-      // جلب الطلاب لاقتراح الأسماء عند التخصيص
-      const { data: stData } = await supabase.from('students_list').select('student_name, class_name');
+      // جلب الطلاب لاقتراح الأسماء عند التخصيص (بالأسماء الصحيحة للأعمدة والجدول)
+      const { data: stData } = await supabase.from('students').select('student_name, academic_level');
       if (stData) setAllStudents(stData);
 
     } catch (err) {
@@ -246,7 +246,7 @@ export default function TransportsSection({ onBack }) {
                   list="students-options"
                 />
                 <datalist id="students-options">
-                  {allStudents.map((st, i) => <option key={i} value={`${st.student_name} (${st.class_name || ''})`} />)}
+                  {allStudents.map((st, i) => <option key={i} value={`${st.student_name} (${st.academic_level || ''})`} />)}
                 </datalist>
                 <button type="button" onClick={() => handleAddStudent(studentInput)} style={btnAddStudentStyle}>
                   ➕ إضافة
