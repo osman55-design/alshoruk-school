@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
 export default function HomeSettingsSection() {
-  const [activeTab, setActiveTab] = useState('settings'); // settings, news, board, teachers, honors, supervision, sections, contacts
+  const [activeTab, setActiveTab] = useState('settings');
 
   // إعدادات من نحن والأهداف
   const [aboutUs, setAboutUs] = useState('');
@@ -25,8 +25,8 @@ export default function HomeSettingsSection() {
   // حقول الإدخال المشتركة للأشخاص
   const [personName, setPersonName] = useState('');
   const [personRole, setPersonRole] = useState(''); // الدور، المادة
-  const [personStage, setPersonStage] = useState('ابتدائي'); // خاصة بلوحة الشرف (روضة، ابتدائي، متوسط، ثانوي)
-  const [personImage, setPersonImage] = useState('');
+  const [personStage, setPersonStage] = useState('ابتدائي'); // خاصة بلوحة الشرف
+  const [personImageFile, setPersonImageFile] = useState(null); // ملف الصورة بدلاً من الرابط
 
   // حقول الإدخال للأقسام والتواصل
   const [sectionTitle, setSectionTitle] = useState('');
@@ -76,6 +76,24 @@ export default function HomeSettingsSection() {
     } catch (err) {
       console.error('Error fetching data:', err);
     }
+  };
+
+  // دالة مساعدة لرفع الصورة إلى Supabase Storage واسترجاع الرابط العام
+  const uploadImageToSupabase = async (file) => {
+    if (!file) return null;
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36.substring(2, 9))}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // رفع الملف إلى الـ Bucket (تأكد أن اسم الـ Bucket هنا مطابق لما لديك، مثل school-images)
+    const { error: uploadError } = await supabase.storage.from('school-images').upload(filePath, file);
+    if (uploadError) {
+      throw new Error('فشل رفع الصورة: ' + uploadError.message);
+    }
+
+    // جلب الرابط العام للصورة
+    const { data } = supabase.storage.from('school-images').getPublicUrl(filePath);
+    return data.publicUrl;
   };
 
   const handleSaveSettings = async (e) => {
@@ -138,50 +156,60 @@ export default function HomeSettingsSection() {
 
   const handleAddPerson = async (type) => {
     if (!personName.trim()) return;
+    setLoading(true);
     try {
+      // رفع الصورة تلقائياً إذا اختار المستخدم ملفاً
+      let uploadedImageUrl = null;
+      if (personImageFile) {
+        uploadedImageUrl = await uploadImageToSupabase(personImageFile);
+      }
+
       if (type === 'board') {
         if (boardList.length >= 5) {
           alert('عذراً، الحد الأقصى لأعضاء الإدارة هو 5 أعضاء فقط.');
+          setLoading(false);
           return;
         }
         await supabase.from('board_members').insert([{ 
           name: personName, 
           role: personRole || 'عضو مجلس الإدارة', 
-          image_url: personImage || null 
+          image_url: uploadedImageUrl 
         }]);
       } else if (type === 'teacher') {
         if (teachersList.length >= 25) {
           alert('عذراً، الحد الأقصى للمعلمين هو 25 معلماً.');
+          setLoading(false);
           return;
         }
         await supabase.from('teachers').insert([{ 
           full_name: personName, 
           subject: personRole || 'معلم', 
-          image_url: personImage || null 
+          image_url: uploadedImageUrl 
         }]);
       } else if (type === 'supervision') {
         await supabase.from('supervision').insert([{ 
           full_name: personName, 
           role: personRole || 'مشرف تربوي', 
-          image_url: personImage || null 
+          image_url: uploadedImageUrl 
         }]);
       } else if (type === 'honor') {
-        // تم ربطها بدقة مع جدول top_students مقسمة حسب المرحلة المحددة
         await supabase.from('top_students').insert([{ 
           name: personName, 
           stage: personStage, 
-          image: personImage || null 
+          image: uploadedImageUrl 
         }]);
       }
 
       setPersonName('');
       setPersonRole('');
       setPersonStage('ابتدائي');
-      setPersonImage('');
+      setPersonImageFile(null);
       fetchAllData();
       setMessage('تمت الإضافة بنجاح! ✅');
     } catch (err) {
       alert('خطأ: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -288,8 +316,11 @@ export default function HomeSettingsSection() {
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم العضو..." style={styles.input} />
             <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المسمى (مثال: المدير العام)..." style={styles.input} />
-            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
-            <button type="button" onClick={() => handleAddPerson('board')} style={styles.actionBtn}>إضافة عضو</button>
+            <div style={styles.fileInputWrapper}>
+              <label style={styles.fileLabel}>📁 اختر صورة العضو:</label>
+              <input type="file" accept="image/*" onChange={(e) => setPersonImageFile(e.target.files[0])} style={styles.input} />
+            </div>
+            <button type="button" disabled={loading} onClick={() => handleAddPerson('board')} style={styles.actionBtn}>{loading ? 'جاري الرفع...' : 'إضافة عضو'}</button>
           </div>
           <div style={styles.tableList}>
             {boardList.map((m) => (
@@ -312,8 +343,11 @@ export default function HomeSettingsSection() {
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم المعلم..." style={styles.input} />
             <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المادة الدراسية..." style={styles.input} />
-            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
-            <button type="button" onClick={() => handleAddPerson('teacher')} style={styles.actionBtn}>إضافة معلم</button>
+            <div style={styles.fileInputWrapper}>
+              <label style={styles.fileLabel}>📁 اختر صورة المعلم:</label>
+              <input type="file" accept="image/*" onChange={(e) => setPersonImageFile(e.target.files[0])} style={styles.input} />
+            </div>
+            <button type="button" disabled={loading} onClick={() => handleAddPerson('teacher')} style={styles.actionBtn}>{loading ? 'جاري الرفع...' : 'إضافة معلم'}</button>
           </div>
           <div style={styles.tableList}>
             {teachersList.map((t) => (
@@ -336,8 +370,11 @@ export default function HomeSettingsSection() {
           <div style={styles.formGrid}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم المشرف..." style={styles.input} />
             <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="الدور أو التخصص..." style={styles.input} />
-            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
-            <button type="button" onClick={() => handleAddPerson('supervision')} style={styles.actionBtn}>إضافة مشرف</button>
+            <div style={styles.fileInputWrapper}>
+              <label style={styles.fileLabel}>📁 اختر صورة المشرف:</label>
+              <input type="file" accept="image/*" onChange={(e) => setPersonImageFile(e.target.files[0])} style={styles.input} />
+            </div>
+            <button type="button" disabled={loading} onClick={() => handleAddPerson('supervision')} style={styles.actionBtn}>{loading ? 'جاري الرفع...' : 'إضافة مشرف'}</button>
           </div>
           <div style={styles.tableList}>
             {supervisionList.map((s) => (
@@ -353,16 +390,14 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
-      {/* 6. لوحة الشرف (مقسمة حسب المراحل تماماً مثل صفحة الزوار) */}
+      {/* 6. لوحة الشرف (مقسمة حسب المراحل مع رفع الصور) */}
       {activeTab === 'honors' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (مقسمة حسب المراحل)</h3>
           
-          {/* نموذج إضافة طالب للوحة الشرف */}
           <div style={{ ...styles.formGrid, backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم الطالب المتفوق..." style={styles.input} />
             
-            {/* القائمة المنسدلة لاختيار المرحلة بدقة */}
             <select value={personStage} onChange={(e) => setPersonStage(e.target.value)} style={styles.input}>
               <option value="روضة">روضة</option>
               <option value="ابتدائي">ابتدائي</option>
@@ -370,11 +405,14 @@ export default function HomeSettingsSection() {
               <option value="ثانوي">ثانوي</option>
             </select>
 
-            <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
-            <button type="button" onClick={() => handleAddPerson('honor')} style={styles.actionBtn}>إضافة للوحة الشرف</button>
+            <div style={styles.fileInputWrapper}>
+              <label style={styles.fileLabel}>📁 اختر صورة الطالب:</label>
+              <input type="file" accept="image/*" onChange={(e) => setPersonImageFile(e.target.files[0])} style={styles.input} />
+            </div>
+
+            <button type="button" disabled={loading} onClick={() => handleAddPerson('honor')} style={styles.actionBtn}>{loading ? 'جاري الرفع...' : 'إضافة للوحة الشرف'}</button>
           </div>
 
-          {/* عرض الطلاب مقسمين في لوحة التحكم حسب المراحل الأربع */}
           {['روضة', 'ابتدائي', 'متوسط', 'ثانوي'].map((stageName) => {
             const filteredStudents = honorsList.filter((s) => s.stage === stageName);
             return (
@@ -456,11 +494,13 @@ const styles = {
   sectionTitle: { color: '#1e293b', fontSize: '16px', marginBottom: '15px', fontWeight: 'bold' },
   inputGroup: { marginBottom: '15px' },
   label: { display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: 'bold' },
-  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', backgroundColor: '#fff' },
   textarea: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
   row: { display: 'flex', gap: '10px', marginBottom: '12px' },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '15px', alignItems: 'center' },
-  actionBtn: { backgroundColor: '#0ea5e9', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' },
+  fileInputWrapper: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  fileLabel: { fontSize: '12px', color: '#64748b', fontWeight: 'bold' },
+  actionBtn: { backgroundColor: '#0ea5e9', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap', height: '42px' },
   saveBtn: { backgroundColor: '#047857', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', width: '100%' },
   list: { paddingRight: '20px', margin: 0, color: '#475569' },
   listItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
