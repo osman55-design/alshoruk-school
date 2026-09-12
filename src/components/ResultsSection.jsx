@@ -3,6 +3,9 @@ import { supabase } from '../supabaseClient';
 import * as XLSX from 'xlsx';
 
 export default function ResultsSection({ onBack }) {
+  // 🛠️ مفتاح الصيانة (اجعليه true لإظهار شاشة الصيانة، أو false لإظهار الصفحة بشكل طبيعي)
+  const [isUnderMaintenance, setIsUnderMaintenance] = useState(true);
+
   const [grades, setGrades] = useState([]);
   const [classesList] = useState(['الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس']);
   const [selectedClass, setSelectedClass] = useState('الصف الأول');
@@ -31,10 +34,12 @@ export default function ResultsSection({ onBack }) {
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    fetchGrades();
-    setCertClass(selectedClass);
-    setCertYear(academicYear);
-  }, [selectedClass, academicYear]);
+    if (!isUnderMaintenance) {
+      fetchGrades();
+      setCertClass(selectedClass);
+      setCertYear(academicYear);
+    }
+  }, [selectedClass, academicYear, isUnderMaintenance]);
 
   const fetchGrades = async () => {
     setLoading(true);
@@ -243,9 +248,66 @@ export default function ResultsSection({ onBack }) {
     };
   };
 
+  // 🛠️ إذا كانت حالة الصيانة مفعلة
+  if (isUnderMaintenance) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '65vh',
+        background: '#ffffff',
+        borderRadius: '16px',
+        border: '1px solid #e2e8f0',
+        padding: '40px',
+        textAlign: 'center',
+        direction: 'rtl',
+        fontFamily: "'Cairo', sans-serif",
+        margin: '20px'
+      }}>
+        <div style={{ fontSize: '64px', marginBottom: '20px' }}>🚧</div>
+        <h2 style={{ color: '#0f172a', fontSize: '24px', fontWeight: '900', marginBottom: '10px' }}>
+          جاري الصيانة في الصفحة حالياً
+        </h2>
+        <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '420px', lineHeight: '1.6', marginBottom: '25px' }}>
+          نعمل حالياً على تحديث وتطوير نظام إدارة النتائج والدرجات ليصبح أسرع وأكثر دقة. شكراً لصبركم! ⏳✨
+        </p>
+        
+        {/* زر سري لتعطيل الصيانة والعودة للملف متى شئتِ */}
+        <button
+          onClick={() => setIsUnderMaintenance(false)}
+          style={{
+            background: '#047857',
+            color: '#fff',
+            border: 'none',
+            padding: '10px 24px',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '13px',
+            boxShadow: '0 4px 10px rgba(4, 120, 87, 0.2)'
+          }}
+        >
+          دخول مؤقت / إيقاف الصيانة 🔓
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ direction: 'rtl', fontFamily: 'Cairo, sans-serif', padding: '10px' }}>
       
+      {/* 🌟 زر جانبي لإعادة تفعيل الصيانة من داخل الصفحة عند الحاجة */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+        <button
+          onClick={() => setIsUnderMaintenance(true)}
+          style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          🛠️ تفعيل وضع الصيانة في الصفحة
+        </button>
+      </div>
+
       {/* 1️⃣ معاينة والتحكم الكامل بالشهادة */}
       {activeCertificateStudent && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.95)', zIndex: 9999, overflowY: 'auto', padding: '20px' }}>
