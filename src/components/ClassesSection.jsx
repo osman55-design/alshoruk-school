@@ -15,17 +15,8 @@ const stageBtnStyle = (isActive, activeColor, activeBg) => ({
   transition: 'all 0.2s ease'
 });
 
-const inputInlineStyle = {
-  width: '100%',
-  padding: '4px 6px',
-  borderRadius: '4px',
-  border: '1px solid #047857',
-  fontSize: '12px',
-  outline: 'none'
-};
-
-const thStyle = { padding: '10px', fontWeight: 'bold', borderBottom: '2px solid #cbd5e1' };
-const tdStyle = { padding: '10px' };
+const thStyle = { padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #cbd5e1', textAlign: 'right' };
+const tdStyle = { padding: '12px', textAlign: 'right' };
 
 export default function ClassesSection() {
   const [activeStage, setActiveStage] = useState('kindergarten');
@@ -36,16 +27,6 @@ export default function ClassesSection() {
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-
-  // 🌟 حالات التعديل (مطابقة لأعمدة جدول Supabase الظاهرة)
-  const [editingStudentId, setEditingStudentId] = useState(null);
-  const [editFormData, setEditFormData] = useState({ 
-    student_name: '', 
-    parent_phone: '', 
-    tuition_status: '', 
-    gender: 'بنين' 
-  });
 
   // 🌟 هيكلية الفصول والمراحل
   const stagesStructure = {
@@ -94,10 +75,10 @@ export default function ClassesSection() {
     }
   }, [selectedClass, genderFilter]);
 
+  // 🌟 جلب الطلاب المرتبطين بالفصل المحدد من جدول الطلاب الرئيسي
   const fetchClassStudents = async (className, currentGenderFilter) => {
     setLoading(true);
     try {
-      // استخدام العمود الصحيح class_name الموجود في جدول Supabase لديك
       let query = supabase
         .from('students')
         .select('*')
@@ -119,47 +100,12 @@ export default function ClassesSection() {
     }
   };
 
-  // 🌟 بدء تعديل طالب
-  const handleStartEdit = (student) => {
-    setEditingStudentId(student.id);
-    setEditFormData({
-      student_name: student.student_name || '',
-      parent_phone: student.parent_phone || '',
-      tuition_status: student.tuition_status || '',
-      gender: student.gender || 'بنين'
-    });
-  };
-
-  // 🌟 حفظ التعديل في Supabase
-  const handleSaveEdit = async (id) => {
-    try {
-      const { error } = await supabase
-        .from('students')
-        .update({
-          student_name: editFormData.student_name,
-          parent_phone: editFormData.parent_phone,
-          tuition_status: editFormData.tuition_status,
-          gender: editFormData.gender
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setStudents(students.map(s => (s.id === id ? { ...s, ...editFormData } : s)));
-      setEditingStudentId(null);
-      alert('تم حفظ التعديلات بنجاح ✨');
-    } catch (err) {
-      console.error('Error updating student:', err);
-      alert('حدث خطأ أثناء حفظ البيانات!');
-    }
-  };
-
-  // 🌟 طباعة / PDF
+  // 🌟 طباعة الكشف
   const handlePrintPDF = () => {
     window.print();
   };
 
-  // 🌟 تصدير إلى Excel
+  // 🌟 تصدير كشف الفصل إلى Excel
   const handleExportExcel = () => {
     if (!students.length) {
       alert('لا توجد بيانات لتصديرها!');
@@ -168,68 +114,17 @@ export default function ClassesSection() {
 
     const dataToExport = students.map((s, index) => ({
       'م': index + 1,
-      'اسم الطالب': s.student_name || '',
+      'اسم الطالب': s.student_name || s.full_name || '',
+      'المرحلة': s.stage || activeStage,
+      'الفصل': s.class_name || selectedClass.name,
       'الجنس': s.gender || '',
-      'رقم هاتف ولي الأمر': s.parent_phone || '',
-      'حالة الرسوم': s.tuition_status || ''
+      'رقم هاتف ولي الأمر': s.parent_phone || ''
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'الطلاب');
-    XLSX.writeFile(workbook, `قائمة_طلاب_${selectedClass.name}_${genderFilter}.xlsx`);
-  };
-
-  // 🌟 استيراد من Excel
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file || !selectedClass) return;
-
-    setUploading(true);
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const bstr = evt.target.result;
-        const workbook = XLSX.read(bstr, { type: 'binary' });
-        const wsname = workbook.SheetNames[0];
-        const ws = workbook.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws);
-
-        if (!data || data.length === 0) {
-          alert('ملف الإكسيل فارغ أو غير صالح!');
-          setUploading(false);
-          return;
-        }
-
-        const formattedData = data.map(row => ({
-          student_name: String(row['اسم الطالب'] || row['student_name'] || row['الاسم'] || '').trim(),
-          parent_phone: String(row['رقم هاتف ولي الأمر'] || row['parent_phone'] || row['الهاتف'] || '').trim(),
-          tuition_status: String(row['حالة الرسوم'] || row['tuition_status'] || '').trim(),
-          gender: String(row['الجنس'] || row['gender'] || (genderFilter !== 'all' ? genderFilter : 'بنين')).trim(),
-          class_name: selectedClass.name, // الربط التلقائي بـ class_name
-          stage: activeStage
-        })).filter(item => item.student_name !== '');
-
-        if (formattedData.length === 0) {
-          alert('لم يتم العثور على أسماء طلاب مطابقة في الملف.');
-          setUploading(false);
-          return;
-        }
-
-        const { error } = await supabase.from('students').insert(formattedData);
-        if (error) throw error;
-
-        alert(`تم استيراد وإضافة ${formattedData.length} طالب للفصل بنجاح 🚀`);
-        fetchClassStudents(selectedClass.name, genderFilter);
-      } catch (err) {
-        console.error(err);
-        alert('حدث خطأ أثناء رفع ملف الإكسيل!');
-      } finally {
-        setUploading(false);
-        e.target.value = null;
-      }
-    };
-    reader.readAsBinaryString(file);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'طلاب_الفصل');
+    XLSX.writeFile(workbook, `كشف_${selectedClass.name}.xlsx`);
   };
 
   return (
@@ -246,7 +141,7 @@ export default function ClassesSection() {
       {/* 🌟 قائمة الفصول */}
       <div className="no-print" style={{ background: '#ffffff', borderRadius: '12px', padding: '18px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
         <h4 style={{ margin: '0 0 14px 0', color: '#0f172a', fontSize: '16px', fontWeight: '800' }}>
-          {stagesStructure[activeStage].name} - اختر الفصل لعرض الطلاب:
+          {stagesStructure[activeStage].name} - اختر الفصل لعرض الكشف:
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
           {stagesStructure[activeStage].classes.map((cls) => {
@@ -267,23 +162,23 @@ export default function ClassesSection() {
                 }}
               >
                 <span style={{ fontWeight: '800', fontSize: '13px', color: isSelected ? '#047857' : '#334155' }}>📖 {cls.name}</span>
-                <span style={{ fontSize: '11px', color: '#64748b', background: '#ffffff', padding: '2px 8px', borderRadius: '12px' }}>عرض 👈</span>
+                <span style={{ fontSize: '11px', color: '#64748b', background: '#ffffff', padding: '2px 8px', borderRadius: '12px' }}>عرض الكشف 👈</span>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* 🌟 جدول عرض الطلاب */}
+      {/* 🌟 جدول عرض كشف الطلاب المرتبط بالفصل */}
       {selectedClass ? (
         <div style={{ background: '#ffffff', borderRadius: '12px', padding: '18px', border: '1px solid #e2e8f0' }}>
           
           <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <h4 style={{ margin: 0, color: '#047857', fontSize: '16px', fontWeight: '900' }}>
-              📋 طلاب: <span style={{ color: '#d97706' }}>{selectedClass.name}</span>
+              📋 كشف طلاب: <span style={{ color: '#d97706' }}>{selectedClass.name}</span>
             </h4>
 
-            {/* 🌟 خيارات التصفية (الجميع / بنين / بنات) */}
+            {/* 🌟 تصفية (الجميع / بنين / بنات) */}
             <div style={{ display: 'flex', gap: '6px', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
               <button 
                 onClick={() => setGenderFilter('all')} 
@@ -305,97 +200,51 @@ export default function ClassesSection() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button onClick={handlePrintPDF} style={{ padding: '7px 12px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>🖨️ طباعة</button>
-              <button onClick={handleExportExcel} style={{ padding: '7px 12px', backgroundColor: '#059669', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>📤 تصدير Excel</button>
-              <label style={{ backgroundColor: '#d97706', color: '#fff', padding: '7px 12px', borderRadius: '6px', cursor: uploading ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '12px' }}>
-                {uploading ? '⏳ جاري الرفع...' : '📥 استيراد Excel'}
-                <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploading} />
-              </label>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button onClick={handlePrintPDF} style={{ padding: '7px 14px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>🖨️ طباعة الكشف</button>
+              <button onClick={handleExportExcel} style={{ padding: '7px 14px', backgroundColor: '#059669', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>📤 تصدير Excel</button>
             </div>
           </div>
 
           {loading ? (
-            <p style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>جاري تحميل البيانات...</p>
+            <p style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>جاري جلب الكشف من سجل الطلاب...</p>
           ) : students.length > 0 ? (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', fontSize: '12.5px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ background: '#f1f5f9', color: '#334155' }}>
                     <th style={thStyle}>#</th>
                     <th style={thStyle}>اسم الطالب</th>
+                    <th style={thStyle}>المرحلة</th>
+                    <th style={thStyle}>الفصل</th>
                     <th style={thStyle}>الجنس</th>
                     <th style={thStyle}>رقم هاتف ولي الأمر</th>
-                    <th style={thStyle}>حالة الرسوم</th>
-                    <th className="no-print" style={thStyle}>إجراءات</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map((student, idx) => {
-                    const isEditing = editingStudentId === student.id;
-                    return (
-                      <tr key={student.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={tdStyle}>{idx + 1}</td>
-                        
-                        <td style={tdStyle}>
-                          {isEditing ? (
-                            <input type="text" value={editFormData.student_name} onChange={e => setEditFormData({ ...editFormData, student_name: e.target.value })} style={inputInlineStyle} />
-                          ) : (
-                            <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{student.student_name}</span>
-                          )}
-                        </td>
-
-                        <td style={tdStyle}>
-                          {isEditing ? (
-                            <select value={editFormData.gender} onChange={e => setEditFormData({ ...editFormData, gender: e.target.value })} style={inputInlineStyle}>
-                              <option value="بنين">بنين</option>
-                              <option value="بنات">بنات</option>
-                            </select>
-                          ) : (
-                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', backgroundColor: student.gender === 'بنات' ? '#ffe4e6' : '#e0f2fe', color: student.gender === 'بنات' ? '#be123c' : '#0369a1' }}>
-                              {student.gender || 'غير محدد'}
-                            </span>
-                          )}
-                        </td>
-
-                        <td style={tdStyle}>
-                          {isEditing ? (
-                            <input type="text" value={editFormData.parent_phone} onChange={e => setEditFormData({ ...editFormData, parent_phone: e.target.value })} style={inputInlineStyle} />
-                          ) : (
-                            student.parent_phone || 'غير مسجل'
-                          )}
-                        </td>
-
-                        <td style={tdStyle}>
-                          {isEditing ? (
-                            <input type="text" value={editFormData.tuition_status} onChange={e => setEditFormData({ ...editFormData, tuition_status: e.target.value })} style={inputInlineStyle} />
-                          ) : (
-                            student.tuition_status || '-'
-                          )}
-                        </td>
-
-                        <td className="no-print" style={tdStyle}>
-                          {isEditing ? (
-                            <div style={{ display: 'flex', gap: '4px' }}>
-                              <button onClick={() => handleSaveEdit(student.id)} style={{ padding: '4px 8px', backgroundColor: '#047857', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>💾 حفظ</button>
-                              <button onClick={() => setEditingStudentId(null)} style={{ padding: '4px 8px', backgroundColor: '#94a3b8', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>إلغاء</button>
-                            </div>
-                          ) : (
-                            <button onClick={() => handleStartEdit(student)} style={{ padding: '4px 8px', backgroundColor: '#e0f2fe', color: '#0369a1', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>✏️ تعديل</button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {students.map((student, idx) => (
+                    <tr key={student.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={tdStyle}>{idx + 1}</td>
+                      <td style={{ ...tdStyle, fontWeight: 'bold', color: '#0f172a' }}>{student.student_name || student.full_name}</td>
+                      <td style={tdStyle}>{student.stage || activeStage}</td>
+                      <td style={tdStyle}>{student.class_name}</td>
+                      <td style={tdStyle}>
+                        <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', backgroundColor: student.gender === 'بنات' ? '#ffe4e6' : '#e0f2fe', color: student.gender === 'بنات' ? '#be123c' : '#0369a1' }}>
+                          {student.gender || 'غير محدد'}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>{student.parent_phone || 'غير مسجل'}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <p style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>لا يوجد طلاب مسجلين في هذا الفصل بالتصنيف المختار حتى الآن.</p>
+            <p style={{ textAlign: 'center', padding: '25px', color: '#94a3b8' }}>لا توجد أسماء مسجلة لهذا الفصل في قاعدة البيانات حتى الآن.</p>
           )}
         </div>
       ) : (
-        <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>💡 اختر فصلاً من الأعلى لعرض بيانات الطلاب وإدارتها.</p>
+        <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>💡 اختر فصلاً من القائمة أعلاه لعرض الكشف الخاص به تلقائياً.</p>
       )}
 
       <style>{`
