@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
@@ -25,7 +24,8 @@ export default function HomeSettingsSection() {
 
   // حقول الإدخال المشتركة للأشخاص
   const [personName, setPersonName] = useState('');
-  const [personRole, setPersonRole] = useState(''); // الدور، المادة، أو المرحلة الدراسية
+  const [personRole, setPersonRole] = useState(''); // الدور، المادة
+  const [personStage, setPersonStage] = useState('ابتدائي'); // خاصة بلوحة الشرف (روضة، ابتدائي، متوسط، ثانوي)
   const [personImage, setPersonImage] = useState('');
 
   // حقول الإدخال للأقسام والتواصل
@@ -61,7 +61,6 @@ export default function HomeSettingsSection() {
       const { data: teachersData } = await supabase.from('teachers').select('*');
       if (teachersData) setTeachersList(teachersData);
 
-      // تم التعديل هنا ليطابق جدول top_students الصحيح
       const { data: honorsData } = await supabase.from('top_students').select('*');
       if (honorsData) setHonorsList(honorsData);
 
@@ -167,16 +166,17 @@ export default function HomeSettingsSection() {
           image_url: personImage || null 
         }]);
       } else if (type === 'honor') {
-        // تم التعديل هنا ليطابق أعمدة جدول top_students (name, stage, image)
+        // تم ربطها بدقة مع جدول top_students مقسمة حسب المرحلة المحددة
         await supabase.from('top_students').insert([{ 
           name: personName, 
-          stage: personRole || 'primary', 
+          stage: personStage, 
           image: personImage || null 
         }]);
       }
 
       setPersonName('');
       setPersonRole('');
+      setPersonStage('ابتدائي');
       setPersonImage('');
       fetchAllData();
       setMessage('تمت الإضافة بنجاح! ✅');
@@ -353,27 +353,53 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
-      {/* 6. لوحة الشرف */}
+      {/* 6. لوحة الشرف (مقسمة حسب المراحل تماماً مثل صفحة الزوار) */}
       {activeTab === 'honors' && (
         <div style={styles.sectionCard}>
-          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف</h3>
-          <div style={styles.formGrid}>
+          <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (مقسمة حسب المراحل)</h3>
+          
+          {/* نموذج إضافة طالب للوحة الشرف */}
+          <div style={{ ...styles.formGrid, backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
             <input type="text" value={personName} onChange={(e) => setPersonName(e.target.value)} placeholder="اسم الطالب المتفوق..." style={styles.input} />
-            <input type="text" value={personRole} onChange={(e) => setPersonRole(e.target.value)} placeholder="المرحلة (primary, middle...)..." style={styles.input} />
+            
+            {/* القائمة المنسدلة لاختيار المرحلة بدقة */}
+            <select value={personStage} onChange={(e) => setPersonStage(e.target.value)} style={styles.input}>
+              <option value="روضة">روضة</option>
+              <option value="ابتدائي">ابتدائي</option>
+              <option value="متوسط">متوسط</option>
+              <option value="ثانوي">ثانوي</option>
+            </select>
+
             <input type="text" value={personImage} onChange={(e) => setPersonImage(e.target.value)} placeholder="رابط الصورة الشخصية (URL)..." style={styles.input} />
             <button type="button" onClick={() => handleAddPerson('honor')} style={styles.actionBtn}>إضافة للوحة الشرف</button>
           </div>
-          <div style={styles.tableList}>
-            {honorsList.map((s) => (
-              <div key={s.id} style={styles.rowItem}>
-                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                  {s.image && <img src={s.image} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
-                  <span><strong>{s.name}</strong> - <span style={{color:'#64748b'}}>{s.stage}</span></span>
+
+          {/* عرض الطلاب مقسمين في لوحة التحكم حسب المراحل الأربع */}
+          {['روضة', 'ابتدائي', 'متوسط', 'ثانوي'].map((stageName) => {
+            const filteredStudents = honorsList.filter((s) => s.stage === stageName);
+            return (
+              <div key={stageName} style={{ marginBottom: '20px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '15px', backgroundColor: '#fff' }}>
+                <h4 style={{ color: '#047857', borderBottom: '2px solid #047857', paddingBottom: '6px', marginBottom: '10px' }}>
+                  مرحلة الـ {stageName} ({filteredStudents.length})
+                </h4>
+                <div style={styles.tableList}>
+                  {filteredStudents.length === 0 ? (
+                    <p style={{ color: '#64748b', fontSize: '13px', margin: '5px 0' }}>لا يوجد طلاب مضافين في هذه المرحلة بعد.</p>
+                  ) : (
+                    filteredStudents.map((s) => (
+                      <div key={s.id} style={styles.rowItem}>
+                        <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                          {s.image && <img src={s.image} alt="" style={{width:'35px', height:'35px', borderRadius:'50%', objectFit:'cover'}} />}
+                          <span><strong>{s.name}</strong></span>
+                        </div>
+                        <button onClick={() => handleDeleteItem('top_students', s.id)} style={styles.delSmBtn}>حذف</button>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <button onClick={() => handleDeleteItem('top_students', s.id)} style={styles.delSmBtn}>حذف</button>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
 
@@ -430,15 +456,15 @@ const styles = {
   sectionTitle: { color: '#1e293b', fontSize: '16px', marginBottom: '15px', fontWeight: 'bold' },
   inputGroup: { marginBottom: '15px' },
   label: { display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: 'bold' },
-  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' },
-  textarea: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' },
+  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+  textarea: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
   row: { display: 'flex', gap: '10px', marginBottom: '12px' },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '15px', alignItems: 'center' },
   actionBtn: { backgroundColor: '#0ea5e9', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' },
   saveBtn: { backgroundColor: '#047857', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', width: '100%' },
   list: { paddingRight: '20px', margin: 0, color: '#475569' },
   listItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
-  tableList: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '15px' },
+  tableList: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' },
   rowItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '10px 15px', borderRadius: '8px', border: '1px solid #e2e8f0' },
   delSmBtn: { backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
   newsForm: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '15px' }
