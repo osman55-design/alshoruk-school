@@ -7,7 +7,7 @@ export default function DashboardSection() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('users'); // 'users' للبطاقات أو 'logs' لسجل النشاطات والتعديلات
+  const [activeTab, setActiveTab] = useState('users'); 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
@@ -16,7 +16,6 @@ export default function DashboardSection() {
     setLoading(true);
     setErrorMessage('');
     try {
-      // 1. جلب بيانات المستخدمين
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
@@ -25,16 +24,13 @@ export default function DashboardSection() {
       if (userError) throw userError;
       setUsers(userData || []);
 
-      // 2. جلب سجل النشاطات والتعديلات والحذف والإضافات
       const { data: actData, error: actError } = await supabase
         .from('activity_logs')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (actError) {
-        console.warn('جدول سجل النشاطات غير موجود أو فارغ بعد:', actError.message);
-      } else {
+      if (!actError) {
         setActivities(actData || []);
       }
 
@@ -50,14 +46,23 @@ export default function DashboardSection() {
     fetchData();
   }, []);
 
-  // دالة الحذف مع توثيق الحدث في سجل النشاطات
+  // دالة ذكية لفحص ما إذا كان المستخدم متصلاً حقاً بناءً على وقت آخر ظهور (خلال آخر 5 دقائق مثلاً) أو عمود الحالة
+  const checkIfOnline = (u) => {
+    if (!u.last_login) return false;
+    const lastLoginTime = new Date(u.last_login).getTime();
+    const now = new Date().getTime();
+    const diffMinutes = (now - lastLoginTime) / (1000 * 60);
+    
+    // إذا كان آخر نشاط خلال الـ 5 دقائق الماضية وعمود is_active ليس صريحاً بأنه خطأ
+    return diffMinutes <= 5 && u.is_active !== false;
+  };
+
   const handleDeleteUser = async (u) => {
     if (!window.confirm(`هل أنتِ متأكدة من حذف المستخدم "${u.full_name || u.username}"؟`)) return;
     try {
       const { error } = await supabase.from('users').delete().eq('id', u.id);
       if (error) throw error;
 
-      // توثيق عملية الحذف في سجل النشاطات
       await supabase.from('activity_logs').insert([
         {
           username: 'الإدارة',
@@ -74,7 +79,6 @@ export default function DashboardSection() {
     }
   };
 
-  // دالة حفظ التعديلات على الصلاحيات مع توثيق الحدث
   const handleSavePermissions = async (e) => {
     e.preventDefault();
     try {
@@ -97,7 +101,6 @@ export default function DashboardSection() {
 
       if (error) throw error;
 
-      // توثيق عملية التعديل في سجل النشاطات
       await supabase.from('activity_logs').insert([
         {
           username: 'الإدارة',
@@ -118,14 +121,13 @@ export default function DashboardSection() {
   return (
     <div style={{ padding: '24px 16px', direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif", maxWidth: '1200px', margin: '0 auto', background: '#f8fafc', minHeight: '100vh' }}>
       
-      {/* رأس الصفحة العصري (Header) */}
       <div style={{ display: 'flex', flexDirection: window.innerWidth < 600 ? 'column' : 'row', justifyContent: 'space-between', alignItems: window.innerWidth < 600 ? 'stretch' : 'center', gap: '16px', marginBottom: '24px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '24px', borderRadius: '20px', boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.2)', color: '#fff' }}>
         <div>
           <span style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#38bdf8', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', display: 'inline-block', marginBottom: '6px' }}>
             ✨ لوحة التحكم والأمان المتقدمة
           </span>
           <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '800' }}>إدارة المستخدمين وحالات الاتصال</h2>
-          <p style={{ margin: '6px 0 0 0', color: '#94a3b8', fontSize: '13px' }}>متابعة حالة الاتصال، آخر ظهور، وتتبع كافة التعديلات، الإضافات، والحذف بدقة</p>
+          <p style={{ margin: '6px 0 0 0', color: '#94a3b8', fontSize: '13px' }}>متابعة حالة الاتصال الحقيقية، آخر ظهور، وتتبع كافة التعديلات والإضافات والحذف</p>
         </div>
         <button 
           onClick={() => setShowAddModal(true)}
@@ -141,7 +143,6 @@ export default function DashboardSection() {
         </div>
       )}
 
-      {/* 🗂️ أزرار التبديل بين بطاقات المستخدمين وسجل التعديلات */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <button 
           onClick={() => setActiveTab('users')} 
@@ -160,75 +161,76 @@ export default function DashboardSection() {
       {loading ? (
         <p style={{ textAlign: 'center', color: '#64748b', padding: '40px', fontSize: '16px' }}>جاري تحميل البيانات...</p>
       ) : activeTab === 'users' ? (
-        /* التبويب الأول: بطاقات المستخدمين مع حالة الاتصال وآخر ظهور */
         users.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', background: '#fff', borderRadius: '16px', color: '#94a3b8' }}>
             لا يوجد مستخدمون لعرضهم حالياً.
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-            {users.map((u) => (
-              <div key={u.id} style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', borderRadius: '16px', padding: '20px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
-                
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                    <div>
-                      <span style={{ backgroundColor: u.role === 'مدير' || u.role === 'admin' ? '#dcfce7' : '#e0f2fe', color: u.role === 'مدير' || u.role === 'admin' ? '#15803d' : '#0369a1', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', display: 'inline-block', marginBottom: '6px' }}>
-                        {u.role || 'إداري'}
-                      </span>
-                      <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px', fontWeight: '800' }}>{u.full_name || u.name || '---'}</h3>
-                      <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>اسم المستخدم: <strong style={{ color: '#334155' }}>{u.username || '---'}</strong></p>
-                    </div>
+            {users.map((u) => {
+              const isOnline = checkIfOnline(u);
+              return (
+                <div key={u.id} style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', borderRadius: '16px', padding: '20px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+                  
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                      <div>
+                        <span style={{ backgroundColor: u.role === 'مدير' || u.role === 'admin' ? '#dcfce7' : '#e0f2fe', color: u.role === 'مدير' || u.role === 'admin' ? '#15803d' : '#0369a1', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', display: 'inline-block', marginBottom: '6px' }}>
+                          {u.role || 'إداري'}
+                        </span>
+                        <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px', fontWeight: '800' }}>{u.full_name || u.name || '---'}</h3>
+                        <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>اسم المستخدم: <strong style={{ color: '#334155' }}>{u.username || '---'}</strong></p>
+                      </div>
 
-                    {/* 🟢 حالة الاتصال وآخر ظهور */}
-                    <div style={{ textAlign: 'left' }}>
-                      <span style={{ backgroundColor: u.is_active ? '#10b981' : '#ef4444', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', display: 'inline-block', marginBottom: '4px' }}>
-                        {u.is_active ? '🟢 متصل الآن' : '🔴 غير متصل'}
-                      </span>
-                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
-                        آخر ظهور: {u.last_login ? new Date(u.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'غير متوفر'}
+                      {/* حالة الاتصال الحقيقية بناءً على وقت آخر ظهور */}
+                      <div style={{ textAlign: 'left' }}>
+                        <span style={{ backgroundColor: isOnline ? '#10b981' : '#ef4444', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', display: 'inline-block', marginBottom: '4px' }}>
+                          {isOnline ? '🟢 متصل الآن' : '🔴 غير متصل'}
+                        </span>
+                        <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+                          آخر ظهور: {u.last_login ? new Date(u.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'غير متوفر'}
+                        </div>
                       </div>
                     </div>
+                    
+                    <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '12px 0' }} />
+
+                    <div style={{ fontSize: '13px', color: '#475569', fontWeight: '700', marginBottom: '8px' }}>الصلاحيات المفعلة:</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', minHeight: '35px' }}>
+                      {u.can_manage_students && <span style={badgeStyle}>الطلاب</span>}
+                      {u.can_manage_classes && <span style={badgeStyle}>الفصول</span>}
+                      {u.can_manage_teachers && <span style={badgeStyle}>المعلمين</span>}
+                      {u.can_manage_finance && <span style={badgeStyle}>المالية</span>}
+                      {u.can_manage_results && <span style={badgeStyle}>النتائج</span>}
+                      {u.can_manage_transport && <span style={badgeStyle}>التراحيل</span>}
+                      {u.can_manage_supervisors && <span style={badgeStyle}>المشرفات</span>}
+                      {u.can_manage_landing && <span style={badgeStyle}>الرئيسية</span>}
+                      {u.can_manage_bridge && <span style={{ ...badgeStyle, backgroundColor: '#e0e7ff', color: '#3730a3' }}>🌉 الجسر</span>}
+                      {u.can_manage_admin && <span style={{ ...badgeStyle, backgroundColor: '#fef3c7', color: '#b45309' }}>👑 الإدارة</span>}
+                    </div>
                   </div>
-                  
-                  <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '12px 0' }} />
 
-                  <div style={{ fontSize: '13px', color: '#475569', fontWeight: '700', marginBottom: '8px' }}>الصلاحيات المفعلة:</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', minHeight: '35px' }}>
-                    {u.can_manage_students && <span style={badgeStyle}>الطلاب</span>}
-                    {u.can_manage_classes && <span style={badgeStyle}>الفصول</span>}
-                    {u.can_manage_teachers && <span style={badgeStyle}>المعلمين</span>}
-                    {u.can_manage_finance && <span style={badgeStyle}>المالية</span>}
-                    {u.can_manage_results && <span style={badgeStyle}>النتائج</span>}
-                    {u.can_manage_transport && <span style={badgeStyle}>التراحيل</span>}
-                    {u.can_manage_supervisors && <span style={badgeStyle}>المشرفات</span>}
-                    {u.can_manage_landing && <span style={badgeStyle}>الرئيسية</span>}
-                    {u.can_manage_bridge && <span style={{ ...badgeStyle, backgroundColor: '#e0e7ff', color: '#3730a3' }}>🌉 الجسر</span>}
-                    {u.can_manage_admin && <span style={{ ...badgeStyle, backgroundColor: '#fef3c7', color: '#b45309' }}>👑 الإدارة</span>}
+                  <div style={{ display: 'flex', gap: '10px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+                    <button 
+                      onClick={() => setEditingUser({ ...u })}
+                      style={{ flex: 1, backgroundColor: '#e0f2fe', color: '#0284c7', border: '1px solid #bae6fd', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
+                    >
+                      تعديل الصلاحيات ✏️
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteUser(u)}
+                      style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '10px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
+                    >
+                      حذف 🗑️
+                    </button>
                   </div>
-                </div>
 
-                <div style={{ display: 'flex', gap: '10px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
-                  <button 
-                    onClick={() => setEditingUser({ ...u })}
-                    style={{ flex: 1, backgroundColor: '#e0f2fe', color: '#0284c7', border: '1px solid #bae6fd', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
-                  >
-                    تعديل الصلاحيات ✏️
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteUser(u)}
-                    style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '10px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
-                  >
-                    حذف 🗑️
-                  </button>
                 </div>
-
-              </div>
-            ))}
+              );
+            })}
           </div>
         )
       ) : (
-        /* التبويب الثاني: جدول سجل التعديلات، الإضافات والحذف */
         <div style={{ background: '#fff', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)', border: '1px solid #e2e8f0' }}>
           <h3 style={{ margin: '0 0 6px 0', color: '#0f172a', fontSize: '18px', fontWeight: '800' }}>
             📊 جدول النشاطات الحية في النظام (إضافة، تعديل، حذف)
@@ -278,7 +280,6 @@ export default function DashboardSection() {
         </div>
       )}
 
-      {/* نافذة التعديل على الصلاحيات (Modal) */}
       {editingUser && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' }}>
           <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
@@ -344,7 +345,6 @@ export default function DashboardSection() {
         </div>
       )}
 
-      {/* نافذة إضافة موظف جديد */}
       {showAddModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' }}>
           <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto' }}>
