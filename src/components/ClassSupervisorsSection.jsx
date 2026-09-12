@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import * as XLSX from 'xlsx';
 
 export default function ClassSupervisorsSection({ onBack }) {
   const [supervisors, setSupervisors] = useState([]);
   const [classesList, setClassesList] = useState(['الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس']);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // حقول النموذج
   const [name, setName] = useState('');
@@ -88,18 +90,90 @@ export default function ClassSupervisorsSection({ onBack }) {
     setGender('مشرفة');
   };
 
+  // دالة استيراد ملفات الإكسيل
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const workbook = XLSX.read(bstr, { type: 'binary' });
+        const wsname = workbook.SheetNames[0];
+        const ws = workbook.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        if (!data || data.length === 0) {
+          alert('ملف الإكسيل فارغ أو غير صالح!');
+          setUploading(false);
+          return;
+        }
+
+        // تحويل وتجهيز البيانات للإدخال لقاعدة البيانات
+        const formattedData = data.map(row => {
+          const supName = row['الاسم'] || row['اسم المشرف'] || row['اسم المشرفة'] || row['Name'] || '';
+          const supClass = row['الصف المسؤول'] || row['الصف'] || row['الفصل'] || row['Class'] || 'الصف الأول';
+          const supPhone = row['رقم الهاتف'] || row['الهاتف'] || row['الجوال'] || row['Phone'] || '';
+          const supGender = row['النوع'] || row['الصفة'] || (supName.includes('أستاذة') || supName.includes('مس') ? 'مشرفة' : 'مشرف');
+
+          return {
+            name: String(supName).trim(),
+            assigned_class: String(supClass).trim(),
+            phone: String(supPhone).trim(),
+            gender: String(supGender).includes('مشرف') && !String(supGender).includes('مشرفة') ? 'مشرف' : 'مشرفة'
+          };
+        }).filter(item => item.name !== '');
+
+        if (formattedData.length === 0) {
+          alert('لم يتم العثور على بيانات صحيحة مطابقة للأعمدة المطلوبة في الملف.');
+          setUploading(false);
+          return;
+        }
+
+        // إدخال البيانات دفعة واحدة إلى Supabase
+        const { error } = await supabase.from('class_supervisors').insert(formattedData);
+        if (error) throw error;
+
+        alert(`تم استيراد وإضافة ${formattedData.length} مشرف/مشرفة بنجاح! 🚀`);
+        fetchSupervisors();
+      } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء قراءة أو رفع ملف الإكسيل. تأكد من صحة الأعمدة.');
+      } finally {
+        setUploading(false);
+        e.target.value = null; // إعادة تعيين الحقل
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   return (
     <div style={{ direction: 'rtl', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h2 style={{ margin: 0, color: '#047857', fontWeight: '900', fontSize: '22px' }}>👩‍🏫 إدارة مشرفين ومشرفات الفصول</h2>
           <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>تعيين متابع وإداري مسؤول لكل فصل دراسي</p>
         </div>
-        {onBack && (
-          <button onClick={onBack} style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-            ⬅️ رجوع
-          </button>
-        )}
+        
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* زر الاستيراد من الإكسيل */}
+          <label style={{ 
+            backgroundColor: '#059669', color: '#fff', padding: '8px 16px', borderRadius: '8px', 
+            cursor: uploading ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+          }}>
+            {uploading ? '⏳ جاري الرفع...' : '📥 استيراد من ملف Excel'}
+            <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploading} />
+          </label>
+
+          {onBack && (
+            <button onClick={onBack} style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+              ⬅️ رجوع
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
