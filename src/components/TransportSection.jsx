@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import * as XLSX from 'xlsx';
 
 export default function TransportsSection({ onBack }) {
   const [transports, setTransports] = useState([]);
@@ -105,10 +106,76 @@ export default function TransportsSection({ onBack }) {
     }
   };
 
+  // 📊 ميزة تصدير خطوط الترحيل إلى Excel
+  const exportToExcel = () => {
+    if (transports.length === 0) {
+      alert('لا توجد خطوط ترحيل متاحة للتصدير حالياً.');
+      return;
+    }
+
+    const exportData = transports.map(row => ({
+      'خط الرحيل / المنطقة': row.route_name || '',
+      'اسم السائق': row.driver_name || '',
+      'رقم العربة / الحافلة': row.vehicle_number || '',
+      'اسم المشرفة': row.supervisor_name || '',
+      'الطلاب المشتركون': row.students_list || ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'التراحيل والخطوط');
+    XLSX.writeFile(workbook, `إدارة_التراحيل_والمشرفين.xlsx`);
+  };
+
+  // 📥 ميزة استيراد خطوط الترحيل من Excel
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        setLoading(true);
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        if (data.length === 0) {
+          alert('الملف فارغ أو صيغته غير صحيحة.');
+          setLoading(false);
+          return;
+        }
+
+        const rowsToInsert = data.map(item => ({
+          route_name: item['خط الرحيل / المنطقة'] || item['خط السير'] || item['route_name'] || 'خط جديد',
+          driver_name: item['اسم السائق'] || item['السائق'] || item['driver_name'] || '',
+          vehicle_number: item['رقم العربة / الحافلة'] || item['رقم الحافلة'] || item['vehicle_number'] || '',
+          supervisor_name: item['اسم المشرفة'] || item['المشرفة'] || item['supervisor_name'] || '',
+          students_list: item['الطلاب المشتركون'] || item['الطلاب'] || item['students_list'] || ''
+        }));
+
+        const { error } = await supabase.from('transports_list').insert(rowsToInsert);
+        if (error) throw error;
+
+        alert(`تم رفع واستيراد ${rowsToInsert.length} خط ترحيل بنجاح 🚀`);
+        fetchTransports();
+      } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء قراءة ملف الإكسيل.');
+      } finally {
+        setLoading(false);
+        e.target.value = null;
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   return (
     <div style={{ direction: 'rtl', padding: '30px 20px', fontFamily: "'Segoe UI', Roboto, sans-serif", backgroundColor: '#f1f5f9', minHeight: '100vh' }}>
       
-      {/* هيدر الصفحة العصري */}
+      {/* هيدر الصفحة العصري مع أزرار التصدير والاستيراد */}
       <div style={{ maxWidth: '1200px', margin: '0 auto 24px auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <h2 style={{ margin: 0, color: '#0f172a', fontSize: '26px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -116,11 +183,23 @@ export default function TransportsSection({ onBack }) {
           </h2>
           <p style={{ margin: '6px 0 0 0', color: '#64748b', fontSize: '14px' }}>تنسيق خطوط السير، السائقين، المشرفات، والطلاب المشتركين بكل حافلة</p>
         </div>
-        {onBack && (
-          <button onClick={onBack} style={btnBackStyle}>
-            ⬅️ العودة للقائمة الرئيسية
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button onClick={exportToExcel} style={btnExportStyle}>
+            📊 تصدير Excel
           </button>
-        )}
+
+          <label style={btnImportStyle}>
+            📥 استيراد Excel
+            <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} style={{ display: 'none' }} />
+          </label>
+
+          {onBack && (
+            <button onClick={onBack} style={btnBackStyle}>
+              ⬅️ العودة للقائمة الرئيسية
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -327,6 +406,30 @@ const btnAddStudentStyle = {
   cursor: 'pointer'
 };
 
+const btnExportStyle = {
+  padding: '10px 16px',
+  backgroundColor: '#10b981',
+  color: '#ffffff',
+  border: 'none',
+  borderRadius: '12px',
+  cursor: 'pointer',
+  fontWeight: '700',
+  fontSize: '13px',
+  boxShadow: '0 2px 5px rgba(0,0,0,0.04)'
+};
+
+const btnImportStyle = {
+  padding: '10px 16px',
+  backgroundColor: '#0284c7',
+  color: '#ffffff',
+  borderRadius: '12px',
+  cursor: 'pointer',
+  fontWeight: '700',
+  fontSize: '13px',
+  display: 'inline-block',
+  boxShadow: '0 2px 5px rgba(0,0,0,0.04)'
+};
+
 const btnBackStyle = {
   padding: '10px 18px',
   backgroundColor: '#ffffff',
@@ -372,7 +475,7 @@ const busHeaderStyle = {
   backgroundColor: '#0f172a',
   padding: '16px',
   display: 'flex',
-  justify: 'space-between',
+  justifyContent: 'space-between',
   alignItems: 'flex-start'
 };
 
@@ -396,7 +499,7 @@ const deleteBtnStyle = {
 
 const infoRowStyle = {
   display: 'flex',
-  justify: 'space-between',
+  justifyContent: 'space-between',
   alignItems: 'center',
   fontSize: '14px'
 };
