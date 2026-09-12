@@ -38,9 +38,14 @@ export default function ClassesSection() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // 🌟 حالات التعديل
+  // 🌟 حالات التعديل (مطابقة لأعمدة جدول Supabase الظاهرة)
   const [editingStudentId, setEditingStudentId] = useState(null);
-  const [editFormData, setEditFormData] = useState({ student_name: '', phone: '', fees: '', address: '', is_honor: false, gender: 'بنين' });
+  const [editFormData, setEditFormData] = useState({ 
+    student_name: '', 
+    parent_phone: '', 
+    tuition_status: '', 
+    gender: 'بنين' 
+  });
 
   // 🌟 هيكلية الفصول والمراحل
   const stagesStructure = {
@@ -92,12 +97,12 @@ export default function ClassesSection() {
   const fetchClassStudents = async (className, currentGenderFilter) => {
     setLoading(true);
     try {
+      // استخدام العمود الصحيح class_name الموجود في جدول Supabase لديك
       let query = supabase
         .from('students')
         .select('*')
-        .eq('grade', className);
+        .eq('class_name', className);
 
-      // تصفية حسب الجنس إذا لم يتم اختيار "الجميع"
       if (currentGenderFilter !== 'all') {
         query = query.eq('gender', currentGenderFilter);
       }
@@ -119,10 +124,8 @@ export default function ClassesSection() {
     setEditingStudentId(student.id);
     setEditFormData({
       student_name: student.student_name || '',
-      phone: student.phone || '',
-      fees: student.fees || '',
-      address: student.address || '',
-      is_honor: student.is_honor || false,
+      parent_phone: student.parent_phone || '',
+      tuition_status: student.tuition_status || '',
       gender: student.gender || 'بنين'
     });
   };
@@ -134,10 +137,8 @@ export default function ClassesSection() {
         .from('students')
         .update({
           student_name: editFormData.student_name,
-          phone: editFormData.phone,
-          fees: editFormData.fees,
-          address: editFormData.address,
-          is_honor: editFormData.is_honor,
+          parent_phone: editFormData.parent_phone,
+          tuition_status: editFormData.tuition_status,
           gender: editFormData.gender
         })
         .eq('id', id);
@@ -169,10 +170,8 @@ export default function ClassesSection() {
       'م': index + 1,
       'اسم الطالب': s.student_name || '',
       'الجنس': s.gender || '',
-      'رقم الهاتف': s.phone || '',
-      'الرسوم': s.fees || '',
-      'العنوان': s.address || '',
-      'لوحة الشرف': s.is_honor ? 'نعم' : 'لا'
+      'رقم هاتف ولي الأمر': s.parent_phone || '',
+      'حالة الرسوم': s.tuition_status || ''
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -204,12 +203,11 @@ export default function ClassesSection() {
 
         const formattedData = data.map(row => ({
           student_name: String(row['اسم الطالب'] || row['student_name'] || row['الاسم'] || '').trim(),
-          phone: String(row['رقم الهاتف'] || row['phone'] || row['الهاتف'] || '').trim(),
-          fees: String(row['الرسوم'] || row['fees'] || '').trim(),
-          address: String(row['العنوان'] || row['address'] || '').trim(),
+          parent_phone: String(row['رقم هاتف ولي الأمر'] || row['parent_phone'] || row['الهاتف'] || '').trim(),
+          tuition_status: String(row['حالة الرسوم'] || row['tuition_status'] || '').trim(),
           gender: String(row['الجنس'] || row['gender'] || (genderFilter !== 'all' ? genderFilter : 'بنين')).trim(),
-          is_honor: row['لوحة الشرف'] === 'نعم' || row['is_honor'] === true,
-          grade: selectedClass.name // الربط التلقائي بالفصل المختار
+          class_name: selectedClass.name, // الربط التلقائي بـ class_name
+          stage: activeStage
         })).filter(item => item.student_name !== '');
 
         if (formattedData.length === 0) {
@@ -327,10 +325,8 @@ export default function ClassesSection() {
                     <th style={thStyle}>#</th>
                     <th style={thStyle}>اسم الطالب</th>
                     <th style={thStyle}>الجنس</th>
-                    <th style={thStyle}>رقم الهاتف</th>
-                    <th style={thStyle}>الرسوم</th>
-                    <th style={thStyle}>العنوان</th>
-                    <th style={thStyle}>لوحة الشرف</th>
+                    <th style={thStyle}>رقم هاتف ولي الأمر</th>
+                    <th style={thStyle}>حالة الرسوم</th>
                     <th className="no-print" style={thStyle}>إجراءات</th>
                   </tr>
                 </thead>
@@ -364,33 +360,17 @@ export default function ClassesSection() {
 
                         <td style={tdStyle}>
                           {isEditing ? (
-                            <input type="text" value={editFormData.phone} onChange={e => setEditFormData({ ...editFormData, phone: e.target.value })} style={inputInlineStyle} />
+                            <input type="text" value={editFormData.parent_phone} onChange={e => setEditFormData({ ...editFormData, parent_phone: e.target.value })} style={inputInlineStyle} />
                           ) : (
-                            student.phone || 'غير مسجل'
+                            student.parent_phone || 'غير مسجل'
                           )}
                         </td>
 
                         <td style={tdStyle}>
                           {isEditing ? (
-                            <input type="text" value={editFormData.fees} onChange={e => setEditFormData({ ...editFormData, fees: e.target.value })} style={inputInlineStyle} />
+                            <input type="text" value={editFormData.tuition_status} onChange={e => setEditFormData({ ...editFormData, tuition_status: e.target.value })} style={inputInlineStyle} />
                           ) : (
-                            student.fees || '-'
-                          )}
-                        </td>
-
-                        <td style={tdStyle}>
-                          {isEditing ? (
-                            <input type="text" value={editFormData.address} onChange={e => setEditFormData({ ...editFormData, address: e.target.value })} style={inputInlineStyle} />
-                          ) : (
-                            student.address || '-'
-                          )}
-                        </td>
-
-                        <td style={tdStyle}>
-                          {isEditing ? (
-                            <input type="checkbox" checked={editFormData.is_honor} onChange={e => setEditFormData({ ...editFormData, is_honor: e.target.checked })} />
-                          ) : (
-                            <span>{student.is_honor ? '⭐ نعم' : 'لا'}</span>
+                            student.tuition_status || '-'
                           )}
                         </td>
 
