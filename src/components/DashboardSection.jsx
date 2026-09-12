@@ -11,7 +11,6 @@ export default function DashboardSection() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
-  // جلب المستخدمين وتحديث نشاط المستخدم الحالي تلقائياً
   const fetchData = async () => {
     setLoading(true);
     setErrorMessage('');
@@ -46,15 +45,13 @@ export default function DashboardSection() {
     fetchData();
   }, []);
 
+  // دالة دقيقة لحساب حالة الاتصال بناءً على الوقت الفعلي (خلال آخر 10 دقائق فقط)
   const checkIfOnline = (u) => {
-    if (u.is_active === true) return true;
     if (!u.last_login) return false;
-    
     const lastLoginTime = new Date(u.last_login).getTime();
     const now = new Date().getTime();
     const diffMinutes = (now - lastLoginTime) / (1000 * 60);
-    
-    return diffMinutes <= 15;
+    return diffMinutes <= 10 && diffMinutes >= 0;
   };
 
   const handleDeleteUser = async (u) => {
@@ -82,9 +79,10 @@ export default function DashboardSection() {
   const handleSavePermissions = async (e) => {
     e.preventDefault();
     try {
-      // تجهيز البيانات التي يتم تحديثها
       const updateData = {
         full_name: editingUser.full_name,
+        username: editingUser.username,
+        password_code: editingUser.password_code, // استخدام اسم العمود الصحيح في جدولكم
         role: editingUser.role,
         can_manage_students: editingUser.can_manage_students,
         can_manage_classes: editingUser.can_manage_classes,
@@ -97,11 +95,6 @@ export default function DashboardSection() {
         can_manage_bridge: editingUser.can_manage_bridge,
         can_manage_admin: editingUser.can_manage_admin,
       };
-
-      // إذا أدخل كلمة مرور جديدة، يتم إضافتها للتحديث
-      if (editingUser.new_password && editingUser.new_password.trim() !== '') {
-        updateData.password = editingUser.new_password.trim();
-      }
 
       const { error } = await supabase
         .from('users')
@@ -196,7 +189,7 @@ export default function DashboardSection() {
                           {isOnline ? '🟢 متصل الآن' : '🔴 غير متصل'}
                         </span>
                         <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
-                          آخر ظهور: {u.last_login ? new Date(u.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'الآن'}
+                          آخر ظهور: {u.last_login ? new Date(u.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'غير مسجل'}
                         </div>
                       </div>
                     </div>
@@ -220,7 +213,7 @@ export default function DashboardSection() {
 
                   <div style={{ display: 'flex', gap: '10px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
                     <button 
-                      onClick={() => setEditingUser({ ...u, new_password: '' })}
+                      onClick={() => setEditingUser({ ...u })}
                       style={{ flex: 1, backgroundColor: '#e0f2fe', color: '#0284c7', border: '1px solid #bae6fd', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
                     >
                       تعديل البيانات ✏️
@@ -288,7 +281,7 @@ export default function DashboardSection() {
         </div>
       )}
 
-      {/* نافذة تعديل الاسم، كلمة المرور والصلاحيات */}
+      {/* نافذة تعديل الاسم، كلمة المرور (password_code) والصلاحيات */}
       {editingUser && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' }}>
           <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
@@ -300,33 +293,41 @@ export default function DashboardSection() {
               ✕
             </button>
             
-            <h3 style={{ color: '#0f172a', marginTop: 0, marginBottom: '16px', fontSize: '18px' }}>✏️ تعديل بيانات المستخدم: {editingUser.username}</h3>
+            <h3 style={{ color: '#0f172a', marginTop: 0, marginBottom: '16px', fontSize: '18px' }}>✏️ تعديل بيانات المستخدم: {editingUser.full_name}</h3>
 
             <form onSubmit={handleSavePermissions} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
               {/* حقل اسم المستخدم الكامل */}
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: '#334155' }}>الاسم الكامل للمستخدم:</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: '#334155' }}>الاسم الكامل:</label>
                 <input 
                   type="text"
                   value={editingUser.full_name || ''}
                   onChange={(e) => setEditingUser({ ...editingUser, full_name: e.target.value })}
-                  placeholder="أدخل الاسم الكامل"
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
                 />
               </div>
 
-              {/* حقل كلمة المرور الجديدة */}
+              {/* حقل اسم الدخول (Username) */}
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: '#334155' }}>كلمة المرور الجديدة (اختياري):</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: '#334155' }}>اسم المستخدم (Username):</label>
                 <input 
                   type="text"
-                  value={editingUser.new_password || ''}
-                  onChange={(e) => setEditingUser({ ...editingUser, new_password: e.target.value })}
-                  placeholder="اترك الحقل فارغاً إذا لم ترغب بتغييرها"
+                  value={editingUser.username || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value })}
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
                 />
-                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>ملاحظة: اكتب كلمة مرور جديدة فقط إذا أردت تغيير كلمة مرور هذا المستخدم.</span>
+              </div>
+
+              {/* حقل كلمة المرور (password_code) ليظهر ويُعدل مباشرة */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: '#334155' }}>كلمة المرور:</label>
+                <input 
+                  type="text"
+                  value={editingUser.password_code || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, password_code: e.target.value })}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
+                />
               </div>
 
               {/* الرتبة الوظيفية */}
@@ -370,7 +371,7 @@ export default function DashboardSection() {
                   إلغاء
                 </button>
                 <button 
-                  type="submit"
+                type="submit"
                   style={{ flex: 2, backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(2, 132, 199, 0.2)' }}
                 >
                   💾 حفظ التعديلات الجديدة
