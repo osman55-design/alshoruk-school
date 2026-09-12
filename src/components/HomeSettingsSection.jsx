@@ -24,9 +24,9 @@ export default function HomeSettingsSection() {
 
   // حقول الإدخال المشتركة للأشخاص
   const [personName, setPersonName] = useState('');
-  const [personRole, setPersonRole] = useState(''); // الدور، المادة
-  const [personStage, setPersonStage] = useState('ابتدائي'); // خاصة بلوحة الشرف
-  const [personImageFile, setPersonImageFile] = useState(null); // ملف الصورة بدلاً من الرابط
+  const [personRole, setPersonRole] = useState('');
+  const [personStage, setPersonStage] = useState('ابتدائي');
+  const [personImageFile, setPersonImageFile] = useState(null);
 
   // حقول الإدخال للأقسام والتواصل
   const [sectionTitle, setSectionTitle] = useState('');
@@ -78,20 +78,17 @@ export default function HomeSettingsSection() {
     }
   };
 
-  // دالة مساعدة لرفع الصورة إلى Supabase Storage واسترجاع الرابط العام
   const uploadImageToSupabase = async (file) => {
     if (!file) return null;
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36.substring(2, 9))}.${fileExt}`;
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    // رفع الملف إلى الـ Bucket (تأكد أن اسم الـ Bucket هنا مطابق لما لديك، مثل school-images)
     const { error: uploadError } = await supabase.storage.from('school-images').upload(filePath, file);
     if (uploadError) {
       throw new Error('فشل رفع الصورة: ' + uploadError.message);
     }
 
-    // جلب الرابط العام للصورة
     const { data } = supabase.storage.from('school-images').getPublicUrl(filePath);
     return data.publicUrl;
   };
@@ -127,6 +124,7 @@ export default function HomeSettingsSection() {
     setGoals([...goals, goalInput.trim()]);
     setGoalInput('');
   };
+
   const handleRemoveGoal = (index) => {
     setGoals(goals.filter((_, i) => i !== index));
   };
@@ -158,7 +156,6 @@ export default function HomeSettingsSection() {
     if (!personName.trim()) return;
     setLoading(true);
     try {
-      // رفع الصورة تلقائياً إذا اختار المستخدم ملفاً
       let uploadedImageUrl = null;
       if (personImageFile) {
         uploadedImageUrl = await uploadImageToSupabase(personImageFile);
@@ -265,7 +262,6 @@ export default function HomeSettingsSection() {
         <button onClick={() => setActiveTab('contacts')} style={{...styles.tabBtn, backgroundColor: activeTab === 'contacts' ? '#047857' : '#e2e8f0', color: activeTab === 'contacts' ? '#fff' : '#334155'}}>أرقام التواصل</button>
       </div>
 
-      {/* 1. من نحن والأهداف */}
       {activeTab === 'settings' && (
         <form onSubmit={handleSaveSettings} style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>📖 تعديل "من نحن" وأهداف المدرسة</h3>
@@ -289,7 +285,6 @@ export default function HomeSettingsSection() {
         </form>
       )}
 
-      {/* 2. الأخبار */}
       {activeTab === 'news' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>📢 إدارة الشريط الإخباري</h3>
@@ -309,7 +304,6 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
-      {/* 3. الإدارة */}
       {activeTab === 'board' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>🏛️ إدارة المدرسة (الحد الأقصى 5 أعضاء)</h3>
@@ -336,7 +330,6 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
-      {/* 4. المعلمين */}
       {activeTab === 'teachers' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>👨‍🏫 الكادر التعليمي (الحد الأقصى 25 معلماً)</h3>
@@ -363,7 +356,6 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
-      {/* 5. الإشراف التربوي */}
       {activeTab === 'supervision' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>📋 الإشراف التربوي</h3>
@@ -390,7 +382,6 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
-      {/* 6. لوحة الشرف (مقسمة حسب المراحل مع رفع الصور) */}
       {activeTab === 'honors' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>🌟 لوحة الشرف (مقسمة حسب المراحل)</h3>
@@ -441,7 +432,6 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
-      {/* 7. أقسام ومرافق المدرسة */}
       {activeTab === 'sections' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>🏫 أقسام ومرافق المدرسة</h3>
@@ -461,7 +451,6 @@ export default function HomeSettingsSection() {
         </div>
       )}
 
-      {/* 8. أرقام التواصل */}
       {activeTab === 'contacts' && (
         <div style={styles.sectionCard}>
           <h3 style={styles.sectionTitle}>📞 أرقام التواصل والجهات</h3>
